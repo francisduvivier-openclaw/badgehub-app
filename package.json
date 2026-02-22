@@ -42,6 +42,7 @@
   },
   "workspaces": [
     "packages/frontend",
-    "packages/backend"
+    "packages/backend",
+    "packages/shared"
   ]
 }
