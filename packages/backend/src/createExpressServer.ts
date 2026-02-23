@@ -6,14 +6,8 @@ import {
   FRONTEND_PUBLIC_DIR,
   IS_DEV_ENVIRONMENT,
 } from "@config";
-import rateLimit from "express-rate-limit";
-import { createExpressEndpoints } from "@ts-rest/express";
-import { publicRestContracts } from "@shared/contracts/publicRestContracts";
-import { createPublicRestRouter } from "@controllers/ts-rest/publicRestRouter";
-import { privateRestContracts } from "@shared/contracts/privateRestContracts";
-import { createPrivateRestRouter } from "@controllers/ts-rest/privateRestRouter";
-import { addAuthenticationMiddleware } from "@auth/jwt-decode";
-import { jwtVerifyTokenMiddleware } from "@auth/jwt-verify";
+import { registerPublicRoutes } from "@controllers/publicRoutes";
+import { registerPrivateRoutes } from "@controllers/privateRoutes";
 import cors from "cors";
 import * as path from "path";
 import * as fs from "node:fs";
@@ -63,28 +57,9 @@ export const createExpressServer = () => {
 
   const apiV3Router = express.Router();
   app.use("/api/v3", apiV3Router);
-  createExpressEndpoints(
-    publicRestContracts,
-    createPublicRestRouter(),
-    apiV3Router
-  );
 
-  const rateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // Limit each IP to 100 requests per windowMs
-  });
-  createExpressEndpoints(
-    privateRestContracts,
-    createPrivateRestRouter(),
-    apiV3Router,
-    {
-      globalMiddleware: [
-        rateLimiter,
-        jwtVerifyTokenMiddleware,
-        addAuthenticationMiddleware,
-      ],
-    }
-  );
+  registerPublicRoutes(apiV3Router);
+  registerPrivateRoutes(apiV3Router);
   app.use((err: any, req: any, res: any, next: any) => {
     console.warn(err);
     next(err);
