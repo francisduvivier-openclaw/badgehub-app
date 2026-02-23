@@ -78,7 +78,8 @@ const AppSidebarSimilar: React.FC<{
         },
       });
       if (result.status === 200) {
-        return result.body.filter((p) => p.slug !== project.slug).slice(0, 3);
+        const summaries = result.body as ProjectSummary[];
+        return summaries.filter((p: ProjectSummary) => p.slug !== project.slug).slice(0, 3);
       }
       throw new Error(publicProjectErrorFromStatus(result.status));
     },
@@ -97,7 +98,7 @@ const AppSidebarSimilar: React.FC<{
       );
     }
     if (similarProjects && similarProjects.length > 0) {
-      return similarProjects.map((p) => (
+      return similarProjects.map((p: ProjectSummary) => (
         <ProjectItem key={p.slug} project={p} />
       ));
     }
