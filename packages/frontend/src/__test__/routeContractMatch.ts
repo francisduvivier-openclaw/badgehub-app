@@ -18,7 +18,7 @@ function getPathValues(path: string, matcher: string): Map<string, string> | und
   for (let i = 0; i < pathParts.length; i++) {
     const matcherPart = matcherParts[i];
     const pathPart = pathParts[i];
-    if (!matcherPart) return undefined;
+    if (!matcherPart || !pathPart) return undefined;
     if (matcherPart.startsWith(":")) {
       pathValues.set(matcherPart.slice(1), pathPart);
       continue;
