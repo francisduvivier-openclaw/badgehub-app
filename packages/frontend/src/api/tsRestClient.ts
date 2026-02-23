@@ -8,7 +8,7 @@ type RequestArgs = {
   headers?: Record<string, string | undefined>;
 };
 
-type TsRestLikeResponse<T = unknown> = {
+type TsRestLikeResponse<T = any> = {
   status: number;
   body?: T;
   headers: Headers;
@@ -129,12 +129,13 @@ function createApiClient(config?: {
         args?.query,
       )}`;
 
-      const headers: Record<string, string> = {
-        ...Object.fromEntries(
-          Object.entries(baseHeaders).filter(([, v]) => !!v),
-        ) as Record<string, string>,
-        ...(args?.headers ?? {}),
-      };
+      const headers: Record<string, string> = {};
+      for (const [k, v] of Object.entries(baseHeaders)) {
+        if (typeof v === "string") headers[k] = v;
+      }
+      for (const [k, v] of Object.entries(args?.headers ?? {})) {
+        if (typeof v === "string") headers[k] = v;
+      }
 
       let body: BodyInit | undefined;
       if (args?.body instanceof FormData) {

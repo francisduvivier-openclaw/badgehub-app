@@ -111,14 +111,16 @@ export function registerPrivateRoutes(
   });
 
   router.post("/projects/:slug/draft/files/:filePath", upload.single("file"), async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
+    const slug = req.params.slug as string;
+    const filePath = req.params.filePath as string;
+    const fail = await checkProjectAuthorization(badgeHubData, slug, req);
     if (fail) return res.status(fail.status).json({ reason: fail.reason });
     const typedFile = req.file as Express.Multer.File | undefined;
     if (!typedFile?.buffer) {
       return res.status(400).json({ reason: "No file provided with multipart/form-data under field file" });
     }
-    const detectedMimeType = detectMimeType(typedFile.mimetype, req.params.filePath);
-    await badgeHubData.writeDraftFile(req.params.slug, req.params.filePath, {
+    const detectedMimeType = detectMimeType(typedFile.mimetype, filePath);
+    await badgeHubData.writeDraftFile(slug, filePath, {
       mimetype: detectedMimeType,
       fileContent: typedFile.buffer,
       directory: typedFile.destination,
