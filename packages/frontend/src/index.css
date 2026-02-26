@@ -47,9 +47,55 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    --bg-gray-700: #2d3748;
-    --bg-gray-600: #4a5568;
-    --slate-200: #e2e8f0;
+
+    /* Theme tokens (default: dark) */
+    --bh-bg-app: #111827;
+    --bh-surface: #1f2937;
+    --bh-surface-soft: #374151;
+    --bh-border-soft: #374151;
+    --bh-text-primary: #e2e8f0;
+    --bh-text-muted: #94a3b8;
+    --bh-text-brand: #34d399;
+    --bh-text-brand-hover: #6ee7b7;
+}
+
+/* Prepared for upcoming light mode toggle */
+[data-theme="light"] {
+    color-scheme: light;
+    --bh-bg-app: #f8fafc;
+    --bh-surface: #ffffff;
+    --bh-surface-soft: #f1f5f9;
+    --bh-border-soft: #cbd5e1;
+    --bh-text-primary: #0f172a;
+    --bh-text-muted: #475569;
+    --bh-text-brand: #059669;
+    --bh-text-brand-hover: #047857;
+}
+
+.bh-bg-app { background-color: var(--bh-bg-app); }
+.bh-surface { background-color: var(--bh-surface); }
+.bh-surface-soft { background-color: var(--bh-surface-soft); }
+.bh-border-soft { border-color: var(--bh-border-soft); }
+.bh-text-primary { color: var(--bh-text-primary); }
+.bh-text-muted { color: var(--bh-text-muted); }
+.bh-text-brand { color: var(--bh-text-brand); }
+.bh-text-brand:hover { color: var(--bh-text-brand-hover); }
+.bh-link { transition: color 0.2s ease; }
+.bh-link:hover { color: var(--bh-text-brand); }
+
+.bh-nav-link {
+    color: var(--bh-text-muted);
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.bh-nav-link:hover {
+    background-color: var(--bh-surface-soft);
+    color: var(--bh-text-primary);
+}
+
+.bh-input {
+    color: var(--bh-text-primary);
+    background-color: var(--bh-surface-soft);
 }
 
 html {
@@ -67,7 +113,7 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--color-gray-800);
+    background: var(--bh-surface);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -254,8 +300,6 @@ button:focus-visible {
 
 input, textarea, select {
     line-height: 1.25;
-    color: var(--slate-200);
-    background-color: var(--bg-gray-700);
 }
 
 input, textarea {
