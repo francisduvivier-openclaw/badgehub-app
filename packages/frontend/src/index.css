@@ -98,6 +98,26 @@
     background-color: var(--bh-surface-soft);
 }
 
+.bh-icon-button {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid var(--bh-border-soft);
+    background-color: var(--bh-surface-soft);
+    color: var(--bh-text-primary);
+    padding: 0;
+    line-height: 1;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.bh-icon-button:hover {
+    background-color: var(--bh-surface);
+    transform: translateY(-1px);
+}
+
 html {
     scroll-behavior: smooth;
 }

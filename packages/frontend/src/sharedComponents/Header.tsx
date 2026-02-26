@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BadgeHubIcon } from "@sharedComponents/BadgeHubIcon.tsx";
 import ProfileIcon from "@sharedComponents/ProfileIcon";
 import { MLink } from "@sharedComponents/MLink.tsx";
+import { useTheme } from "@hooks/useTheme.ts";
 
 const navLinks = [
   { label: "Browse Projects", to: "/", testId: "BrowseProjects" },
@@ -62,6 +63,7 @@ const SearchField: React.FC<SearchProps> = ({
 
 const Header: React.FC<Partial<SearchProps>> = (searchProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const searchEnabled =
     searchProps.searchQuery !== undefined &&
     searchProps.setSearchQuery !== undefined;
@@ -104,6 +106,16 @@ const Header: React.FC<Partial<SearchProps>> = (searchProps) => {
             {checkedSearchProps && (
               <SearchField {...checkedSearchProps}></SearchField>
             )}
+            <button
+              type="button"
+              className="bh-icon-button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              data-testid="theme-toggle"
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <ProfileIcon />
           </div>
 
