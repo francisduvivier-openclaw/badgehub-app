@@ -10,6 +10,9 @@ function getInitialTheme(): Theme {
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (saved === "light" || saved === "dark") return saved;
 
+  const supportsMatchMedia = typeof window.matchMedia === "function";
+  if (!supportsMatchMedia) return "dark";
+
   return window.matchMedia("(prefers-color-scheme: light)").matches
     ? "light"
     : "dark";
