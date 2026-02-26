@@ -13,6 +13,42 @@
     <title>BadgeHub</title>
     <script src="/badgehub-app/pr-5/scripts/tailwind.js"></script>
     <!-- __SHARED_CONFIG_SCRIPT_PLACEHOLDER__ -->
+    <script type="application/javascript">
+      // Static fallback for preview/static deployments where server-side shared config injection is unavailable.
+      if (!globalThis.__SHARED_CONFIG__) {
+        const badgeSlugs = "why2025,troopers23,mch2022,waveshare_esp32_s3_touch_lcd_2,fri3d_2024,fri3d_2026".split(",").map((s) => s.trim()).filter(Boolean);
+        globalThis.__SHARED_CONFIG__ = {
+          keycloakPublic: {
+            KEYCLOAK_BASE_URL: "https://keycloak.p1m.nl",
+            KEYCLOAK_REALM: "master",
+            KEYCLOAK_CLIENT_ID: "badgehub-api-frontend",
+          },
+          BADGEHUB_API_BASE_URL: "https://badgehub.p1m.nl",
+          BADGE_SLUGS: badgeSlugs,
+          CATEGORY_NAMES: [
+            "Uncategorised",
+            "Event related",
+            "Games",
+            "Graphics",
+            "Hardware",
+            "Utility",
+            "Wearable",
+            "Data",
+            "Silly",
+            "Hacking",
+            "Troll",
+            "Unusable",
+            "Adult",
+            "Virus",
+            "SAO",
+            "Interpreter",
+            "Driver"
+          ],
+          ADMIN_CATEGORY_NAMES: ["Default", "Featured on P1M"],
+          isDevEnvironment: false,
+        };
+      }
+    </script>
     <!-- secret{CodeNeverLiesCommentsSometimesDo} -->
     <script type="module" crossorigin src="/badgehub-app/pr-5/static/entry_index-UkUvqmye.js"></script>
     <link rel="modulepreload" crossorigin href="/badgehub-app/pr-5/static/chunks/vendor-DEiZjHmj.js">
