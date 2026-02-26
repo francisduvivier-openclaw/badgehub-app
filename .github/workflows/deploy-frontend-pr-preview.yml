@@ -38,7 +38,7 @@ jobs:
           VITE_KEYCLOAK_REALM: ${{ vars.VITE_KEYCLOAK_REALM }}
           VITE_KEYCLOAK_CLIENT_ID: ${{ vars.VITE_KEYCLOAK_CLIENT_ID }}
           VITE_BADGE_SLUGS: ${{ vars.VITE_BADGE_SLUGS }}
-        run: npm run build
+        run: npm run build -- --base /badgehub-app/${{ env.PR_PATH }}/
 
       - name: Deploy PR preview to gh-pages
         uses: peaceiris/actions-gh-pages@v4
