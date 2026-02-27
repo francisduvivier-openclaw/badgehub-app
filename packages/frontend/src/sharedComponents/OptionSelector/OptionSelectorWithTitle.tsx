@@ -24,7 +24,7 @@ export const OptionSelectorWithTitle: React.FC<
     <div className={valueMap ? "" : "todoElement"}>
       <label
         htmlFor={selectionId}
-        className="block text-sm font-medium text-slate-300 mb-1"
+        className="block text-sm font-medium bh-text-muted mb-1"
       >
         {title}
       </label>
@@ -32,7 +32,7 @@ export const OptionSelectorWithTitle: React.FC<
         id={selectionId}
         name={selectionId}
         data-testid={selectionId}
-        className="w-full border-gray-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 p-2"
+        className="w-full bh-input border bh-border-soft rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 p-2"
         value={value === undefined ? NO_FILTER_OPTION_VALUE : String(value)}
         onChange={(e) =>
           onValueSelection(

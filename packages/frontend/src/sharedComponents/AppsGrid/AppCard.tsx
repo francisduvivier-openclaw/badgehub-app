@@ -91,14 +91,14 @@ const AppCard: React.FC<
   return (
     <div
       data-testid="AppCard"
-      className="bg-gray-800 rounded-lg shadow-lg overflow-hidden card-hover-effect flex flex-col h-60"
+      className="bh-surface rounded-lg border bh-border-soft shadow-md overflow-hidden card-hover-effect flex flex-col min-h-64"
     >
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-5 flex flex-col flex-grow bg-transparent">
         {/* Header with icon, title, and Git link */}
         <div className="flex items-center mb-3">
-          <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center mr-4 flex-shrink-0 overflow-hidden">
+          <div className="w-10 h-10 rounded-lg bh-surface-soft flex items-center justify-center mr-4 flex-shrink-0 overflow-hidden">
             {isLoadingIcon || !authenticatedIconSrc ? (
-              <div className="w-8 h-8 bg-gray-600 animate-pulse rounded"></div>
+              <div className="w-8 h-8 bh-surface-soft animate-pulse rounded"></div>
             ) : (
               <img
                 src={authenticatedIconSrc}
@@ -120,7 +120,7 @@ const AppCard: React.FC<
               }
               className="min-w-0" // Prevents the link from pushing other elements
             >
-              <h3 className="text-xl font-semibold text-emerald-400 hover:text-emerald-300 transition-colors truncate">
+              <h3 className="text-xl font-semibold bh-text-brand transition-colors truncate">
                 {name}
               </h3>
             </MLink>
@@ -129,7 +129,7 @@ const AppCard: React.FC<
         </div>
 
         {/* Description with line clamp */}
-        <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">
+        <p className="text-sm bh-text-muted leading-relaxed line-clamp-2">
           {description}
         </p>
 
@@ -166,7 +166,7 @@ const AppCard: React.FC<
                 ))}
                 {hiddenCount > 0 && (
                   <span
-                    className="text-xs text-slate-500 font-medium cursor-help"
+                    className="text-xs bh-text-muted font-medium cursor-help"
                     title={allTags
                       .slice(MAX_VISIBLE_TAGS)
                       .map((tag) => tag.text)
@@ -182,14 +182,14 @@ const AppCard: React.FC<
       </div>
 
       {/* Footer with stats */}
-      <div className="px-5 py-3 bg-gray-700 border-t border-gray-700 flex justify-between items-center">
-        <p className="text-sm text-slate-400">Revision: {revision ?? "-"}</p>
-        <p className="text-sm text-slate-400">
+      <div className="px-5 py-3 bh-surface-soft border-t bh-border-soft flex justify-between items-center">
+        <p className="text-sm bh-text-muted">Revision: {revision ?? "-"}</p>
+        <p className="text-sm bh-text-muted">
           Published:{" "}
           {published_at ? new Date(published_at).toLocaleDateString() : "-"}
         </p>
         {installs !== undefined && (
-          <p className="text-sm text-slate-400 flex items-center">
+          <p className="text-sm bh-text-muted flex items-center">
             <DownloadIcon />
             <span className="ml-1">{installs}</span>
           </p>

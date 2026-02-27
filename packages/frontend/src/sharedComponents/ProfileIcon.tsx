@@ -42,7 +42,7 @@ const ProfileIcon: React.FC = () => {
     <div className="relative" ref={menuRef}>
       <div className="inline-block align-top p-2 pr-3">{user?.name}</div>
       <button
-        className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white transition-colors"
+        className="p-2 rounded-full bh-text-muted hover:text-[var(--bh-text-primary)] hover:bg-[var(--bh-surface-soft)] focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors"
         aria-label="Profile"
         onClick={() => setMenuOpen((v) => !v)}
         data-testid="profile-icon"

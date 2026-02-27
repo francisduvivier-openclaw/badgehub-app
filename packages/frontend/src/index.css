@@ -47,9 +47,87 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    --bg-gray-700: #2d3748;
-    --bg-gray-600: #4a5568;
-    --slate-200: #e2e8f0;
+
+    /* Theme tokens (default: dark) */
+    --bh-bg-app: #111827;
+    --bh-surface: #1f2937;
+    --bh-surface-soft: #374151;
+    --bh-border-soft: #374151;
+    --bh-text-primary: #e2e8f0;
+    --bh-text-muted: #94a3b8;
+    --bh-text-brand: #34d399;
+    --bh-text-brand-hover: #6ee7b7;
+}
+
+/* Prepared for upcoming light mode toggle */
+[data-theme="light"] {
+    color-scheme: light;
+    --bh-bg-app: #f8fafc;
+    --bh-surface: #ffffff;
+    --bh-surface-soft: #f1f5f9;
+    --bh-border-soft: #cbd5e1;
+    --bh-text-primary: #0f172a;
+    --bh-text-muted: #334155;
+    --bh-text-brand: #059669;
+    --bh-text-brand-hover: #047857;
+}
+
+.bh-bg-app { background-color: var(--bh-bg-app); }
+.bh-surface { background-color: var(--bh-surface); }
+.bh-surface-soft { background-color: var(--bh-surface-soft); }
+.bh-border-soft { border-color: var(--bh-border-soft); }
+.bh-text-primary { color: var(--bh-text-primary); }
+.bh-text-muted { color: var(--bh-text-muted); }
+.bh-text-brand { color: var(--bh-text-brand); }
+.bh-text-brand:hover { color: var(--bh-text-brand-hover); }
+.bh-link { transition: color 0.2s ease; }
+.bh-link:hover { color: var(--bh-text-brand); }
+
+.bh-nav-link {
+    color: var(--bh-text-muted);
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.bh-nav-link:hover {
+    background-color: var(--bh-surface-soft);
+    color: var(--bh-text-primary);
+}
+
+.bh-input {
+    color: var(--bh-text-primary);
+    background-color: var(--bh-surface-soft);
+}
+
+.bh-input::placeholder {
+    color: color-mix(in srgb, var(--bh-text-muted) 72%, transparent);
+}
+
+.bh-icon-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid var(--bh-border-soft);
+    background-color: var(--bh-surface-soft);
+    color: var(--bh-text-primary);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+    padding: 0;
+    line-height: 1;
+    font-size: 1.05rem;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bh-icon-button:hover {
+    background-color: var(--bh-surface);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+}
+
+.bh-icon-button:focus-visible {
+    outline: 2px solid var(--bh-text-brand);
+    outline-offset: 2px;
 }
 
 html {
@@ -67,7 +145,7 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--color-gray-800);
+    background: var(--bh-surface);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -138,32 +216,34 @@ button:focus-visible {
 
 /* Tag styles */
 .tag {
-    background-color: #374151;
-    color: #d1d5db;
+    background-color: color-mix(in srgb, var(--bh-surface-soft) 88%, #0f172a 12%);
+    color: var(--bh-text-primary);
 }
 
 .tag-mcu {
-    background-color: #047857;
-    color: #d1fae5;
+    background-color: color-mix(in srgb, var(--bh-text-brand) 84%, white 16%);
+    color: white;
 }
 
 /* Button variants */
 .btn-primary {
-    background-color: #047857;
+    background-color: var(--bh-text-brand);
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #059669;
+    background-color: var(--bh-text-brand-hover);
 }
 
 .btn-secondary {
-    background-color: #4b5563;
-    color: white;
+    background-color: color-mix(in srgb, var(--bh-surface-soft) 86%, white 14%);
+    border: 1px solid var(--bh-border-soft);
+    color: var(--bh-text-primary);
 }
 
 .btn-secondary:hover {
-    background-color: #52525b;
+    background-color: color-mix(in srgb, var(--bh-surface-soft) 72%, white 28%);
+    color: var(--bh-text-primary);
 }
 
 /* Icon utility */
@@ -254,8 +334,6 @@ button:focus-visible {
 
 input, textarea, select {
     line-height: 1.25;
-    color: var(--slate-200);
-    background-color: var(--bg-gray-700);
 }
 
 input, textarea {

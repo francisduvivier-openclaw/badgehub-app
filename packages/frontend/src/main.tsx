@@ -30,9 +30,14 @@ const AppEditPageWrapper = () => {
   return <AppEditPage slug={slug} />;
 };
 
+const routerBaseName =
+  import.meta.env.BASE_URL && import.meta.env.BASE_URL !== "/"
+    ? import.meta.env.BASE_URL.replace(/\/$/, "")
+    : undefined;
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={routerBaseName}>
       <SessionProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
