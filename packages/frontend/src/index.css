@@ -67,7 +67,7 @@
     --bh-surface-soft: #f1f5f9;
     --bh-border-soft: #cbd5e1;
     --bh-text-primary: #0f172a;
-    --bh-text-muted: #475569;
+    --bh-text-muted: #334155;
     --bh-text-brand: #059669;
     --bh-text-brand-hover: #047857;
 }
@@ -96,6 +96,10 @@
 .bh-input {
     color: var(--bh-text-primary);
     background-color: var(--bh-surface-soft);
+}
+
+.bh-input::placeholder {
+    color: color-mix(in srgb, var(--bh-text-muted) 72%, transparent);
 }
 
 .bh-icon-button {

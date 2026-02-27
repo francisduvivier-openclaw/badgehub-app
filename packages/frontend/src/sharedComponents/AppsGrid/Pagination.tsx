@@ -23,8 +23,8 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === 1}
         className={`relative inline-flex items-center px-2 py-2 rounded-l-md border text-sm font-medium transition-colors ${
           currentPage === 1
-            ? "border-gray-600 bg-gray-700 text-gray-500 cursor-not-allowed"
-            : "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700"
+            ? "bh-border-soft bh-surface-soft bh-text-muted cursor-not-allowed"
+            : "bh-border-soft bh-surface bh-text-muted hover:bg-[var(--bh-surface-soft)]"
         }`}
         data-testid="pagination-prev"
       >
@@ -50,7 +50,7 @@ const Pagination: React.FC<PaginationProps> = ({
           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
             page === currentPage
               ? "border-emerald-500 bg-emerald-600 text-white"
-              : "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700"
+              : "bh-border-soft bh-surface bh-text-muted hover:bg-[var(--bh-surface-soft)]"
           }`}
           data-testid={`pagination-page-${page}`}
         >
@@ -64,8 +64,8 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === totalPages}
         className={`relative inline-flex items-center px-2 py-2 rounded-r-md border text-sm font-medium transition-colors ${
           currentPage === totalPages
-            ? "border-gray-600 bg-gray-700 text-gray-500 cursor-not-allowed"
-            : "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700"
+            ? "bh-border-soft bh-surface-soft bh-text-muted cursor-not-allowed"
+            : "bh-border-soft bh-surface bh-text-muted hover:bg-[var(--bh-surface-soft)]"
         }`}
         data-testid="pagination-next"
       >
