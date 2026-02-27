@@ -91,9 +91,9 @@ const AppCard: React.FC<
   return (
     <div
       data-testid="AppCard"
-      className="bh-surface rounded-lg shadow-lg overflow-hidden card-hover-effect flex flex-col h-60"
+      className="bh-surface rounded-lg border bh-border-soft shadow-md overflow-hidden card-hover-effect flex flex-col h-60"
     >
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-5 flex flex-col flex-grow bg-transparent">
         {/* Header with icon, title, and Git link */}
         <div className="flex items-center mb-3">
           <div className="w-10 h-10 rounded-lg bh-surface-soft flex items-center justify-center mr-4 flex-shrink-0 overflow-hidden">

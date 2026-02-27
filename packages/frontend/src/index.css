@@ -204,13 +204,13 @@ button:focus-visible {
 
 /* Tag styles */
 .tag {
-    background-color: #374151;
-    color: #d1d5db;
+    background-color: color-mix(in srgb, var(--bh-surface-soft) 88%, #0f172a 12%);
+    color: var(--bh-text-primary);
 }
 
 .tag-mcu {
-    background-color: #047857;
-    color: #d1fae5;
+    background-color: color-mix(in srgb, var(--bh-text-brand) 84%, white 16%);
+    color: white;
 }
 
 /* Button variants */
