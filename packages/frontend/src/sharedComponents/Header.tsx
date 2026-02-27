@@ -42,11 +42,11 @@ const SearchField: React.FC<SearchProps> = ({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         data-testid="search-bar"
-        className="bh-input bh-text-primary placeholder-gray-500 rounded-md py-2 pl-3 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+        className="bh-input bh-text-primary rounded-md py-2 pl-3 pr-10 border bh-border-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
       />
       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
         <svg
-          className="h-4 w-4 text-gray-400"
+          className="h-4 w-4 bh-text-muted"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -72,7 +72,7 @@ const Header: React.FC<Partial<SearchProps>> = (searchProps) => {
     : undefined;
 
   return (
-    <header className="bh-surface shadow-md sticky top-0 z-50">
+    <header className="bh-surface shadow-md border-b bh-border-soft sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
