@@ -110,8 +110,9 @@ const Header: React.FC<Partial<SearchProps>> = (searchProps) => {
               type="button"
               className="bh-icon-button"
               onClick={toggleTheme}
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              aria-pressed={theme === "light"}
+              aria-label={`Theme: ${theme}. Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              title={`Theme: ${theme}. Switch to ${theme === "dark" ? "light" : "dark"} mode`}
               data-testid="theme-toggle"
             >
               {theme === "dark" ? "☀️" : "🌙"}
