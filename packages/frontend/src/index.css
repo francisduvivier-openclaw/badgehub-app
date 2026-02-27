@@ -215,21 +215,23 @@ button:focus-visible {
 
 /* Button variants */
 .btn-primary {
-    background-color: #047857;
+    background-color: var(--bh-text-brand);
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #059669;
+    background-color: var(--bh-text-brand-hover);
 }
 
 .btn-secondary {
-    background-color: #4b5563;
-    color: white;
+    background-color: color-mix(in srgb, var(--bh-surface-soft) 86%, white 14%);
+    border: 1px solid var(--bh-border-soft);
+    color: var(--bh-text-primary);
 }
 
 .btn-secondary:hover {
-    background-color: #52525b;
+    background-color: color-mix(in srgb, var(--bh-surface-soft) 72%, white 28%);
+    color: var(--bh-text-primary);
 }
 
 /* Icon utility */

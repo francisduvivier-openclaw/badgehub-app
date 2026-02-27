@@ -19,7 +19,7 @@ const Hero: React.FC = () => (
       </a>
       <MLink
         to="/page/create-project"
-        className="btn-secondary px-8 py-3 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
+        className="btn-secondary px-8 py-3 rounded-lg text-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105"
       >
         Upload Your Creation
       </MLink>
