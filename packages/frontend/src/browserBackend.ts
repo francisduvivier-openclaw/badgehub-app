@@ -2,6 +2,24 @@ import initSqlJs, { type Database } from "sql.js";
 
 const API_PREFIX = "/api/v3";
 
+// Preview-only seed constants — single source of truth used in seed(), route handlers, and defaults
+const PREVIEW_AUTHOR = "preview-user";
+const PREVIEW_BADGE = "fri3d-badge";
+const PREVIEW_CATEGORY = "tools";
+
+// Columns consumed by getProjectSummary — avoid SELECT * fetching unused columns
+const PROJECT_COLUMNS =
+  "slug, metadataJson, publishedRevision, draftRevision, updatedAt, createdAt, authorId";
+
+// Route patterns compiled once at module load (not per-request)
+const RE_TRAILING_SLASH = /\/+$/;
+const RE_PROJECT = new RegExp(`^${API_PREFIX}/projects/([^/]+)$`);
+const RE_DRAFT = new RegExp(`^${API_PREFIX}/projects/([^/]+)/draft$`);
+const RE_PUBLISH = new RegExp(`^${API_PREFIX}/projects/([^/]+)/publish$`);
+const RE_LATEST_FILE = new RegExp(
+  `^${API_PREFIX}/projects/([^/]+)/latest/files/(.+)$`,
+);
+
 let installed = false;
 
 const textEncoder = new TextEncoder();
@@ -18,7 +36,7 @@ function noContent(): Response {
 }
 
 function parsePath(url: URL): string {
-  return url.pathname.replace(/\/+$/, "") || "/";
+  return url.pathname.replace(RE_TRAILING_SLASH, "") || "/";
 }
 
 function seed(db: Database) {
@@ -52,9 +70,9 @@ function seed(db: Database) {
   const metadata = {
     name: "Demo App",
     description: "Preview app backed by in-browser sqlite",
-    category: "tools",
-    badges: ["fri3d-badge"],
-    author: "preview-user",
+    category: PREVIEW_CATEGORY,
+    badges: [PREVIEW_BADGE],
+    author: PREVIEW_AUTHOR,
     tags: ["preview"],
   };
 
@@ -63,11 +81,11 @@ function seed(db: Database) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       "demo-app",
-      "Demo App",
-      "Preview app backed by in-browser sqlite",
-      "tools",
-      JSON.stringify(["fri3d-badge"]),
-      "preview-user",
+      metadata.name,
+      metadata.description,
+      metadata.category,
+      JSON.stringify(metadata.badges),
+      metadata.author,
       JSON.stringify(metadata),
       now,
       now,
@@ -80,7 +98,11 @@ function seed(db: Database) {
   );
 }
 
-function firstRow<T extends Record<string, unknown>>(db: Database, sql: string, params: unknown[] = []): T | null {
+function firstRow<T extends Record<string, unknown>>(
+  db: Database,
+  sql: string,
+  params: unknown[] = [],
+): T | null {
   const stmt = db.prepare(sql, params);
   try {
     if (!stmt.step()) return null;
@@ -90,7 +112,11 @@ function firstRow<T extends Record<string, unknown>>(db: Database, sql: string, 
   }
 }
 
-function allRows<T extends Record<string, unknown>>(db: Database, sql: string, params: unknown[] = []): T[] {
+function allRows<T extends Record<string, unknown>>(
+  db: Database,
+  sql: string,
+  params: unknown[] = [],
+): T[] {
   const stmt = db.prepare(sql, params);
   const out: T[] = [];
   try {
@@ -120,9 +146,21 @@ function getProjectDetails(row: Record<string, unknown>) {
   };
 }
 
+/** Shared handler for GET /projects/:slug and GET /projects/:slug/draft */
+function respondWithProject(db: Database, slug: string): Response {
+  const row = firstRow(
+    db,
+    `SELECT ${PROJECT_COLUMNS} FROM projects WHERE slug = ?`,
+    [slug],
+  );
+  if (!row) return jsonResponse(404, { reason: "Project not found" });
+  return jsonResponse(200, getProjectDetails(row));
+}
+
 async function createBackendDb(): Promise<Database> {
   const SQL = await initSqlJs({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/sql.js@1.12.0/dist/${file}`,
+    locateFile: (file) =>
+      `https://cdn.jsdelivr.net/npm/sql.js@1.12.0/dist/${file}`,
   });
   const db = new SQL.Database();
   seed(db);
@@ -152,82 +190,94 @@ export async function installBrowserBackendIfNeeded() {
     }
 
     if (method === "GET" && path === `${API_PREFIX}/badges`) {
-      return jsonResponse(200, ["fri3d-badge"]);
+      return jsonResponse(200, [PREVIEW_BADGE]);
     }
 
     if (method === "GET" && path === `${API_PREFIX}/categories`) {
-      return jsonResponse(200, ["tools"]);
+      return jsonResponse(200, [PREVIEW_CATEGORY]);
     }
 
     if (method === "GET" && path === `${API_PREFIX}/stats`) {
-      return jsonResponse(200, { total_projects: 1, total_installs: 0 });
+      const row = firstRow<{ n: number }>(
+        db,
+        "SELECT COUNT(*) AS n FROM projects",
+      );
+      return jsonResponse(200, {
+        total_projects: row?.n ?? 0,
+        total_installs: 0,
+      });
     }
 
     if (method === "GET" && path === `${API_PREFIX}/project-summaries`) {
-      const projects = allRows(db, "SELECT * FROM projects ORDER BY updatedAt DESC").map(getProjectSummary);
+      const projects = allRows(
+        db,
+        `SELECT ${PROJECT_COLUMNS} FROM projects ORDER BY updatedAt DESC`,
+      ).map(getProjectSummary);
       return jsonResponse(200, projects);
     }
 
-    const projectMatch = path.match(/^\/api\/v3\/projects\/([^/]+)$/);
-    if (projectMatch && method === "GET") {
+    const projectMatch = path.match(RE_PROJECT);
+    if (projectMatch) {
       const slug = decodeURIComponent(projectMatch[1]);
-      const row = firstRow(db, "SELECT * FROM projects WHERE slug = ?", [slug]);
-      if (!row) return jsonResponse(404, { reason: "Project not found" });
-      return jsonResponse(200, getProjectDetails(row));
+
+      if (method === "GET") {
+        return respondWithProject(db, slug);
+      }
+
+      if (method === "POST") {
+        const body = (await request.json()) as Record<string, unknown>;
+        const now = new Date().toISOString();
+        const metadata = {
+          name: body.name ?? slug,
+          description: body.description ?? "",
+          category: body.category ?? PREVIEW_CATEGORY,
+          badges: body.badges ?? [PREVIEW_BADGE],
+          author: PREVIEW_AUTHOR,
+        };
+        db.run(
+          `INSERT INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            slug,
+            String(metadata.name),
+            String(metadata.description),
+            String(metadata.category),
+            JSON.stringify(metadata.badges),
+            metadata.author,
+            JSON.stringify(metadata),
+            now,
+            now,
+          ],
+        );
+        return noContent();
+      }
     }
 
-    if (projectMatch && method === "POST") {
-      const slug = decodeURIComponent(projectMatch[1]);
-      const body = (await request.json()) as Record<string, unknown>;
-      const now = new Date().toISOString();
-      const metadata = {
-        name: body.name ?? slug,
-        description: body.description ?? "",
-        category: body.category ?? "tools",
-        badges: body.badges ?? ["fri3d-badge"],
-        author: "preview-user",
-      };
-      db.run(
-        `INSERT INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          slug,
-          String(metadata.name),
-          String(metadata.description),
-          String(metadata.category),
-          JSON.stringify(metadata.badges),
-          "preview-user",
-          JSON.stringify(metadata),
-          now,
-          now,
-        ],
-      );
-      return noContent();
-    }
-
-    const draftMatch = path.match(/^\/api\/v3\/projects\/([^/]+)\/draft$/);
+    const draftMatch = path.match(RE_DRAFT);
     if (draftMatch && method === "GET") {
-      const slug = decodeURIComponent(draftMatch[1]);
-      const row = firstRow(db, "SELECT * FROM projects WHERE slug = ?", [slug]);
-      if (!row) return jsonResponse(404, { reason: "Project not found" });
-      return jsonResponse(200, getProjectDetails(row));
+      return respondWithProject(db, decodeURIComponent(draftMatch[1]));
     }
 
-    const publishMatch = path.match(/^\/api\/v3\/projects\/([^/]+)\/publish$/);
+    const publishMatch = path.match(RE_PUBLISH);
     if (publishMatch && method === "PATCH") {
       const slug = decodeURIComponent(publishMatch[1]);
+      const now = new Date().toISOString();
       db.run(
         "UPDATE projects SET publishedRevision = draftRevision, draftRevision = draftRevision + 1, updatedAt = ? WHERE slug = ?",
-        [new Date().toISOString(), slug],
+        [now, slug],
       );
       return noContent();
     }
 
-    const latestFileMatch = path.match(/^\/api\/v3\/projects\/([^/]+)\/latest\/files\/(.+)$/);
+    const latestFileMatch = path.match(RE_LATEST_FILE);
     if (latestFileMatch && method === "GET") {
       const slug = decodeURIComponent(latestFileMatch[1]);
       const filePath = decodeURIComponent(latestFileMatch[2]);
-      const project = firstRow<{ publishedRevision: number }>(db, "SELECT publishedRevision FROM projects WHERE slug = ?", [slug]);
+      const project = firstRow<{ publishedRevision: number }>(
+        db,
+        "SELECT publishedRevision FROM projects WHERE slug = ?",
+        [slug],
+      );
       if (!project) return jsonResponse(404, { reason: "Project not found" });
       const file = firstRow<{ content: string }>(
         db,
@@ -238,7 +288,9 @@ export async function installBrowserBackendIfNeeded() {
       return new Response(textEncoder.encode(file.content), { status: 200 });
     }
 
-    return jsonResponse(501, { reason: `Browser backend route not implemented: ${method} ${path}` });
+    return jsonResponse(501, {
+      reason: `Browser backend route not implemented: ${method} ${path}`,
+    });
   };
 
   installed = true;
