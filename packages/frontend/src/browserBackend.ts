@@ -4,7 +4,18 @@ import { tsRestApiContracts } from "@shared/contracts/restContracts.ts";
 import { matchRoute } from "@api/routeContractMatch.ts";
 import type { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries.ts";
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
-import type { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats.ts";
+import {
+  createProjectHandler,
+  getBadgesHandler,
+  getCategoriesHandler,
+  getLatestPublishedFileHandler,
+  getProjectHandler,
+  getProjectSummariesHandler,
+  getStatsHandler,
+  pingHandler,
+  publishProjectHandler,
+  type BackendDataAccess,
+} from "@shared/api/backendCoreHandlers.ts";
 
 const PREVIEW_AUTHOR = "preview-user";
 const PREVIEW_BADGE = "fri3d-badge";
@@ -154,13 +165,9 @@ function toDetails(row: ProjectRow): ProjectDetails {
   };
 }
 
-function notFound(reason = "Not found") {
-  return { status: 404 as const, body: { reason }, headers: new Headers() };
-}
-
 async function createBackendDb(): Promise<Database> {
   const SQL = await initSqlJs({
-    locateFile: (file) =>
+    locateFile: (file: string) =>
       `https://cdn.jsdelivr.net/npm/sql.js@1.12.0/dist/${file}`,
   });
   const db = new SQL.Database();
@@ -168,12 +175,9 @@ async function createBackendDb(): Promise<Database> {
   return db;
 }
 
-// Lazy-initialized: WASM loads in the background, blocks only on first API call
 let dbPromise: Promise<Database> | undefined;
 function getDb(): Promise<Database> {
-  if (!dbPromise) {
-    dbPromise = createBackendDb();
-  }
+  if (!dbPromise) dbPromise = createBackendDb();
   return dbPromise;
 }
 
@@ -185,166 +189,164 @@ function findProject(db: Database, slug: string): ProjectRow | null {
   );
 }
 
+async function createDataAccess(): Promise<BackendDataAccess> {
+  const db = await getDb();
+  return {
+    getBadges: async () => [PREVIEW_BADGE],
+    getCategories: async () => [PREVIEW_CATEGORY],
+    registerBadge: async () => {},
+    getStats: async () => {
+      const row = firstRow<{ n: number }>(db, "SELECT COUNT(*) AS n FROM projects");
+      return {
+        projects: row?.n ?? 0,
+        installs: 0,
+        crashes: 0,
+        launches: 0,
+        installed_projects: 0,
+        launched_projects: 0,
+        crashed_projects: 0,
+        authors: 0,
+        badges: 0,
+      };
+    },
+    getProjectSummaries: async () => {
+      const rows = allRows<ProjectRow>(
+        db,
+        `SELECT ${PROJECT_COLUMNS} FROM projects ORDER BY updatedAt DESC`,
+      );
+      return rows.map(toSummary);
+    },
+    getProject: async (slug) => {
+      const row = findProject(db, slug);
+      return row ? toDetails(row) : undefined;
+    },
+    getFileContents: async (slug, _revision, filePath) => {
+      const project = firstRow<{ publishedRevision: number }>(
+        db,
+        "SELECT publishedRevision FROM projects WHERE slug = ?",
+        [slug],
+      );
+      if (!project) return undefined;
+      const file = firstRow<{ content: string }>(
+        db,
+        "SELECT content FROM project_files WHERE slug = ? AND revision = ? AND filePath = ?",
+        [slug, project.publishedRevision, filePath],
+      );
+      return file ? new TextEncoder().encode(file.content) : undefined;
+    },
+    insertProject: async (project) => {
+      const now = new Date().toISOString();
+      const metadata = {
+        name: project.slug,
+        description: "",
+        categories: [PREVIEW_CATEGORY],
+        badges: [PREVIEW_BADGE],
+        author: PREVIEW_AUTHOR,
+      };
+      db.run(
+        `INSERT INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          project.slug,
+          String(metadata.name),
+          String(metadata.description),
+          metadata.categories[0] ?? PREVIEW_CATEGORY,
+          JSON.stringify(metadata.badges),
+          PREVIEW_AUTHOR,
+          JSON.stringify(metadata),
+          now,
+          now,
+        ],
+      );
+    },
+    publishVersion: async (slug) => {
+      const now = new Date().toISOString();
+      db.run(
+        "UPDATE projects SET publishedRevision = draftRevision, draftRevision = draftRevision + 1, updatedAt = ? WHERE slug = ?",
+        [now, slug],
+      );
+    },
+  };
+}
+
+function notFound(reason = "Not found") {
+  return { status: 404 as const, body: { reason }, headers: new Headers() };
+}
+
 export function createBrowserBackedClient() {
-  // Start loading WASM eagerly so it's ready when the first API call arrives
   getDb();
 
   return initClient(tsRestApiContracts, {
     baseUrl: "",
     api: async (args: ApiFetcherArgs) => {
-      const db = await getDb();
-
-      // --- Public: misc ---
+      const data = await createDataAccess();
 
       if (matchRoute(args, tsRestApiContracts.ping)) {
-        return { status: 200, body: "pong", headers: new Headers() };
+        const response = await pingHandler(data);
+        return { ...response, headers: new Headers() };
       }
-
       if (matchRoute(args, tsRestApiContracts.getBadges)) {
-        return {
-          status: 200,
-          body: [PREVIEW_BADGE],
-          headers: new Headers(),
-        };
+        const response = await getBadgesHandler(data);
+        return { ...response, headers: new Headers() };
       }
-
       if (matchRoute(args, tsRestApiContracts.getCategories)) {
-        return {
-          status: 200,
-          body: [PREVIEW_CATEGORY],
-          headers: new Headers(),
-        };
+        const response = await getCategoriesHandler(data);
+        return { ...response, headers: new Headers() };
       }
-
       if (matchRoute(args, tsRestApiContracts.getStats)) {
-        const row = firstRow<{ n: number }>(
-          db,
-          "SELECT COUNT(*) AS n FROM projects",
-        );
-        const stats: BadgeHubStats = {
-          projects: row?.n ?? 0,
-          installs: 0,
-          crashes: 0,
-          launches: 0,
-          installed_projects: 0,
-          launched_projects: 0,
-          crashed_projects: 0,
-          authors: 0,
-          badges: 0,
-        };
-        return { status: 200, body: stats, headers: new Headers() };
+        const response = await getStatsHandler(data);
+        return { ...response, headers: new Headers() };
       }
-
-      // --- Public: project summaries ---
 
       if (matchRoute(args, tsRestApiContracts.getProjectSummaries)) {
-        const rows = allRows<ProjectRow>(
-          db,
-          `SELECT ${PROJECT_COLUMNS} FROM projects ORDER BY updatedAt DESC`,
-        );
-        const summaries = rows.map(toSummary);
-        return { status: 200, body: summaries, headers: new Headers() };
+        const response = await getProjectSummariesHandler(data, args.rawQuery ?? {});
+        return { ...response, headers: new Headers() };
       }
-
-      // --- Public: project details ---
 
       const projectMatch = matchRoute(args, tsRestApiContracts.getProject);
       if (projectMatch) {
-        const slug = projectMatch.get("slug")!;
-        const row = findProject(db, slug);
-        if (!row) return notFound("Project not found");
-        return { status: 200, body: toDetails(row), headers: new Headers() };
+        const response = await getProjectHandler(data, projectMatch.get("slug")!);
+        return { ...response, headers: new Headers() };
       }
 
-      // --- Public: files ---
-
-      const fileMatch = matchRoute(
-        args,
-        tsRestApiContracts.getLatestPublishedFile,
-      );
+      const fileMatch = matchRoute(args, tsRestApiContracts.getLatestPublishedFile);
       if (fileMatch) {
-        const slug = fileMatch.get("slug")!;
-        const filePath = fileMatch.get("filePath")!;
-        const project = firstRow<{ publishedRevision: number }>(
-          db,
-          "SELECT publishedRevision FROM projects WHERE slug = ?",
-          [slug],
+        const response = await getLatestPublishedFileHandler(
+          data,
+          fileMatch.get("slug")!,
+          fileMatch.get("filePath")!,
         );
-        if (!project) return notFound("Project not found");
-        const file = firstRow<{ content: string }>(
-          db,
-          "SELECT content FROM project_files WHERE slug = ? AND revision = ? AND filePath = ?",
-          [slug, project.publishedRevision, filePath],
-        );
-        if (!file) return notFound("File not found");
-        return { status: 200, body: file.content, headers: new Headers() };
-      }
-
-      // --- Private: create project ---
-
-      const createMatch = matchRoute(
-        args,
-        tsRestApiContracts.createProject,
-      );
-      if (createMatch) {
-        const slug = createMatch.get("slug")!;
-        const now = new Date().toISOString();
-        const body = (args.body ?? {}) as Record<string, unknown>;
-        const metadata = {
-          name: (body.name as string) ?? slug,
-          description: (body.description as string) ?? "",
-          categories: (body.categories as string[]) ?? [PREVIEW_CATEGORY],
-          badges: (body.badges as string[]) ?? [PREVIEW_BADGE],
-          author: PREVIEW_AUTHOR,
+        if (response.status !== 200) return { ...response, headers: new Headers() };
+        return {
+          status: 200,
+          body: new TextDecoder().decode(response.body),
+          headers: new Headers(),
         };
-        db.run(
-          `INSERT INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            slug,
-            String(metadata.name),
-            String(metadata.description),
-            (metadata.categories[0] ?? PREVIEW_CATEGORY),
-            JSON.stringify(metadata.badges),
-            metadata.author,
-            JSON.stringify(metadata),
-            now,
-            now,
-          ],
-        );
-        return { status: 204, body: undefined, headers: new Headers() };
       }
 
-      // --- Private: get draft ---
+      const createMatch = matchRoute(args, tsRestApiContracts.createProject);
+      if (createMatch) {
+        const response = await createProjectHandler(
+          data,
+          createMatch.get("slug")!,
+          (args.body ?? {}) as any,
+          PREVIEW_AUTHOR,
+        );
+        return { ...response, headers: new Headers() };
+      }
 
-      const draftMatch = matchRoute(
-        args,
-        tsRestApiContracts.getDraftProject,
-      );
+      const draftMatch = matchRoute(args, tsRestApiContracts.getDraftProject);
       if (draftMatch) {
-        const slug = draftMatch.get("slug")!;
-        const row = findProject(db, slug);
-        if (!row) return notFound("Project not found");
-        return { status: 200, body: toDetails(row), headers: new Headers() };
+        const response = await getProjectHandler(data, draftMatch.get("slug")!, "draft");
+        return { ...response, headers: new Headers() };
       }
 
-      // --- Private: publish ---
-
-      const publishMatch = matchRoute(
-        args,
-        tsRestApiContracts.publishVersion,
-      );
+      const publishMatch = matchRoute(args, tsRestApiContracts.publishVersion);
       if (publishMatch) {
-        const slug = publishMatch.get("slug")!;
-        const now = new Date().toISOString();
-        db.run(
-          "UPDATE projects SET publishedRevision = draftRevision, draftRevision = draftRevision + 1, updatedAt = ? WHERE slug = ?",
-          [now, slug],
-        );
-        return { status: 204, body: undefined, headers: new Headers() };
+        const response = await publishProjectHandler(data, publishMatch.get("slug")!);
+        return { ...response, headers: new Headers() };
       }
 
-      // Unhandled route
       return notFound(
         `Browser backend route not implemented: ${args.method} ${args.path}`,
       );

@@ -12,15 +12,26 @@ import { noContent, nok, ok } from "@controllers/ts-rest/httpResponses";
 import { Readable } from "node:stream";
 import { RouterImplementation } from "@ts-rest/express/src/lib/types";
 import { ProjectLatestRevisions } from "@shared/domain/readModels/project/ProjectRevision";
+import {
+  getBadgesHandler,
+  getCategoriesHandler,
+  getLatestPublishedFileHandler,
+  getProjectHandler,
+  getProjectSummariesHandler,
+  getStatsHandler,
+  pingHandler,
+} from "@shared/api/backendCoreHandlers";
 
 const createFilesRouter = (badgeHubData: BadgeHubData) => {
   const filesRouter: RouterImplementation<typeof publicFilesContracts> = {
     getLatestPublishedFile: async ({ params: { slug, filePath }, res }) => {
-      const file = await badgeHubData.getFileContents(slug, "latest", filePath);
-      if (!file) {
-        return nok(404, `No app with slug '${slug}' found`);
-      }
-      const data = Readable.from(file);
+      const response = await getLatestPublishedFileHandler(
+        badgeHubData,
+        slug,
+        filePath
+      );
+      if (response.status !== 200) return response;
+      const data = Readable.from(response.body);
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${filePath}"`
@@ -54,39 +65,10 @@ const createFilesRouter = (badgeHubData: BadgeHubData) => {
 const createProjectRouter = (badgeHubData: BadgeHubData) => {
   const projectRouter: RouterImplementation<typeof publicProjectContracts> = {
     getProject: async ({ params: { slug } }) => {
-      const details = await badgeHubData.getProject(slug, "latest");
-      if (!details) {
-        return nok(404, `No public app with slug '${slug}' found`);
-      }
-      return ok(details);
+      return getProjectHandler(badgeHubData, slug, "latest");
     },
-    getProjectSummaries: async ({
-      query: {
-        pageStart,
-        pageLength,
-        badge,
-        category,
-        search,
-        slugs: projectSlugsString,
-        userId,
-        orderBy,
-      },
-    }) => {
-      const projectSlugs = projectSlugsString?.split(",") || [];
-      const data = await badgeHubData.getProjectSummaries(
-        {
-          slugs: projectSlugs,
-          pageStart,
-          pageLength,
-          badge,
-          category,
-          search,
-          userId,
-          orderBy: orderBy ?? "published_at",
-        },
-        "latest"
-      );
-      return ok(data);
+    getProjectSummaries: async ({ query }) => {
+      return getProjectSummariesHandler(badgeHubData, query, "latest");
     },
     getProjectLatestRevisions: async ({ query, res }) => {
       const slugs = (query.slugs && query.slugs?.split(",")) || undefined;
@@ -129,24 +111,10 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
 
 const createPublicOtherRouter = (badgeHubData: BadgeHubData) => {
   const otherRouter: RouterImplementation<typeof publicOtherContracts> = {
-    getBadges: async () => {
-      const data = await badgeHubData.getBadges();
-      return ok(data);
-    },
-    getCategories: async () => {
-      const data = await badgeHubData.getCategories();
-      return ok(data);
-    },
-    ping: async ({ query: { id, mac } }) => {
-      if (id) {
-        await badgeHubData.registerBadge(id, mac);
-      }
-      return ok("pong");
-    },
-    getStats: async () => {
-      const data = await badgeHubData.getStats();
-      return ok(data);
-    },
+    getBadges: async () => getBadgesHandler(badgeHubData),
+    getCategories: async () => getCategoriesHandler(badgeHubData),
+    ping: async ({ query: { id, mac } }) => pingHandler(badgeHubData, id, mac),
+    getStats: async () => getStatsHandler(badgeHubData),
   };
   return otherRouter;
 };
