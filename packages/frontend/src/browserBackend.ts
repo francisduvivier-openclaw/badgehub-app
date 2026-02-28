@@ -1,4 +1,5 @@
 import initSqlJs, { type Database } from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { ApiFetcherArgs, initClient } from "@ts-rest/core";
 import { tsRestApiContracts } from "@shared/contracts/restContracts.ts";
 import { matchRoute } from "@api/routeContractMatch.ts";
@@ -167,8 +168,7 @@ function toDetails(row: ProjectRow): ProjectDetails {
 
 async function createBackendDb(): Promise<Database> {
   const SQL = await initSqlJs({
-    locateFile: (file: string) =>
-      `https://cdn.jsdelivr.net/npm/sql.js@1.12.0/dist/${file}`,
+    locateFile: () => sqlWasmUrl,
   });
   const db = new SQL.Database();
   seed(db);
