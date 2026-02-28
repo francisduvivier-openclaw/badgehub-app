@@ -49,35 +49,54 @@ function seed(db: Database) {
     );
   `);
 
-  const now = new Date().toISOString();
-  const metadata = {
-    name: "Demo App",
-    description: "Preview app backed by in-browser sqlite",
-    categories: [PREVIEW_CATEGORY],
-    badges: [PREVIEW_BADGE],
-    author: PREVIEW_AUTHOR,
-  };
+  const demoProjects = [
+    "demo-app",
+    "codecraft",
+    "pixelpulse",
+    "bitblast",
+    "nanogames",
+    "circuitforge",
+    "bytebash",
+    "sparkscript",
+    "logicland",
+    "gamegenius",
+  ];
 
-  db.run(
-    `INSERT OR IGNORE INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      "demo-app",
-      metadata.name,
-      metadata.description,
-      PREVIEW_CATEGORY,
-      JSON.stringify(metadata.badges),
-      metadata.author,
-      JSON.stringify(metadata),
-      now,
-      now,
-    ],
-  );
+  demoProjects.forEach((slug, index) => {
+    const now = new Date(Date.now() - index * 86_400_000).toISOString();
+    const badge = index % 2 === 0 ? "why2025" : "mch2022";
+    const metadata = {
+      name: slug
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" "),
+      description: `Preview app ${slug} backed by in-browser sqlite`,
+      categories: [PREVIEW_CATEGORY],
+      badges: [badge],
+      author: PREVIEW_AUTHOR,
+    };
 
-  db.run(
-    `INSERT OR IGNORE INTO project_files (slug, revision, filePath, content) VALUES (?, ?, ?, ?)`,
-    ["demo-app", 1, "main.py", "print('hello from github pages preview')\n"],
-  );
+    db.run(
+      `INSERT OR IGNORE INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        slug,
+        metadata.name,
+        metadata.description,
+        PREVIEW_CATEGORY,
+        JSON.stringify(metadata.badges),
+        metadata.author,
+        JSON.stringify(metadata),
+        now,
+        now,
+      ],
+    );
+
+    db.run(
+      `INSERT OR IGNORE INTO project_files (slug, revision, filePath, content) VALUES (?, ?, ?, ?)`,
+      [slug, 1, "main.py", `print('hello from ${slug} preview')\n`],
+    );
+  });
 }
 
 function firstRow<T extends Record<string, unknown>>(
