@@ -39,7 +39,8 @@ function getPathValues(
   return pathValues;
 }
 
-type ApiRoute = (typeof tsRestApiContracts)[keyof typeof tsRestApiContracts];
+export type ApiRoute =
+  (typeof tsRestApiContracts)[keyof typeof tsRestApiContracts];
 
 export const matchRoute = (args: ApiFetcherArgs, routeContract: ApiRoute) => {
   return (

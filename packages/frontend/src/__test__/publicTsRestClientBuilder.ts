@@ -1,7 +1,7 @@
 import { getProjectsQuerySchema } from "@shared/contracts/publicRestContracts.ts";
 import { publicTsRestClient as defaultTsRestClient } from "@api/tsRestClient.ts";
 import { DummyApp, dummyApps } from "@__test__/fixtures";
-import { matchRoute } from "@__test__/routeContractMatch.ts";
+import { matchRoute } from "@api/routeContractMatch.ts";
 import { tsRestApiContracts } from "@shared/contracts/restContracts.ts";
 import { ApiFetcherArgs, initClient } from "@ts-rest/core";
 
