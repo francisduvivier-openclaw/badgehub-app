@@ -19,8 +19,8 @@ import {
 } from "@shared/api/backendCoreHandlers.ts";
 
 const PREVIEW_AUTHOR = "preview-user";
-const PREVIEW_BADGE = "fri3d-badge";
-const PREVIEW_CATEGORY = "tools";
+const PREVIEW_BADGE = "why2025";
+const PREVIEW_CATEGORY = "Default";
 
 function seed(db: Database) {
   db.run(`
