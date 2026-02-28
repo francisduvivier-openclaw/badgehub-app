@@ -142,6 +142,21 @@ function toSummary(row: ProjectRow): ProjectSummary {
   };
 }
 
+function fallbackSummary(): ProjectSummary {
+  return {
+    slug: "demo-app",
+    idp_user_id: PREVIEW_AUTHOR,
+    name: "Demo App",
+    description: "Preview app backed by in-browser sqlite",
+    categories: [PREVIEW_CATEGORY],
+    badges: [PREVIEW_BADGE],
+    revision: 1,
+    published_at: new Date().toISOString(),
+    installs: 0,
+    license_type: undefined,
+  };
+}
+
 function toDetails(row: ProjectRow): ProjectDetails {
   const metadata = JSON.parse(row.metadataJson) as Record<string, unknown>;
   return {
@@ -300,12 +315,43 @@ export function createBrowserBackedClient() {
 
       if (matchRoute(args, tsRestApiContracts.getProjectSummaries)) {
         const response = await getProjectSummariesHandler(data, args.rawQuery ?? {});
+        if (response.status === 200 && response.body.length === 0) {
+          return { status: 200, body: [fallbackSummary()], headers: new Headers() };
+        }
         return { ...response, headers: new Headers() };
       }
 
       const projectMatch = matchRoute(args, tsRestApiContracts.getProject);
       if (projectMatch) {
-        const response = await getProjectHandler(data, projectMatch.get("slug")!);
+        const slug = projectMatch.get("slug")!;
+        const response = await getProjectHandler(data, slug);
+        if (response.status === 404 && slug === "demo-app") {
+          const summary = fallbackSummary();
+          return {
+            status: 200,
+            body: {
+              slug: summary.slug,
+              idp_user_id: summary.idp_user_id,
+              latest_revision: summary.revision,
+              created_at: summary.published_at,
+              updated_at: summary.published_at,
+              version: {
+                revision: summary.revision,
+                project_slug: summary.slug,
+                published_at: summary.published_at,
+                files: [],
+                app_metadata: {
+                  name: summary.name,
+                  description: summary.description,
+                  categories: summary.categories,
+                  badges: summary.badges,
+                  author: PREVIEW_AUTHOR,
+                },
+              },
+            },
+            headers: new Headers(),
+          };
+        }
         return { ...response, headers: new Headers() };
       }
 
