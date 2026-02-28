@@ -33,11 +33,11 @@ jobs:
         working-directory: packages/frontend
         env:
           VITE_BASE_PATH: /badgehub-app/${{ env.PR_PATH }}/
-          VITE_BADGEHUB_API_BASE_URL: ${{ vars.VITE_BADGEHUB_API_BASE_URL }}
-          VITE_KEYCLOAK_BASE_URL: ${{ vars.VITE_KEYCLOAK_BASE_URL }}
-          VITE_KEYCLOAK_REALM: ${{ vars.VITE_KEYCLOAK_REALM }}
-          VITE_KEYCLOAK_CLIENT_ID: ${{ vars.VITE_KEYCLOAK_CLIENT_ID }}
-          VITE_BADGE_SLUGS: ${{ vars.VITE_BADGE_SLUGS }}
+          VITE_BADGEHUB_API_BASE_URL: ${{ vars.VITE_BADGEHUB_API_BASE_URL || 'https://api.example.invalid' }}
+          VITE_KEYCLOAK_BASE_URL: ${{ vars.VITE_KEYCLOAK_BASE_URL || 'https://auth.example.invalid' }}
+          VITE_KEYCLOAK_REALM: ${{ vars.VITE_KEYCLOAK_REALM || 'badgehub' }}
+          VITE_KEYCLOAK_CLIENT_ID: ${{ vars.VITE_KEYCLOAK_CLIENT_ID || 'badgehub-frontend' }}
+          VITE_BADGE_SLUGS: ${{ vars.VITE_BADGE_SLUGS || 'why2025,mch2022' }}
           VITE_ENABLE_BROWSER_BACKEND: "true"
         run: npm run build
 
