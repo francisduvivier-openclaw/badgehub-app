@@ -4,10 +4,7 @@ import { tsRestApiContracts } from "@shared/contracts/restContracts.ts";
 import Keycloak from "keycloak-js";
 import { createBrowserBackedClient } from "@browserBackend.ts";
 
-// Canonical client type — derived from the contracts, not from any specific instance
-export type TsRestClient = ReturnType<
-  typeof initClient<typeof tsRestApiContracts>
->;
+export type TsRestClient = ReturnType<typeof createBrowserBackedClient>;
 
 const BROWSER_BACKEND_ENABLED =
   import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true";
