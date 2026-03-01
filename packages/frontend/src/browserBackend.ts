@@ -96,7 +96,7 @@ async function seed(db: Database) {
       const slug = projectName.toLowerCase();
       const now = new Date().toISOString();
       db.run(
-        "UPDATE projects SET publishedRevision = draftRevision, draftRevision = draftRevision + 1, updatedAt = ? WHERE slug = ?",
+        "UPDATE projects SET updatedAt = ? WHERE slug = ?",
         [now, slug],
       );
     },
@@ -168,21 +168,6 @@ function toSummary(row: ProjectRow): ProjectSummary {
   };
 }
 
-function fallbackSummary(): ProjectSummary {
-  return {
-    slug: "demo-app",
-    idp_user_id: PREVIEW_AUTHOR,
-    name: "Demo App",
-    description: "Preview app backed by in-browser sqlite",
-    categories: [PREVIEW_CATEGORY],
-    badges: [PREVIEW_BADGE],
-    revision: 1,
-    published_at: new Date().toISOString(),
-    installs: 0,
-    license_type: undefined,
-  };
-}
-
 function toDetails(row: ProjectRow): ProjectDetails {
   const metadata = JSON.parse(row.metadataJson) as Record<string, unknown>;
   return {
@@ -233,11 +218,27 @@ function findProject(db: Database, slug: string): ProjectRow | null {
 async function createDataAccess(): Promise<BackendDataAccess> {
   const db = await getDb();
   return {
-    getBadges: async () => [PREVIEW_BADGE],
-    getCategories: async () => [PREVIEW_CATEGORY],
+    getBadges: async () => {
+      const rows = allRows<{ badges: string }>(db, "SELECT badges FROM projects");
+      const badges = new Set<string>();
+      for (const row of rows) {
+        for (const badge of JSON.parse(row.badges) as string[]) badges.add(badge);
+      }
+      return Array.from(badges);
+    },
+    getCategories: async () => {
+      const rows = allRows<{ category: string }>(db, "SELECT DISTINCT category FROM projects");
+      return rows.map((row) => row.category);
+    },
     registerBadge: async () => {},
     getStats: async () => {
       const row = firstRow<{ n: number }>(db, "SELECT COUNT(*) AS n FROM projects");
+      const authorRow = firstRow<{ n: number }>(db, "SELECT COUNT(DISTINCT authorId) AS n FROM projects");
+      const badgeRows = allRows<{ badges: string }>(db, "SELECT badges FROM projects");
+      const badges = new Set<string>();
+      for (const badgeRow of badgeRows) {
+        for (const badge of JSON.parse(badgeRow.badges) as string[]) badges.add(badge);
+      }
       return {
         projects: row?.n ?? 0,
         installs: 0,
@@ -246,8 +247,8 @@ async function createDataAccess(): Promise<BackendDataAccess> {
         installed_projects: 0,
         launched_projects: 0,
         crashed_projects: 0,
-        authors: 0,
-        badges: 0,
+        authors: authorRow?.n ?? 0,
+        badges: badges.size,
       };
     },
     getProjectSummaries: async () => {
@@ -303,7 +304,7 @@ async function createDataAccess(): Promise<BackendDataAccess> {
     publishVersion: async (slug) => {
       const now = new Date().toISOString();
       db.run(
-        "UPDATE projects SET publishedRevision = draftRevision, draftRevision = draftRevision + 1, updatedAt = ? WHERE slug = ?",
+        "UPDATE projects SET updatedAt = ? WHERE slug = ?",
         [now, slug],
       );
     },
@@ -341,9 +342,6 @@ export function createBrowserBackedClient() {
 
       if (matchRoute(args, tsRestApiContracts.getProjectSummaries)) {
         const response = await getProjectSummariesHandler(data, args.rawQuery ?? {});
-        if (response.status === 200 && response.body.length === 0) {
-          return { status: 200, body: [fallbackSummary()], headers: new Headers() };
-        }
         return { ...response, headers: new Headers() };
       }
 
@@ -351,33 +349,6 @@ export function createBrowserBackedClient() {
       if (projectMatch) {
         const slug = projectMatch.get("slug")!;
         const response = await getProjectHandler(data, slug);
-        if (response.status === 404 && slug === "demo-app") {
-          const summary = fallbackSummary();
-          return {
-            status: 200,
-            body: {
-              slug: summary.slug,
-              idp_user_id: summary.idp_user_id,
-              latest_revision: summary.revision,
-              created_at: summary.published_at,
-              updated_at: summary.published_at,
-              version: {
-                revision: summary.revision,
-                project_slug: summary.slug,
-                published_at: summary.published_at,
-                files: [],
-                app_metadata: {
-                  name: summary.name,
-                  description: summary.description,
-                  categories: summary.categories,
-                  badges: summary.badges,
-                  author: PREVIEW_AUTHOR,
-                },
-              },
-            },
-            headers: new Headers(),
-          };
-        }
         return { ...response, headers: new Headers() };
       }
 
