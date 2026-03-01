@@ -41,6 +41,7 @@ export const AppGridWithFilterAndPagination = ({
   useEffect(() => {
     setLoading(true);
     setError(null);
+    setCurrentPage(1);
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -48,7 +49,7 @@ export const AppGridWithFilterAndPagination = ({
       appFetcher({ badge, category })
         .then((res) => {
           if (cancelled) return;
-          if (typeof res === "object") {
+          if (Array.isArray(res)) {
             setApps(res);
             setError(null);
             setLoading(false);
@@ -134,7 +135,7 @@ export const AppGridWithFilterAndPagination = ({
         <AppsGrid apps={paginatedApps} editable={editable} />
       )}
       {/* show pagination if more than one page */}
-      {Math.ceil(filteredSortedApps.length / pageSize) > 1 && (
+      {filteredSortedApps.length > pageSize && (
         <Pagination
           currentPage={currentPage}
           totalPages={Math.ceil(filteredSortedApps.length / pageSize)}
