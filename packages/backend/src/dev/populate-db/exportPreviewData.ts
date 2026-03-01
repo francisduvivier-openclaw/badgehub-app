@@ -1,11 +1,12 @@
 /**
- * Generates packages/frontend/public/preview-data.json from fixture data.
- * The service worker (api-sw.js) fetches this file on install so the frontend
- * PR preview has realistic project data instead of a hardcoded stub list.
+ * Generates packages/frontend/public/preview-data.sqlite from fixture data.
+ * The service worker (api-sw.js) fetches this file on install and opens it
+ * with sql.js so the frontend PR preview has realistic project data, backed
+ * by the same SQLiteBadgeHubMetadata queries as the real backend.
  *
  * Usage: npm run export-preview-data --workspace=packages/backend
  */
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,12 +30,13 @@ const OUT_PATH = path.resolve(
   "../../../..",
   "frontend",
   "public",
-  "preview-data.json"
+  "preview-data.sqlite"
 );
 
 async function main() {
   const tempDir = mkdtempSync(path.join(tmpdir(), "badgehub-preview-export-"));
-  const rawDb = new DatabaseSync(path.join(tempDir, "preview.sqlite"));
+  const dbPath = path.join(tempDir, "preview.sqlite");
+  const rawDb = new DatabaseSync(dbPath);
   rawDb.exec(BADGEHUB_SCHEMA_SQL);
 
   const adapter = new NodeSqliteAdapter(rawDb);
@@ -81,20 +83,10 @@ async function main() {
       );
     }
 
-    console.log("Querying data…");
-    const summaries = await metadata.getProjectSummaries(
-      { orderBy: "installs" },
-      "latest"
-    );
-    const stats = await metadata.getStats();
-    const badges = await metadata.getBadges();
-    const categories = await metadata.getCategories();
-
-    const previewData = { summaries, stats, badges, categories };
-    writeFileSync(OUT_PATH, JSON.stringify(previewData, null, 2) + "\n");
-    console.log(
-      `Wrote ${summaries.length} summaries → ${OUT_PATH}`
-    );
+    // Close the database before copying so all pages are flushed to disk.
+    rawDb.close();
+    copyFileSync(dbPath, OUT_PATH);
+    console.log(`Wrote SQLite database → ${OUT_PATH}`);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }

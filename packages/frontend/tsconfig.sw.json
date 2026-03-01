@@ -1,0 +1,19 @@
+{
+  "extends": "../shared/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2020", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@shared/*": ["../shared/src/*"],
+      "@*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/api-sw.ts",
+    "src/api/PreviewBadgeHubData.ts",
+    "src/db/SqlJsAdapter.ts",
+    "src/sqljs.d.ts"
+  ]
+}

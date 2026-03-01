@@ -90,6 +90,7 @@ if (
   navigator.serviceWorker
     .register(`${import.meta.env.BASE_URL}api-sw.js`, {
       scope: import.meta.env.BASE_URL,
+      type: "module",
     })
     .catch((error) => {
       console.error("Failed to register API service worker", error);
