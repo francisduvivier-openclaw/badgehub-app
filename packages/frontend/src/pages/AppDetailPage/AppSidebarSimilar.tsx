@@ -1,9 +1,6 @@
 import React from "react";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
-import {
-  publicTsRestClient as defaultTsRestClient,
-  type TsRestClient,
-} from "../../api/tsRestClient.ts";
+import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import { ERROR_ICON_URL } from "@config.ts";
 import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries.ts";
 import { useAsyncResource } from "@hooks/useAsyncResource.ts";
@@ -67,7 +64,7 @@ const SkeletonLoader: React.FC = () => (
  */
 const AppSidebarSimilar: React.FC<{
   project: ProjectDetails;
-  tsRestClient: TsRestClient;
+  tsRestClient: typeof defaultTsRestClient;
 }> = ({ project, tsRestClient = defaultTsRestClient }) => {
   const { data: similarProjects, error, loading } = useAsyncResource(
     async () => {
@@ -81,9 +78,8 @@ const AppSidebarSimilar: React.FC<{
         },
       });
       if (result.status === 200) {
-        return result.body
-          .filter((p: ProjectSummary) => p.slug !== project.slug)
-          .slice(0, 3);
+        const summaries = result.body as ProjectSummary[];
+        return summaries.filter((p: ProjectSummary) => p.slug !== project.slug).slice(0, 3);
       }
       throw new Error(publicProjectErrorFromStatus(result.status));
     },

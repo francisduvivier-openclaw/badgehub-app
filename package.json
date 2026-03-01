@@ -30,7 +30,6 @@
     "validate": "npm run lint && npm run check:ts && npm run build && npm run test"
   },
   "dependencies": {
-    "@ts-rest/core": "^3.53.0-rc.1",
     "zod": "^3.25.42"
   },
   "devDependencies": {
