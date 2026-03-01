@@ -519,7 +519,7 @@ export class SQLiteBadgeHubMetadata {
   async getProjectApiTokenMetadata(
     slug: string
   ): Promise<{ created_at: string; last_used_at: string | null } | undefined> {
-    return this.db.get`SELECT created_at, last_used_at FROM project_api_token WHERE project_slug = ${slug}`;
+    return this.db.get`SELECT created_at, last_used_at FROM project_api_token WHERE project_slug = ${slug}` as { created_at: string; last_used_at: string | null } | undefined;
   }
 
   async createProjectApiToken(slug: string, tokenHash: string): Promise<void> {

@@ -22,7 +22,6 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  rawDb.close();
   await rm(tempDir, { recursive: true, force: true });
 });
 
