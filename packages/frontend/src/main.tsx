@@ -12,7 +12,6 @@ import { TodoPage } from "@pages/TodoPage.tsx";
 import MyProjectsPage from "@pages/MyProjectsPage/MyProjectsPage.tsx";
 import { IS_DEV_ENVIRONMENT } from "@config.ts";
 import { useTitle } from "@hooks/useTitle.ts";
-import { installBrowserBackendIfNeeded } from "@browserBackend.ts";
 
 const AppDetailWrapper = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -31,35 +30,25 @@ const AppEditPageWrapper = () => {
   return <AppEditPage slug={slug} />;
 };
 
-async function bootstrap() {
-  try {
-    await installBrowserBackendIfNeeded();
-  } catch (error) {
-    console.error("Failed to initialize browser backend preview:", error);
-  }
-
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <HashRouter>
-        <SessionProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/page/project/:slug" element={<AppDetailWrapper />} />
-            <Route
-              path="/page/project/:slug/edit"
-              element={<AppEditPageWrapper />}
-            />
-            <Route path="/page/my-projects" element={<MyProjectsPage />} />
-            <Route path="/page/todo" element={<TodoPage />} />
-            <Route path="/page/create-project" element={<CreateProjectPage />} />
-          </Routes>
-        </SessionProvider>
-      </HashRouter>
-    </StrictMode>
-  );
-}
-
-void bootstrap();
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <HashRouter>
+      <SessionProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/page/project/:slug" element={<AppDetailWrapper />} />
+          <Route
+            path="/page/project/:slug/edit"
+            element={<AppEditPageWrapper />}
+          />
+          <Route path="/page/my-projects" element={<MyProjectsPage />} />
+          <Route path="/page/todo" element={<TodoPage />} />
+          <Route path="/page/create-project" element={<CreateProjectPage />} />
+        </Routes>
+      </SessionProvider>
+    </HashRouter>
+  </StrictMode>
+);
 
 // Floating toggle button logic
 function setupTodoToggleButton() {
@@ -92,4 +81,17 @@ function setupTodoToggleButton() {
 
 if (IS_DEV_ENVIRONMENT) {
   setupTodoToggleButton();
+}
+
+if (
+  import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true" &&
+  "serviceWorker" in navigator
+) {
+  navigator.serviceWorker
+    .register(`${import.meta.env.BASE_URL}api-sw.js`, {
+      scope: import.meta.env.BASE_URL,
+    })
+    .catch((error) => {
+      console.error("Failed to register API service worker", error);
+    });
 }

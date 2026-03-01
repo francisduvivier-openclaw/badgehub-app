@@ -566,13 +566,13 @@ describe(
         expect(stats.authors).toBeGreaterThan(0);
         expect(Object.keys(stats)).toMatchInlineSnapshot(`
           [
-            "crashed_projects",
+            "projects",
+            "installs",
+            "launches",
             "crashes",
             "installed_projects",
             "launched_projects",
-            "launches",
-            "projects",
-            "installs",
+            "crashed_projects",
             "authors",
             "badges",
           ]

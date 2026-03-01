@@ -1,25 +1,34 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { NodeSqliteAdapter } from "@db/NodeSqliteAdapter";
+import { SQLiteBadgeHubMetadata } from "@db/SQLiteBadgeHubMetadata";
+import { BADGEHUB_SCHEMA_SQL } from "@shared/db/sqliteSchema";
 
 let tempDir: string;
+let rawDb: DatabaseSync;
+
+function makeMetadata() {
+  rawDb.exec(BADGEHUB_SCHEMA_SQL);
+  const adapter = new NodeSqliteAdapter(rawDb);
+  return new SQLiteBadgeHubMetadata(adapter, () => "http://localhost/test");
+}
 
 beforeEach(async () => {
   tempDir = await mkdtemp(path.join(tmpdir(), "badgehub-sqlite-meta-"));
-  process.env.DATABASE_ENGINE = "sqlite";
-  process.env.SQLITE_DB_PATH = path.join(tempDir, "badgehub.sqlite");
-  vi.resetModules();
+  rawDb = new DatabaseSync(path.join(tempDir, "badgehub.sqlite"));
 });
 
 afterEach(async () => {
+  rawDb.close();
   await rm(tempDir, { recursive: true, force: true });
 });
 
 describe("SQLiteBadgeHubMetadata", () => {
   it("returns badges and categories from shared config", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
 
     const badges = await metadata.getBadges();
     const categories = await metadata.getCategories();
@@ -29,8 +38,7 @@ describe("SQLiteBadgeHubMetadata", () => {
   });
 
   it("stores report events, badges and projects in sqlite stats", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
 
     await metadata.insertProject({ slug: "project-a", idp_user_id: "user-1" });
     await metadata.insertProject({ slug: "project-b", idp_user_id: "user-2" });
@@ -57,9 +65,7 @@ describe("SQLiteBadgeHubMetadata", () => {
   });
 
   it("updates project rows with allowed columns only", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const { getSqliteDb } = await import("@db/sqliteDatabase");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
 
     await metadata.insertProject({ slug: "project-upd", idp_user_id: "user-1" });
     await metadata.updateProject("project-upd", {
@@ -69,7 +75,7 @@ describe("SQLiteBadgeHubMetadata", () => {
       made_up_column: "ignore-me",
     });
 
-    const row = getSqliteDb()
+    const row = rawDb
       .prepare("SELECT git, latest_revision FROM projects WHERE slug = ?")
       .get("project-upd") as { git: string; latest_revision: number };
 
@@ -78,8 +84,7 @@ describe("SQLiteBadgeHubMetadata", () => {
   });
 
   it("manages project api token lifecycle", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
 
     await metadata.createProjectApiToken("project-a", "hash-1");
     expect(await metadata.getProjectApiTokenHash("project-a")).toBe("hash-1");
@@ -93,8 +98,7 @@ describe("SQLiteBadgeHubMetadata", () => {
   });
 
   it("writes draft metadata + files and reads them through getProject/getFileMetadata", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
 
     await metadata.insertProject({ slug: "project-files", idp_user_id: "user-1" });
     await metadata.updateDraftMetadata("project-files", {
@@ -112,7 +116,7 @@ describe("SQLiteBadgeHubMetadata", () => {
     );
 
     const file = await metadata.getFileMetadata("project-files", "draft", "icons/app.png");
-    expect(file?.full_path).toBe(path.join("icons", "app.png"));
+    expect(file?.full_path).toBe("icons/app.png");
 
     const project = await metadata.getProject("project-files", "draft");
     expect(project?.version.app_metadata.name).toBe("Project Files");
@@ -125,8 +129,7 @@ describe("SQLiteBadgeHubMetadata", () => {
   }, 15000);
 
   it("returns project summaries with filtering", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
 
     await metadata.insertProject({ slug: "summary-a", idp_user_id: "user-1" });
     await metadata.updateDraftMetadata("summary-a", {
@@ -147,8 +150,7 @@ describe("SQLiteBadgeHubMetadata", () => {
   });
 
   it("refreshReports is a no-op", async () => {
-    const { SQLiteBadgeHubMetadata } = await import("@db/SQLiteBadgeHubMetadata");
-    const metadata = new SQLiteBadgeHubMetadata();
+    const metadata = makeMetadata();
     await expect(metadata.refreshReports()).resolves.toBeUndefined();
   });
 });
