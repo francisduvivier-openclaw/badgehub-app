@@ -50,7 +50,7 @@ export function tsRestClientWithApps(apps: DummyApp[] = dummyApps) {
 export function tsRestClientWithError() {
   return {
     ...defaultTsRestClient,
-    async getProject() {
+    async getProjectSummaries() {
       throw new Error("API error");
     },
   } as typeof defaultTsRestClient;
