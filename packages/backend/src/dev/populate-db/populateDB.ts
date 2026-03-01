@@ -2,80 +2,13 @@ import { getSqliteDb } from "@db/sqliteDatabase";
 import { BadgeHubData } from "@domain/BadgeHubData";
 import { createBadgeHubData } from "@domain/createBadgeHubData";
 import { stringToSemiRandomNumber } from "@dev/populate-db/stringToSemiRandomNumber";
-
-import { BADGE_IDS, PROJECT_NAMES, USERS } from "@dev/populate-db/fixtures";
 import {
   createSemiRandomAppdata,
   get1DayAfterSemiRandomUpdatedAt,
   getSemiRandomDates,
 } from "@dev/populate-db/createSemiRandomAppdata";
-
-async function reportSomeDownloads(
-  badgeHubData: BadgeHubData,
-  projectNames: string[]
-) {
-  const projectsWithDownloads = projectNames
-    .slice(0, -3)
-    .map((projectName) => projectName.toLowerCase());
-  const nbDownloads = 500;
-  for (let i = 0; i < nbDownloads; i++) {
-    const semiRandomIndex = await stringToSemiRandomNumber("download" + i);
-    await badgeHubData.reportInstall(
-      projectsWithDownloads[semiRandomIndex % projectsWithDownloads.length]!,
-      1,
-      { id: BADGE_IDS[i % BADGE_IDS.length >> 2] + "-v1" }
-    );
-  }
-  await badgeHubData.refreshReports();
-}
-
-async function registerMostBadges(badgeHubData: BadgeHubData) {
-  for (const badge_id of BADGE_IDS.slice(3)) {
-    await badgeHubData.registerBadge(badge_id, undefined);
-  }
-}
-
-export async function repopulateDB() {
-  const badgeHubData = createBadgeHubData();
-  await cleanTables();
-  const projectSlugs = await insertProjects(badgeHubData);
-  const publishedProjectSlugs = await publishSomeProjects(
-    badgeHubData,
-    projectSlugs
-  );
-  await registerMostBadges(badgeHubData);
-  await reportSomeDownloads(badgeHubData, publishedProjectSlugs);
-}
-
-async function cleanTables() {
-  const db = getSqliteDb();
-  db.exec(`
-    DELETE FROM event_reports;
-    DELETE FROM files;
-    DELETE FROM versions;
-    DELETE FROM project_api_token;
-    DELETE FROM registered_badges;
-    DELETE FROM projects;
-    DELETE FROM sqlite_sequence WHERE name IN ('event_reports', 'files', 'versions');
-  `);
-}
-
-async function publishSomeProjects(
-  badgeHubData: BadgeHubData,
-  projectNames: string[]
-) {
-  const halfOfProjectNames = projectNames.slice(0, projectNames.length >> 1);
-  await Promise.all(
-    halfOfProjectNames.map(async (projectName) => {
-      await badgeHubData.publishVersion(
-        projectName.toLowerCase(),
-        await get1DayAfterSemiRandomUpdatedAt(projectName)
-      );
-      await writeDraftAppFiles(badgeHubData, projectName, "0.0.1");
-    })
-  );
-  return halfOfProjectNames;
-}
+import { SHARED_BADGE_IDS, SHARED_PROJECT_NAMES } from "@shared/dev/populate/populateFixtures";
+import { runSharedPopulate } from "@shared/dev/populate/populateRunner";
 
 const writeDraftAppFiles = async (
   badgeHubData: BadgeHubData,
@@ -103,7 +36,6 @@ const writeDraftAppFiles = async (
     { created_at, updated_at }
   );
 
-  // Upload the icon file if it exists
   if (iconRelativePath && iconBuffer) {
     await badgeHubData.writeDraftFile(
       projectSlug,
@@ -132,20 +64,55 @@ const writeDraftAppFiles = async (
   );
 };
 
-async function insertProjects(badgeHubData: BadgeHubData) {
-  for (const projectName of PROJECT_NAMES) {
-    const semiRandomNumber = await stringToSemiRandomNumber(projectName);
-    const slug = projectName.toLowerCase();
-    const userName = USERS[semiRandomNumber % USERS.length]!;
+async function cleanTables() {
+  const db = getSqliteDb();
+  db.exec(`
+    DELETE FROM event_reports;
+    DELETE FROM files;
+    DELETE FROM versions;
+    DELETE FROM project_api_token;
+    DELETE FROM registered_badges;
+    DELETE FROM projects;
+    DELETE FROM sqlite_sequence WHERE name IN ('event_reports', 'files', 'versions');
+  `);
+}
 
-    const { created_at, updated_at } = await getSemiRandomDates(projectName);
+export async function repopulateDB() {
+  const badgeHubData = createBadgeHubData();
 
-    await badgeHubData.insertProject(
-      { slug, idp_user_id: userName },
-      { created_at, updated_at }
-    );
-    await writeDraftAppFiles(badgeHubData, projectName);
-  }
-
-  return PROJECT_NAMES;
+  await runSharedPopulate({
+    reset: cleanTables,
+    projectNames: SHARED_PROJECT_NAMES,
+    badgeIds: SHARED_BADGE_IDS,
+    createDraftProject: async (projectName) => {
+      const semiRandomNumber = await stringToSemiRandomNumber(projectName);
+      const slug = projectName.toLowerCase();
+      const { created_at, updated_at } = await getSemiRandomDates(projectName);
+      await badgeHubData.insertProject(
+        {
+          slug,
+          idp_user_id: `seed-user-${semiRandomNumber % 99}`,
+        },
+        { created_at, updated_at }
+      );
+      await writeDraftAppFiles(badgeHubData, projectName);
+    },
+    publishProject: async (projectName) => {
+      const slug = projectName.toLowerCase();
+      await badgeHubData.publishVersion(
+        slug,
+        await get1DayAfterSemiRandomUpdatedAt(projectName)
+      );
+      await writeDraftAppFiles(badgeHubData, projectName, "0.0.1");
+    },
+    registerBadge: async (badgeId) => {
+      await badgeHubData.registerBadge(badgeId, undefined);
+    },
+    reportInstall: async (projectSlug, badgeId) => {
+      await badgeHubData.reportInstall(projectSlug, 1, { id: badgeId });
+    },
+    refreshReports: async () => {
+      await badgeHubData.refreshReports();
+    },
+  });
 }

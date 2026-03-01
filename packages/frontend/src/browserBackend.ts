@@ -17,12 +17,14 @@ import {
   publishProjectHandler,
   type BackendDataAccess,
 } from "@shared/api/backendCoreHandlers.ts";
+import { SHARED_BADGE_IDS, SHARED_PROJECT_NAMES } from "@shared/dev/populate/populateFixtures.ts";
+import { runSharedPopulate } from "@shared/dev/populate/populateRunner.ts";
 
 const PREVIEW_AUTHOR = "preview-user";
 const PREVIEW_BADGE = "why2025";
 const PREVIEW_CATEGORY = "Default";
 
-function seed(db: Database) {
+async function seed(db: Database) {
   db.run(`
     CREATE TABLE IF NOT EXISTS projects (
       slug TEXT PRIMARY KEY,
@@ -49,53 +51,58 @@ function seed(db: Database) {
     );
   `);
 
-  const demoProjects = [
-    "demo-app",
-    "codecraft",
-    "pixelpulse",
-    "bitblast",
-    "nanogames",
-    "circuitforge",
-    "bytebash",
-    "sparkscript",
-    "logicland",
-    "gamegenius",
-  ];
+  await runSharedPopulate({
+    reset: async () => {
+      db.run("DELETE FROM project_files");
+      db.run("DELETE FROM projects");
+    },
+    projectNames: SHARED_PROJECT_NAMES,
+    badgeIds: SHARED_BADGE_IDS,
+    createDraftProject: async (projectName) => {
+      const slug = projectName.toLowerCase();
+      const index = SHARED_PROJECT_NAMES.indexOf(projectName);
+      const now = new Date(Date.now() - Math.max(index, 0) * 86_400_000).toISOString();
+      const badge = index % 2 === 0 ? "why2025" : "mch2022";
+      const metadata = {
+        name: projectName,
+        description: `Preview app ${slug} backed by in-browser sqlite`,
+        categories: [PREVIEW_CATEGORY],
+        badges: [badge],
+        author: PREVIEW_AUTHOR,
+      };
 
-  demoProjects.forEach((slug, index) => {
-    const now = new Date(Date.now() - index * 86_400_000).toISOString();
-    const badge = index % 2 === 0 ? "why2025" : "mch2022";
-    const metadata = {
-      name: slug
-        .split("-")
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(" "),
-      description: `Preview app ${slug} backed by in-browser sqlite`,
-      categories: [PREVIEW_CATEGORY],
-      badges: [badge],
-      author: PREVIEW_AUTHOR,
-    };
+      db.run(
+        `INSERT OR IGNORE INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          slug,
+          metadata.name,
+          metadata.description,
+          PREVIEW_CATEGORY,
+          JSON.stringify(metadata.badges),
+          metadata.author,
+          JSON.stringify(metadata),
+          now,
+          now,
+        ],
+      );
 
-    db.run(
-      `INSERT OR IGNORE INTO projects (slug, name, description, category, badges, authorId, metadataJson, updatedAt, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        slug,
-        metadata.name,
-        metadata.description,
-        PREVIEW_CATEGORY,
-        JSON.stringify(metadata.badges),
-        metadata.author,
-        JSON.stringify(metadata),
-        now,
-        now,
-      ],
-    );
-
-    db.run(
-      `INSERT OR IGNORE INTO project_files (slug, revision, filePath, content) VALUES (?, ?, ?, ?)`,
-      [slug, 1, "main.py", `print('hello from ${slug} preview')\n`],
-    );
+      db.run(
+        `INSERT OR IGNORE INTO project_files (slug, revision, filePath, content) VALUES (?, ?, ?, ?)`,
+        [slug, 1, "main.py", `print('hello from ${slug} preview')\n`],
+      );
+    },
+    publishProject: async (projectName) => {
+      const slug = projectName.toLowerCase();
+      const now = new Date().toISOString();
+      db.run(
+        "UPDATE projects SET publishedRevision = draftRevision, draftRevision = draftRevision + 1, updatedAt = ? WHERE slug = ?",
+        [now, slug],
+      );
+    },
+    registerBadge: async () => {},
+    reportInstall: async () => {},
+    refreshReports: async () => {},
   });
 }
 
@@ -205,7 +212,7 @@ async function createBackendDb(): Promise<Database> {
     locateFile: () => sqlWasmUrl,
   });
   const db = new SQL.Database();
-  seed(db);
+  await seed(db);
   return db;
 }
 

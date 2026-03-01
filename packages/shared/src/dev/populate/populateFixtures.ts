@@ -1,0 +1,28 @@
+export const SHARED_PROJECT_NAMES = [
+  "CodeCraft",
+  "PixelPulse",
+  "BitBlast",
+  "NanoGames",
+  "ElectraPlay",
+  "CircuitForge",
+  "ByteBash",
+  "CodeCanvas",
+  "SparkScript",
+  "LogicLand",
+  "MicroArcade",
+  "CodeCraze",
+  "GameGenius",
+  "PixelPal",
+  "Electronica",
+  "CodeQuest",
+  "CircuitCraft",
+  "ByteBeat",
+  "NanoNexus",
+  "BitBox",
+  "CircuitChaos",
+  "CodeCrafter",
+  "PixelPioneer",
+  "LogicLab",
+];
+
+export const SHARED_BADGE_IDS = Array.from({ length: 50 }, (_, i) => `badgeid${i}`);
