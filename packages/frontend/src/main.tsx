@@ -82,3 +82,16 @@ function setupTodoToggleButton() {
 if (IS_DEV_ENVIRONMENT) {
   setupTodoToggleButton();
 }
+
+if (
+  import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true" &&
+  "serviceWorker" in navigator
+) {
+  navigator.serviceWorker
+    .register(`${import.meta.env.BASE_URL}api-sw.js`, {
+      scope: import.meta.env.BASE_URL,
+    })
+    .catch((error) => {
+      console.error("Failed to register API service worker", error);
+    });
+}

@@ -1,6 +1,9 @@
 import { BADGHUB_API_V3_URL } from "@config.ts";
 import Keycloak from "keycloak-js";
 
+const BROWSER_BACKEND_ENABLED =
+  import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true";
+
 type RequestArgs = {
   params?: Record<string, string | number>;
   query?: Record<string, unknown>;
@@ -115,7 +118,8 @@ function createApiClient(config?: {
   baseUrl?: string;
   baseHeaders?: Record<string, string | undefined>;
 }): ApiClient {
-  const baseUrl = config?.baseUrl ?? BADGHUB_API_V3_URL;
+  const baseUrl =
+    config?.baseUrl ?? (BROWSER_BACKEND_ENABLED ? "/api/v3" : BADGHUB_API_V3_URL);
   const baseHeaders = config?.baseHeaders ?? {};
 
   const client = {} as ApiClient;
