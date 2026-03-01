@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate preview data
+        run: npm run export-preview-data --workspace=packages/backend
+
       - name: Build frontend for PR preview
         working-directory: packages/frontend
         env:

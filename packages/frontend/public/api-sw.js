@@ -1,36 +1,19 @@
-const SW_VERSION = "v1";
-const PREVIEW_CATEGORY = "Default";
-const PREVIEW_BADGES = ["why2025", "mch2022"];
+const SW_VERSION = "v2";
 
-const projects = [
-  "CodeCraft",
-  "PixelPulse",
-  "BitBlast",
-  "NanoGames",
-  "CircuitForge",
-  "ByteBash",
-  "SparkScript",
-  "LogicLand",
-].map((name, index) => {
-  const slug = name.toLowerCase();
-  const badge = PREVIEW_BADGES[index % PREVIEW_BADGES.length];
-  const publishedAt = new Date(Date.now() - index * 86_400_000).toISOString();
-  return {
-    slug,
-    idp_user_id: "preview-user",
-    name,
-    description: `Preview app ${slug}`,
-    categories: [PREVIEW_CATEGORY],
-    badges: [badge],
-    revision: 1,
-    published_at: publishedAt,
-    installs: 0,
-    license_type: undefined,
-  };
-});
+let previewData = null; // loaded from preview-data.json on install
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    fetch("preview-data.json")
+      .then((r) => r.json())
+      .then((data) => {
+        previewData = data;
+      })
+      .catch((e) => {
+        console.warn("[api-sw] Could not load preview-data.json", e);
+      })
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -52,22 +35,36 @@ self.addEventListener("fetch", (event) => {
 
   const path = url.pathname.slice(apiPrefixIndex + "/api/v3".length);
 
+  if (event.request.method === "GET" && path === "/ping") {
+    event.respondWith(json("pong"));
+    return;
+  }
+
+  if (!previewData) {
+    event.respondWith(
+      json({ reason: "Preview data not loaded yet — try refreshing" }, 503)
+    );
+    return;
+  }
+
+  const { summaries, stats, badges, categories } = previewData;
+
   if (event.request.method === "GET" && path === "/project-summaries") {
     const badge = url.searchParams.get("badge");
     const category = url.searchParams.get("category");
     const userId = url.searchParams.get("userId");
     const search = url.searchParams.get("search")?.toLowerCase();
 
-    let list = projects.slice();
-    if (badge) list = list.filter((p) => p.badges.includes(badge));
-    if (category) list = list.filter((p) => p.categories.includes(category));
+    let list = summaries.slice();
+    if (badge) list = list.filter((p) => p.badges?.includes(badge));
+    if (category) list = list.filter((p) => p.categories?.includes(category));
     if (userId) list = list.filter((p) => p.idp_user_id === userId);
     if (search) {
       list = list.filter(
         (p) =>
           p.slug.includes(search) ||
-          p.name.toLowerCase().includes(search) ||
-          p.description.toLowerCase().includes(search),
+          (p.name ?? "").toLowerCase().includes(search) ||
+          (p.description ?? "").toLowerCase().includes(search)
       );
     }
 
@@ -77,67 +74,55 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.method === "GET" && path.startsWith("/projects/")) {
     const slug = decodeURIComponent(path.split("/")[2] || "");
-    const p = projects.find((x) => x.slug === slug);
-    if (!p) {
-      event.respondWith(json({ reason: `No project with slug '${slug}' found` }, 404));
+    const summary = summaries.find((s) => s.slug === slug);
+    if (!summary) {
+      event.respondWith(
+        json({ reason: `No project with slug '${slug}' found` }, 404)
+      );
       return;
     }
     event.respondWith(
       json({
-        slug: p.slug,
-        idp_user_id: p.idp_user_id,
-        latest_revision: 1,
-        created_at: p.published_at,
-        updated_at: p.published_at,
+        slug: summary.slug,
+        idp_user_id: summary.idp_user_id,
+        latest_revision: summary.revision,
+        created_at: summary.published_at,
+        updated_at: summary.published_at,
         version: {
-          revision: 1,
-          project_slug: p.slug,
-          published_at: p.published_at,
+          revision: summary.revision,
+          project_slug: summary.slug,
+          published_at: summary.published_at,
           files: [],
           app_metadata: {
-            name: p.name,
-            description: p.description,
-            categories: p.categories,
-            badges: p.badges,
-            author: "preview-user",
+            name: summary.name,
+            description: summary.description,
+            categories: summary.categories,
+            badges: summary.badges,
+            author: summary.idp_user_id,
+            license_type: summary.license_type,
           },
         },
-      }),
+      })
     );
     return;
   }
 
   if (event.request.method === "GET" && path === "/badges") {
-    event.respondWith(json(PREVIEW_BADGES));
+    event.respondWith(json(badges));
     return;
   }
 
   if (event.request.method === "GET" && path === "/categories") {
-    event.respondWith(json([PREVIEW_CATEGORY]));
-    return;
-  }
-
-  if (event.request.method === "GET" && path === "/ping") {
-    event.respondWith(json("pong"));
+    event.respondWith(json(categories));
     return;
   }
 
   if (event.request.method === "GET" && path === "/stats") {
-    event.respondWith(
-      json({
-        projects: projects.length,
-        installs: 0,
-        crashes: 0,
-        launches: 0,
-        installed_projects: 0,
-        launched_projects: 0,
-        crashed_projects: 0,
-        authors: 1,
-        badges: PREVIEW_BADGES.length,
-      }),
-    );
+    event.respondWith(json(stats));
     return;
   }
 
-  event.respondWith(json({ reason: `SW route not implemented (${SW_VERSION}): ${path}` }, 404));
+  event.respondWith(
+    json({ reason: `SW route not implemented (${SW_VERSION}): ${path}` }, 404)
+  );
 });
