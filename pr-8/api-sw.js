@@ -47,9 +47,10 @@ function json(data, status = 200) {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  if (!url.pathname.startsWith("/api/v3/")) return;
+  const apiPrefixIndex = url.pathname.indexOf("/api/v3/");
+  if (apiPrefixIndex === -1) return;
 
-  const path = url.pathname.slice("/api/v3".length);
+  const path = url.pathname.slice(apiPrefixIndex + "/api/v3".length);
 
   if (event.request.method === "GET" && path === "/project-summaries") {
     const badge = url.searchParams.get("badge");
