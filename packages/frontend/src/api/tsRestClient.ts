@@ -119,7 +119,10 @@ function createApiClient(config?: {
   baseHeaders?: Record<string, string | undefined>;
 }): ApiClient {
   const baseUrl =
-    config?.baseUrl ?? (BROWSER_BACKEND_ENABLED ? "/api/v3" : BADGHUB_API_V3_URL);
+    config?.baseUrl ??
+    (BROWSER_BACKEND_ENABLED
+      ? `${import.meta.env.BASE_URL}api/v3`
+      : BADGHUB_API_V3_URL);
   const baseHeaders = config?.baseHeaders ?? {};
 
   const client = {} as ApiClient;
