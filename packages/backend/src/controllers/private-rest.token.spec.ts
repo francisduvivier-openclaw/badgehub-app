@@ -1,7 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
-import request from "supertest";
-import { Express } from "express";
-import { createExpressServer } from "@createExpressServer";
+import { createHonoApp } from "@createHonoApp";
 import { isInDebugMode } from "@util/debug";
 import { decodeJwt } from "jose";
 import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
@@ -11,11 +9,40 @@ const USER1_TOKEN =
 const USER1_ID = decodeJwt(USER1_TOKEN).sub;
 const toSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
+type App = ReturnType<typeof createHonoApp>;
+
+async function parseResponse(res: Response) {
+  const text = await res.text();
+  let body: any;
+  try { body = JSON.parse(text); } catch { body = text; }
+  return { status: res.status, statusCode: res.status, body, text, headers: res.headers };
+}
+
+async function get(app: App, url: string, headers?: Record<string, string>) {
+  return parseResponse(await app.request(url, { headers }));
+}
+
+async function post(app: App, url: string, options?: { headers?: Record<string, string>; body?: BodyInit }) {
+  return parseResponse(await app.request(url, { method: "POST", ...options }));
+}
+
+async function del(app: App, url: string, headers?: Record<string, string>) {
+  return parseResponse(await app.request(url, { method: "DELETE", headers }));
+}
+
+function auth(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+function apiToken(token: string): Record<string, string> {
+  return { "badgehub-api-token": `Bearer ${token}` };
+}
+
 describe("Project API Tokens", () => {
-  let app: Express;
+  let app: App;
   beforeAll(() => {
     console.warn = () => {}; // Suppress console.warn messages during tests
-    app = createExpressServer();
+    app = createHonoApp();
   });
 
   describe(
@@ -25,31 +52,25 @@ describe("Project API Tokens", () => {
       beforeEach(async () => {
         console.warn = () => {}; // Suppress console.warn messages during tests
         dynamicAppId = toSlug(`test_user1_app_${crypto.randomUUID()}`);
-        const postRes = await request(app)
-          .post(`/api/v3/projects/${dynamicAppId}`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const postRes = await post(app, `/api/v3/projects/${dynamicAppId}`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(postRes.statusCode).toBe(204);
       });
 
       test("CRD /projects/{slug}/token and usage", async () => {
-        const getRes0 = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getRes0 = await get(app, `/api/v3/projects/${dynamicAppId}/token`, auth(USER1_TOKEN));
         expect(getRes0.statusCode).toBe(404);
 
-        const createTokenRes = await request(app)
-          .post(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const createTokenRes = await post(app, `/api/v3/projects/${dynamicAppId}/token`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(createTokenRes.statusCode).toBe(200);
         expect(createTokenRes.body).toEqual({
           token: expect.any(String),
         });
 
-        const getResAfterCreate = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getResAfterCreate = await get(app, `/api/v3/projects/${dynamicAppId}/token`, auth(USER1_TOKEN));
         expect(getResAfterCreate.statusCode).toBe(200);
 
         const body = getResAfterCreate.body as ProjectApiTokenMetadata;
@@ -62,45 +83,34 @@ describe("Project API Tokens", () => {
           -Math.abs(Date.now() - Date.parse(body.last_used_at))
         ).toBeGreaterThanOrEqual(-oneMinuteMillis);
 
-        const deleteRes = await request(app)
-          .delete(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const deleteRes = await del(app, `/api/v3/projects/${dynamicAppId}/token`, auth(USER1_TOKEN));
         expect(deleteRes.statusCode).toBe(204);
 
-        const getResAfterDelete = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getResAfterDelete = await get(app, `/api/v3/projects/${dynamicAppId}/token`, auth(USER1_TOKEN));
         expect(getResAfterDelete.statusCode).toBe(404);
       });
 
       test("using a token should work", async () => {
-        const createTokenRes = await request(app)
-          .post(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const createTokenRes = await post(app, `/api/v3/projects/${dynamicAppId}/token`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(createTokenRes.statusCode).toBe(200);
         expect(createTokenRes.body).toEqual({
           token: expect.any(String),
         });
         const dynamicAppToken = createTokenRes.body.token;
 
-        const getDraftRes = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId}/draft`)
-          .set("badgehub-api-token", "Bearer " + dynamicAppToken);
+        const getDraftRes = await get(app, `/api/v3/projects/${dynamicAppId}/draft`, apiToken(dynamicAppToken));
         expect(getDraftRes.statusCode).toBe(200);
       });
 
       test("invalid token should not work", async () => {
-        const getDraftRes = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId}/draft`)
-          .set("badgehub-api-token", "Bearer " + "invalidtoken");
+        const getDraftRes = await get(app, `/api/v3/projects/${dynamicAppId}/draft`, apiToken("invalidtoken"));
         expect(getDraftRes.statusCode).toBe(403);
 
-        const createTokenRes = await request(app)
-          .post(`/api/v3/projects/${dynamicAppId}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const createTokenRes = await post(app, `/api/v3/projects/${dynamicAppId}/token`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(createTokenRes.statusCode).toBe(200);
         expect(createTokenRes.body).toEqual({
           token: expect.any(String),
@@ -108,59 +118,49 @@ describe("Project API Tokens", () => {
         const dynamicAppToken = createTokenRes.body.token;
 
         const dynamicAppId2 = toSlug(`test_user1_app_${crypto.randomUUID()}`);
-        const createApp2Res = await request(app)
-          .post(`/api/v3/projects/${dynamicAppId2}`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const createApp2Res = await post(app, `/api/v3/projects/${dynamicAppId2}`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(createApp2Res.statusCode).toBe(204);
 
-        const getDraftForOtherProject = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId2}/draft`)
-          .set("badgehub-api-token", "Bearer " + dynamicAppToken);
+        const getDraftForOtherProject = await get(app, `/api/v3/projects/${dynamicAppId2}/draft`, apiToken(dynamicAppToken));
         expect(getDraftForOtherProject.statusCode).toBe(403);
 
-        const createP2TokenRes = await request(app)
-          .post(`/api/v3/projects/${dynamicAppId2}/token`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send();
+        const createP2TokenRes = await post(app, `/api/v3/projects/${dynamicAppId2}/token`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(createP2TokenRes.statusCode).toBe(200);
         const p2Token = createP2TokenRes.body.token;
 
         // Sanity check
-        const getDraftForOtherProjectCorrect = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId2}/draft`)
-          .set("badgehub-api-token", "Bearer " + p2Token);
+        const getDraftForOtherProjectCorrect = await get(app, `/api/v3/projects/${dynamicAppId2}/draft`, apiToken(p2Token));
         expect(getDraftForOtherProjectCorrect.statusCode).toBe(200);
 
-        const getDraftForOtherProjectWithToken = await request(app)
-          .get(`/api/v3/projects/${dynamicAppId2}/draft`)
-          .set("badgehub-api-token", "Bearer " + dynamicAppToken);
+        const getDraftForOtherProjectWithToken = await get(app, `/api/v3/projects/${dynamicAppId2}/draft`, apiToken(dynamicAppToken));
         expect(getDraftForOtherProjectWithToken.statusCode).toBe(403);
       });
 
       describe("With api token for dynamicAppId", async () => {
         let dynamicApp1Token: string;
         beforeEach(async () => {
-          const createTokenRes = await request(app)
-            .post(`/api/v3/projects/${dynamicAppId}/token`)
-            .auth(USER1_TOKEN, { type: "bearer" })
-            .send();
+          const createTokenRes = await post(app, `/api/v3/projects/${dynamicAppId}/token`, {
+            headers: auth(USER1_TOKEN),
+          });
           expect(createTokenRes.statusCode).toBe(200);
           dynamicApp1Token = createTokenRes.body.token;
         });
         test("token should not be usable for project creation", async () => {
           const dynamicAppId2 = toSlug(`test_user1_app_${crypto.randomUUID()}`);
-          const postRes = await request(app)
-            .post(`/api/v3/projects/${dynamicAppId2}`)
-            .set("badgehub-api-token", "Bearer " + dynamicApp1Token);
+          const postRes = await post(app, `/api/v3/projects/${dynamicAppId2}`, {
+            headers: apiToken(dynamicApp1Token),
+          });
           expect(postRes.statusCode).toBe(403);
         });
 
         test("token overwriting should be possible", async () => {
-          const createTokenRes2 = await request(app)
-            .post(`/api/v3/projects/${dynamicAppId}/token`)
-            .auth(USER1_TOKEN, { type: "bearer" })
-            .send();
+          const createTokenRes2 = await post(app, `/api/v3/projects/${dynamicAppId}/token`, {
+            headers: auth(USER1_TOKEN),
+          });
           expect(createTokenRes2.statusCode).toBe(200);
           expect(createTokenRes2.body).toEqual({
             token: expect.any(String),
@@ -169,9 +169,7 @@ describe("Project API Tokens", () => {
         });
 
         test("GET /users/{userId}/drafts should not be possible with an api-token", async () => {
-          const res = await request(app)
-            .get(`/api/v3/users/${USER1_ID}/drafts`)
-            .set("badgehub-api-token", "Bearer " + dynamicApp1Token);
+          const res = await get(app, `/api/v3/users/${USER1_ID}/drafts`, apiToken(dynamicApp1Token));
           expect(res.statusCode).toBe(403);
         });
       });

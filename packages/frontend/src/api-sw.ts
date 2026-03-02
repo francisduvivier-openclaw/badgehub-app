@@ -6,18 +6,8 @@ import initSqlJs from "sql.js";
 import { SqlJsAdapter } from "@db/SqlJsAdapter";
 import { SQLiteBadgeHubMetadata } from "@shared/db/SQLiteBadgeHubMetadata";
 import { PreviewBadgeHubData } from "@api/PreviewBadgeHubData";
-import {
-  pingHandler,
-  getBadgesHandler,
-  getCategoriesHandler,
-  getStatsHandler,
-  getProjectSummariesHandler,
-  getProjectHandler,
-} from "@shared/api/backendCoreHandlers";
-import {
-  badgeIdentifiersSchema,
-  getProjectsQuerySchema,
-} from "@shared/contracts/publicRestContracts";
+import { createPublicApiRouter } from "@shared/api/honoRouter";
+import type { Hono } from "hono";
 
 const API_PREFIX = "/api/v3";
 
@@ -81,23 +71,23 @@ async function saveToIdb(data: Uint8Array): Promise<void> {
   }
 }
 
-let backend: PreviewBadgeHubData | null = null;
-let backendPromise: Promise<PreviewBadgeHubData> | null = null;
+let honoApp: Hono | null = null;
+let appPromise: Promise<Hono> | null = null;
 
 function fileUrl(slug: string, revision: number | string, filePath: string): string {
   return `/api/v3/projects/${encodeURIComponent(slug)}/versions/${revision}/files/${filePath}`;
 }
 
 /**
- * Loads the SQLite database via sql.js.  On first load the bytes are fetched
- * from the network and persisted in IndexedDB.  Subsequent loads (same
- * PREVIEW_DATA_VERSION) are served from the cache, avoiding the network round-
- * trip.  Bump PREVIEW_DATA_VERSION to force a cache invalidation and re-fetch.
+ * Loads the SQLite database and initialises the shared Hono public router.
+ * On first load the bytes are fetched from the network and persisted in
+ * IndexedDB.  Subsequent loads (same PREVIEW_DATA_VERSION) are served from
+ * the cache, avoiding the network round-trip.
  */
-function loadBackend(): Promise<PreviewBadgeHubData> {
-  if (backend) return Promise.resolve(backend);
-  if (!backendPromise) {
-    backendPromise = Promise.all([
+function loadApp(): Promise<Hono> {
+  if (honoApp) return Promise.resolve(honoApp);
+  if (!appPromise) {
+    appPromise = Promise.all([
       initSqlJs({ locateFile: (file) => new URL(file, self.location.href).href }),
       loadFromIdb().then(async (cached) => {
         if (cached) return cached;
@@ -113,29 +103,23 @@ function loadBackend(): Promise<PreviewBadgeHubData> {
         const db = new SQL.Database(bytes);
         const adapter = new SqlJsAdapter(db);
         const metadata = new SQLiteBadgeHubMetadata(adapter, fileUrl);
-        backend = new PreviewBadgeHubData(metadata);
-        backendPromise = null;
-        return backend;
+        const backend = new PreviewBadgeHubData(metadata);
+        honoApp = createPublicApiRouter(backend);
+        appPromise = null;
+        return honoApp;
       })
       .catch((e) => {
-        backendPromise = null;
+        appPromise = null;
         throw e;
       });
   }
-  return backendPromise;
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return appPromise;
 }
 
 self.addEventListener("install", (event) => {
   // Pre-load the SQLite database so it's ready before we start intercepting requests.
   event.waitUntil(
-    loadBackend()
+    loadApp()
       .catch((e) =>
         console.warn("[api-sw] Could not pre-load preview-data.sqlite", e)
       )
@@ -150,54 +134,29 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  const idx = url.pathname.indexOf(API_PREFIX + "/");
-  if (idx === -1) return;
+
+  // Only intercept /api/v3/ requests on this origin.
+  const apiIndex = url.pathname.indexOf(API_PREFIX + "/");
+  if (apiIndex === -1) return;
+
+  // Only intercept GET requests (POST report routes are no-ops in preview anyway).
   if (event.request.method !== "GET") return;
 
-  const path = url.pathname.slice(idx + API_PREFIX.length);
-  const params = Object.fromEntries(url.searchParams);
+  // Normalise the URL: strip the GitHub Pages base path prefix so Hono sees
+  // exactly /api/v3/... regardless of deployment sub-path.
+  const apiPath = url.pathname.slice(apiIndex);
+  const normalizedUrl = new URL(apiPath + url.search, "https://localhost");
+  const normalizedRequest = new Request(normalizedUrl.toString(), event.request);
 
   event.respondWith(
-    loadBackend()
-      .then(async (be): Promise<Response> => {
-        if (path === "/ping") {
-          const { id, mac } = badgeIdentifiersSchema.parse(params);
-          const result = await pingHandler(be, id, mac);
-          return json(result.body, result.status);
-        }
-
-        if (path === "/project-summaries") {
-          const query = getProjectsQuerySchema.parse(params);
-          const result = await getProjectSummariesHandler(be, query);
-          return json(result.body, result.status);
-        }
-
-        if (path.startsWith("/projects/")) {
-          const slug = decodeURIComponent(path.slice("/projects/".length));
-          const result = await getProjectHandler(be, slug);
-          return json(result.body, result.status);
-        }
-
-        if (path === "/badges") {
-          const result = await getBadgesHandler(be);
-          return json(result.body, result.status);
-        }
-
-        if (path === "/categories") {
-          const result = await getCategoriesHandler(be);
-          return json(result.body, result.status);
-        }
-
-        if (path === "/stats") {
-          const result = await getStatsHandler(be);
-          return json(result.body, result.status);
-        }
-
-        return json({ reason: `SW route not implemented: ${path}` }, 404);
-      })
+    loadApp()
+      .then((app) => app.fetch(normalizedRequest))
       .catch((e) => {
         console.error("[api-sw] error", e);
-        return json({ reason: "Preview data could not be loaded" }, 503);
+        return new Response(
+          JSON.stringify({ reason: "Preview data could not be loaded" }),
+          { status: 503, headers: { "Content-Type": "application/json" } },
+        );
       })
   );
 });

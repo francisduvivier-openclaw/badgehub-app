@@ -1,26 +1,25 @@
-import { NextFunction, Request, Response, Router } from "express";
-import multer from "multer";
+import { Hono } from "hono";
 import { BadgeHubData } from "@domain/BadgeHubData";
 import { createBadgeHubData } from "@domain/createBadgeHubData";
-import { getUser, AuthenticatedRequest, UserDataInRequest } from "@auth/jwt-decode";
+import { UserDataInRequest, AuthVariables, addAuthenticationMiddleware } from "@auth/jwt-decode";
 import { ProjectDetails, ProjectSlug } from "@shared/domain/readModels/project/ProjectDetails";
-import { Readable } from "node:stream";
 import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@config";
 import { ProjectAlreadyExistsError, UserError } from "@domain/UserError";
 import { detectMimeType } from "@util/mimeTypeDetection";
-import { addAuthenticationMiddleware } from "@auth/jwt-decode";
 import { jwtVerifyTokenMiddleware } from "@auth/jwt-verify";
-import rateLimit from "express-rate-limit";
 
-const upload = multer({ limits: { fileSize: MAX_UPLOAD_FILE_SIZE_BYTES } });
+type AuthCtx = { Variables: AuthVariables };
 
-const requestIsFromAllowedUser = (request: { user: UserDataInRequest }, { allowedUsers }: { allowedUsers: string[] }) => {
-  const user = getUser(request);
-  return user && allowedUsers.includes(user.idp_user_id);
-};
+const requestIsFromAllowedUser = (
+  user: UserDataInRequest | undefined,
+  { allowedUsers }: { allowedUsers: string[] },
+) => user && allowedUsers.includes(user.idp_user_id);
 
-const checkUserAuthorization = (userId: string, request: any) => {
-  if (!requestIsFromAllowedUser(request, { allowedUsers: [userId] })) {
+const checkUserAuthorization = (
+  userId: string,
+  user: UserDataInRequest | undefined,
+) => {
+  if (!requestIsFromAllowedUser(user, { allowedUsers: [userId] })) {
     return `You are not allowed to access the draft projects of user with id '${userId}'`;
   }
   return undefined;
@@ -29,169 +28,231 @@ const checkUserAuthorization = (userId: string, request: any) => {
 const checkProjectAuthorization = async (
   badgeHubData: BadgeHubData,
   slug: ProjectSlug,
-  request: unknown,
+  user: UserDataInRequest | undefined,
+  apiToken: string | undefined,
   project?: ProjectDetails,
 ): Promise<{ status: number; reason: string } | undefined> => {
   project = project ?? (await badgeHubData.getProject(slug, "draft"));
   if (!project) return { status: 404, reason: `No project with slug '${slug}' found` };
 
-  const authenticatedRequest = request as AuthenticatedRequest;
-  if (authenticatedRequest.apiToken) {
-    const tokenIsValidForProject = await badgeHubData.checkApiToken(slug, authenticatedRequest.apiToken);
+  if (apiToken) {
+    const tokenIsValidForProject = await badgeHubData.checkApiToken(slug, apiToken);
     return tokenIsValidForProject
       ? undefined
       : { status: 403, reason: `The given badgehub-api-token not authorized for project with slug '${slug}'` };
   }
 
-  if (!authenticatedRequest.user) return { status: 403, reason: "No authentication provided" };
+  if (!user) return { status: 403, reason: "No authentication provided" };
 
-  if (!requestIsFromAllowedUser(authenticatedRequest, { allowedUsers: [project.idp_user_id] })) {
-    return { status: 403, reason: `The user in the JWT token is not authorized for project with slug '${slug}'` };
+  if (!requestIsFromAllowedUser(user, { allowedUsers: [project.idp_user_id] })) {
+    return {
+      status: 403,
+      reason: `The user in the JWT token is not authorized for project with slug '${slug}'`,
+    };
   }
 
   return undefined;
 };
 
+// Simple in-memory rate limiter: 500 requests per 15 minutes per IP.
+const rateCounts = new Map<string, { count: number; resetAt: number }>();
+async function rateLimiterMiddleware(c: any, next: () => Promise<void>) {
+  const ip = c.req.header("x-forwarded-for") ?? "unknown";
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const limit = 500;
+  let entry = rateCounts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + windowMs };
+    rateCounts.set(ip, entry);
+  }
+  entry.count++;
+  if (entry.count > limit) {
+    return c.json({ reason: "Too many requests" }, 429);
+  }
+  await next();
+}
+
 export function registerPrivateRoutes(
-  router: Router,
+  app: Hono,
   badgeHubData: BadgeHubData = createBadgeHubData(),
 ) {
-  const rateLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500 });
+  const privateApp = new Hono<AuthCtx>();
+  privateApp.use("*", rateLimiterMiddleware, jwtVerifyTokenMiddleware, addAuthenticationMiddleware);
 
-  router.use(rateLimiter, jwtVerifyTokenMiddleware, addAuthenticationMiddleware);
-
-  router.post("/projects/:slug", async (req, res) => {
-    const user = getUser(req as unknown as AuthenticatedRequest);
-    if (!user) return res.status(403).json({ reason: "No user in request" });
+  privateApp.post("/projects/:slug", async (c) => {
+    const user = c.get("user");
+    if (!user) return c.json({ reason: "No user in request" }, 403);
     try {
-      await badgeHubData.insertProject({ ...(req.body as any), slug: req.params.slug, idp_user_id: user.idp_user_id });
-      return res.status(204).send();
+      const body = await c.req.json().catch(() => ({}));
+      await badgeHubData.insertProject({
+        ...(body as any),
+        slug: c.req.param("slug"),
+        idp_user_id: user.idp_user_id,
+      });
+      return c.body(null, 204);
     } catch (e) {
-      if (e instanceof ProjectAlreadyExistsError) return res.status(409).json({ reason: e.message });
-      if (e instanceof UserError) return res.status(400).json({ reason: e.message });
+      if (e instanceof ProjectAlreadyExistsError) return c.json({ reason: e.message }, 409);
+      if (e instanceof UserError) return c.json({ reason: e.message }, 400);
       throw e;
     }
   });
 
-  router.patch("/projects/:slug", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    await badgeHubData.updateProject(req.params.slug, req.body);
-    res.status(204).send();
+  privateApp.patch("/projects/:slug", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    const body = await c.req.json().catch(() => ({}));
+    await badgeHubData.updateProject(slug, body);
+    return c.body(null, 204);
   });
 
-  router.delete("/projects/:slug", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    await badgeHubData.deleteProject(req.params.slug);
-    res.status(204).send();
+  privateApp.delete("/projects/:slug", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    await badgeHubData.deleteProject(slug);
+    return c.body(null, 204);
   });
 
-  router.patch("/projects/:slug/draft/metadata", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    await badgeHubData.updateDraftMetadata(req.params.slug, req.body);
-    res.status(204).send();
+  privateApp.patch("/projects/:slug/draft/metadata", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    const body = await c.req.json().catch(() => ({}));
+    await badgeHubData.updateDraftMetadata(slug, body);
+    return c.body(null, 204);
   });
 
-  router.get("/projects/:slug/draft", async (req, res) => {
-    const project = await badgeHubData.getProject(req.params.slug, "draft");
-    if (!project) return res.status(404).json({ reason: `No project with slug '${req.params.slug}' found` });
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req, project);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    return res.status(200).json(project);
+  privateApp.get("/projects/:slug/draft", async (c) => {
+    const slug = c.req.param("slug");
+    const project = await badgeHubData.getProject(slug, "draft");
+    if (!project) return c.json({ reason: `No project with slug '${slug}' found` }, 404);
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"), project);
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    return c.json(project);
   });
 
-  router.patch("/projects/:slug/publish", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    await badgeHubData.publishVersion(req.params.slug);
-    res.status(204).send();
+  privateApp.patch("/projects/:slug/publish", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    await badgeHubData.publishVersion(slug);
+    return c.body(null, 204);
   });
 
-  router.post("/projects/:slug/draft/files/:filePath", upload.single("file"), async (req, res) => {
-    const slug = req.params.slug as string;
-    const filePath = req.params.filePath as string;
-    const fail = await checkProjectAuthorization(badgeHubData, slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    const typedFile = req.file as Express.Multer.File | undefined;
-    if (!typedFile?.buffer) {
-      return res.status(400).json({ reason: "No file provided with multipart/form-data under field file" });
+  privateApp.post("/projects/:slug/draft/files/*", async (c) => {
+    const slug = c.req.param("slug");
+    const prefix = `/api/v3/projects/${slug}/draft/files/`;
+    const filePath = decodeURIComponent(c.req.path.slice(prefix.length));
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+
+    const formData = await c.req.parseBody();
+    const file = formData["file"];
+    if (!file || typeof file === "string") {
+      return c.json({ reason: "No file provided with multipart/form-data under field file" }, 400);
     }
-    const detectedMimeType = detectMimeType(typedFile.mimetype, filePath);
+    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+      return c.json({ reason: `File exceeds maximum size of ${MAX_UPLOAD_FILE_SIZE_BYTES} bytes` }, 413);
+    }
+    const fileContent = new Uint8Array(await file.arrayBuffer());
+    const detectedMimeType = detectMimeType(file.type, filePath);
     await badgeHubData.writeDraftFile(slug, filePath, {
       mimetype: detectedMimeType,
-      fileContent: typedFile.buffer,
-      directory: typedFile.destination,
-      fileName: typedFile.filename,
-      size: typedFile.size,
+      fileContent,
+      directory: undefined,
+      fileName: file.name,
+      size: file.size,
     });
-    return res.status(204).send();
+    return c.body(null, 204);
   });
 
-  router.post("/projects/:slug/draft/icon", async (req, res) => {
-    const project = await badgeHubData.getProject(req.params.slug, "draft");
-    if (!project) return res.status(404).json({ reason: `No project with slug '${req.params.slug}' found` });
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req, project);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
+  privateApp.post("/projects/:slug/draft/icon", async (c) => {
+    const slug = c.req.param("slug");
+    const project = await badgeHubData.getProject(slug, "draft");
+    if (!project) return c.json({ reason: `No project with slug '${slug}' found` }, 404);
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"), project);
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
     try {
-      const iconPaths = await badgeHubData.setDraftIconFromFile(req.params.slug, req.body.filePath, req.body.sizes, project);
-      if (!iconPaths) return res.status(404).json({ reason: `File '${req.body.filePath}' not found in draft project '${req.params.slug}'` });
-      return res.status(200).json({ iconPaths });
+      const body = await c.req.json().catch(() => ({}));
+      const iconPaths = await badgeHubData.setDraftIconFromFile(slug, body.filePath, body.sizes, project);
+      if (!iconPaths) {
+        return c.json({ reason: `File '${body.filePath}' not found in draft project '${slug}'` }, 404);
+      }
+      return c.json({ iconPaths });
     } catch (error) {
-      if (error instanceof UserError) return res.status(400).json({ reason: error.message });
+      if (error instanceof UserError) return c.json({ reason: error.message }, 400);
       throw error;
     }
   });
 
-  router.delete("/projects/:slug/draft/files/:filePath", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    await badgeHubData.deleteDraftFile(req.params.slug, req.params.filePath);
-    res.status(204).send();
+  privateApp.delete("/projects/:slug/draft/files/*", async (c) => {
+    const slug = c.req.param("slug");
+    const prefix = `/api/v3/projects/${slug}/draft/files/`;
+    const filePath = decodeURIComponent(c.req.path.slice(prefix.length));
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    await badgeHubData.deleteDraftFile(slug, filePath);
+    return c.body(null, 204);
   });
 
-  router.get("/projects/:slug/draft/files/:filePath", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    const fileContents = await badgeHubData.getFileContents(req.params.slug, "draft", req.params.filePath);
-    if (!fileContents) return res.status(404).json({ reason: `Project with slug '${req.params.slug}' or file '${req.params.filePath}' not found` });
-    Readable.from(fileContents).pipe(res);
+  privateApp.get("/projects/:slug/draft/files/*", async (c) => {
+    const slug = c.req.param("slug");
+    const prefix = `/api/v3/projects/${slug}/draft/files/`;
+    const filePath = decodeURIComponent(c.req.path.slice(prefix.length));
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    const fileContents = await badgeHubData.getFileContents(slug, "draft", filePath);
+    if (!fileContents) {
+      return c.json(
+        { reason: `Project with slug '${slug}' or file '${filePath}' not found` },
+        404,
+      );
+    }
+    return c.body(fileContents);
   });
 
-  router.post("/projects/:slug/token", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    return res.status(200).json({ token: await badgeHubData.createProjectApiToken(req.params.slug) });
+  privateApp.post("/projects/:slug/token", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    return c.json({ token: await badgeHubData.createProjectApiToken(slug) });
   });
 
-  router.get("/projects/:slug/token", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    const metadata = await badgeHubData.getProjectApiTokenMetadata(req.params.slug);
-    if (!metadata) return res.status(404).json({ reason: "No Project API" });
-    return res.status(200).json({ last_used_at: metadata.last_used_at, created_at: metadata.created_at });
+  privateApp.get("/projects/:slug/token", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    const metadata = await badgeHubData.getProjectApiTokenMetadata(slug);
+    if (!metadata) return c.json({ reason: "No Project API" }, 404);
+    return c.json({ last_used_at: metadata.last_used_at, created_at: metadata.created_at });
   });
 
-  router.delete("/projects/:slug/token", async (req, res) => {
-    const fail = await checkProjectAuthorization(badgeHubData, req.params.slug, req);
-    if (fail) return res.status(fail.status).json({ reason: fail.reason });
-    await badgeHubData.revokeProjectAPIToken(req.params.slug);
-    res.status(204).send();
+  privateApp.delete("/projects/:slug/token", async (c) => {
+    const slug = c.req.param("slug");
+    const fail = await checkProjectAuthorization(badgeHubData, slug, c.get("user"), c.get("apiToken"));
+    if (fail) return c.json({ reason: fail.reason }, fail.status as any);
+    await badgeHubData.revokeProjectAPIToken(slug);
+    return c.body(null, 204);
   });
 
-  router.get("/users/:userId/drafts", async (req, res) => {
-    const reason = checkUserAuthorization(req.params.userId, req);
-    if (reason) return res.status(403).json({ reason });
+  privateApp.get("/users/:userId/drafts", async (c) => {
+    const userId = c.req.param("userId");
+    const reason = checkUserAuthorization(userId, c.get("user"));
+    if (reason) return c.json({ reason }, 403);
+    const q = c.req.query();
     const projects = await badgeHubData.getProjectSummaries(
       {
-        pageStart: req.query.pageStart ? Number(req.query.pageStart) : undefined,
-        pageLength: req.query.pageLength ? Number(req.query.pageLength) : undefined,
-        userId: req.params.userId,
+        pageStart: q.pageStart ? Number(q.pageStart) : undefined,
+        pageLength: q.pageLength ? Number(q.pageLength) : undefined,
+        userId,
         orderBy: "updated_at",
       },
       "draft",
     );
-    return res.status(200).json(projects);
+    return c.json(projects);
   });
+
+  app.route("/api/v3", privateApp);
 }

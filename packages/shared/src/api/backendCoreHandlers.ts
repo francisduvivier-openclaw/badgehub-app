@@ -24,10 +24,13 @@ export type BackendDataAccess = {
     userId?: string;
     orderBy: "published_at" | "updated_at" | "installs";
   }, revision: "latest" | "draft"): Promise<ProjectSummary[]>;
-  getProject(slug: string, revision: "latest" | "draft"): Promise<ProjectDetails | undefined>;
-  getFileContents(slug: string, revision: "latest", filePath: string): Promise<Uint8Array | undefined>;
+  getProject(slug: string, revision: "latest" | "draft" | number): Promise<ProjectDetails | undefined>;
+  getFileContents(slug: string, revision: "latest" | "draft" | number, filePath: string): Promise<Uint8Array | undefined>;
   insertProject(project: CreateProjectProps): Promise<void>;
   publishVersion(slug: string): Promise<void>;
+  reportInstall(slug: string, revision: number, badge: { id?: string; mac?: string }): Promise<void>;
+  reportLaunch(slug: string, revision: number, badge: { id?: string; mac?: string }): Promise<void>;
+  reportCrash(slug: string, revision: number, badge: { id?: string; mac?: string }, body: { reason?: string }): Promise<void>;
 };
 
 export async function getBadgesHandler(data: BackendDataAccess): Promise<Ok<BadgeSlug[]>> {

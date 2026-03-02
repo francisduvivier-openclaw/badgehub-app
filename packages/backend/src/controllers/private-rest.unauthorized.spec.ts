@@ -6,11 +6,8 @@ import {
   expect,
   test,
 } from "vitest";
-import request from "supertest";
-import express, { Express } from "express";
-import { createExpressServer } from "@createExpressServer";
+import { createHonoApp } from "@createHonoApp";
 import { isInDebugMode } from "@util/debug";
-import { CreateProjectProps } from "@shared/domain/writeModels/project/WriteProject";
 import { decodeJwt } from "jose";
 
 const USER1_TOKEN =
@@ -20,10 +17,46 @@ const USER2_TOKEN =
   "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJnUGI4VjZ5dHZTMkpFakdjVDFlLWdTWVRPbFBTNm04Xzkta210cHFDMktVIn0.eyJleHAiOjE3NDgyMzk0OTksImlhdCI6MTc0ODIzOTQzOSwiYXV0aF90aW1lIjoxNzQ4MjM5NDM5LCJqdGkiOiJjYzYzYzAzZS1mNDAxLTQ0OGQtOGM3NS0zOWI5ZDEzY2M1ODAiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLnAxbS5ubC9yZWFsbXMvbWFzdGVyIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjdjNTJhZDk3LTBhODYtNDQwYy05NDVlLWNmMzhlNDc5MzNjZiIsInR5cCI6IkJlYXJlciIsImF6cCI6ImJhZGdlaHViIiwic2Vzc2lvbl9zdGF0ZSI6IjEzNmUxYmIzLWYzOWUtNGFlZC1hMjI5LTc3OTM1M2NiMjEwNCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiaHR0cHM6Ly9iYWRnZWh1Yi5wMW0ubmwvIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1hc3RlciIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBlbWFpbCBwcm9maWxlIiwic2lkIjoiMTM2ZTFiYjMtZjM5ZS00YWVkLWEyMjktNzc5MzUzY2IyMTA0IiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoidG9tIGdhZ2EiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0b21nYWdhIiwiZ2l2ZW5fbmFtZSI6InRvbSIsImZhbWlseV9uYW1lIjoiZ2FnYSIsImVtYWlsIjoidG9tZ2FnYUBnbWFpbC5jb20ifQ.fLWOhYDJUhfqqffVBM-mH3A96SIch8sKJbFc_W2sot7jq-5cTyyeJr4hLETFgZmfUZaKvVFnMT_hyDuYCvbb3VVdDcF4KTt1p-6ZmdfJs6A5FJVN56iYLj0QQKIV7HJ_RDpzl1eCfteO5IgNAecqKcbGXhDDjPwu2PYpVaAcVNopHXaQh1JQtIEUXAFzmWiFuVIt1UJO44vTM8f3Fvha9GfQG7IuQiCEGp_esEH2dS50gqkiJGl0WfJVGG4NvIh1EdrMlMo6YkfkqYkNLmZTnt_3q6x6ObNGX02JUEeaFYNf5XuW0M-70iIwzPpdlnc6EKOrdWOz9srTBRx2wz9f0A";
 const toSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
-const createProject = async (app: Express, projectSlug: string) => {
-  const res1 = await request(app)
-    .post(`/api/v3/projects/${projectSlug}`)
-    .auth(USER1_TOKEN, { type: "bearer" });
+type App = ReturnType<typeof createHonoApp>;
+
+async function parseResponse(res: Response) {
+  const text = await res.text();
+  let body: any;
+  try { body = JSON.parse(text); } catch { body = text; }
+  return { status: res.status, statusCode: res.status, body, text, headers: res.headers };
+}
+
+async function get(app: App, url: string, headers?: Record<string, string>) {
+  return parseResponse(await app.request(url, { headers }));
+}
+
+async function post(app: App, url: string, options?: { headers?: Record<string, string>; body?: BodyInit }) {
+  return parseResponse(await app.request(url, { method: "POST", ...options }));
+}
+
+async function patch(app: App, url: string, options?: { headers?: Record<string, string>; body?: BodyInit }) {
+  return parseResponse(await app.request(url, { method: "PATCH", ...options }));
+}
+
+async function del(app: App, url: string, headers?: Record<string, string>) {
+  return parseResponse(await app.request(url, { method: "DELETE", headers }));
+}
+
+function auth(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+function fileFormData(content: Buffer | string, filename: string): FormData {
+  const formData = new FormData();
+  const buf = typeof content === "string" ? Buffer.from(content) : content;
+  formData.append("file", new Blob([buf], { type: "application/octet-stream" }), filename);
+  return formData;
+}
+
+const createProject = async (app: App, projectSlug: string) => {
+  const res1 = await post(app, `/api/v3/projects/${projectSlug}`, {
+    headers: auth(USER1_TOKEN),
+  });
 
   expect(res1.statusCode).toBeGreaterThanOrEqual(200); // Sanity check
   expect(res1.statusCode).toBeLessThan(300); // Sanity check
@@ -32,93 +65,71 @@ const createProject = async (app: Express, projectSlug: string) => {
 describe(
   "The API should return a 403 if the user is not authorized of the project or operation",
   () => {
-    let app: ReturnType<typeof express>;
+    let app: App;
     let randomUUID: string;
     let user1AppId: string;
 
     beforeAll(async () => {
       randomUUID = crypto.randomUUID();
       user1AppId = toSlug("auth_test_user_1_" + crypto.randomUUID());
-      app = createExpressServer();
+      app = createHonoApp();
       await createProject(app, user1AppId);
     });
 
     describe("/projects/{slug}/draft", () => {
       test("GET /projects/{slug}/draft", async () => {
-        const res = await request(app)
-          .get(`/api/v3/projects/${user1AppId}/draft`)
-          .auth(USER2_TOKEN, { type: "bearer" });
+        const res = await get(app, `/api/v3/projects/${user1AppId}/draft`, auth(USER2_TOKEN));
         expect(res.statusCode).toBe(403);
       });
     });
 
     describe("/users/{userId}/drafts", () => {
       test("GET /users/{userId}/drafts", async () => {
-        const res = await request(app)
-          .get(`/api/v3/users/${USER1_ID}/drafts`)
-          .auth(USER2_TOKEN, { type: "bearer" });
+        const res = await get(app, `/api/v3/users/${USER1_ID}/drafts`, auth(USER2_TOKEN));
         expect(res.statusCode).toBe(403);
       });
     });
 
     describe("/projects/{slug}/draft/files/{filePath}", () => {
       test("POST /projects/{slug}/draft/files/{filePath}", async () => {
-        const res = await request(app)
-          .post(
-            `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`
-          )
-          .auth(USER2_TOKEN, { type: "bearer" })
-          .attach("file", Buffer.from("test file content"), "test.txt");
+        const res = await post(app, `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`, {
+          headers: auth(USER2_TOKEN),
+          body: fileFormData(Buffer.from("test file content"), "test.txt"),
+        });
         expect(res.statusCode).toBe(403);
       });
 
       describe("GET/DELETE /api/v3/projects/codecraft/draft/files/test_[random].txt", () => {
         const ORIGINAL_FILE_CONTENT = "original file content";
         beforeEach(async () => {
-          const res = await request(app)
-            .post(
-              `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`
-            )
-            .auth(USER1_TOKEN, { type: "bearer" })
-            .attach("file", Buffer.from(ORIGINAL_FILE_CONTENT), "test.txt");
+          const res = await post(app, `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`, {
+            headers: auth(USER1_TOKEN),
+            body: fileFormData(Buffer.from(ORIGINAL_FILE_CONTENT), "test.txt"),
+          });
           expect(res.statusCode).toBe(204);
         });
 
         afterEach(async () => {
-          const getRes2 = await request(app)
-            .get(
-              `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`
-            )
-            .auth(USER1_TOKEN, { type: "bearer" });
+          const getRes2 = await get(app, `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`, auth(USER1_TOKEN));
           expect(getRes2.statusCode).toBe(200);
           expect(getRes2.text).toBe(ORIGINAL_FILE_CONTENT);
         });
 
         test("GET /projects/codecraft/draft/files/test.txt", async () => {
-          const getRes = await request(app)
-            .get(
-              `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`
-            )
-            .auth(USER2_TOKEN, { type: "bearer" });
+          const getRes = await get(app, `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`, auth(USER2_TOKEN));
           expect(getRes.statusCode).toBe(403);
         });
 
         test("DELETE /projects/codecraft/draft/files/test.txt", async () => {
-          const deleteRes = await request(app)
-            .delete(
-              `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`
-            )
-            .auth(USER2_TOKEN, { type: "bearer" });
+          const deleteRes = await del(app, `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`, auth(USER2_TOKEN));
           expect(deleteRes.statusCode).toBe(403);
         });
 
         test("POST /projects/codecraft/draft/files/test.txt", async () => {
-          const postRes = await request(app)
-            .post(
-              `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`
-            )
-            .auth(USER2_TOKEN, { type: "bearer" })
-            .attach("file", Buffer.from(ORIGINAL_FILE_CONTENT), "test.txt");
+          const postRes = await post(app, `/api/v3/projects/${user1AppId}/draft/files/test_${randomUUID}.txt`, {
+            headers: auth(USER2_TOKEN),
+            body: fileFormData(Buffer.from(ORIGINAL_FILE_CONTENT), "test.txt"),
+          });
           expect(postRes.statusCode).toBe(403);
         });
       });
@@ -126,56 +137,43 @@ describe(
 
     describe("/projects/{slug}", () => {
       let dynamicTestAppId: string;
-      let originalProject: string;
+      let originalProject: any;
       beforeEach(async () => {
-        const createProjectProps: Omit<
-          CreateProjectProps,
-          "slug" | "idp_user_id"
-        > = {};
         // Reason that we make the test project id dynamic is to avoid that the test fails if you run it multiple times locally and possibly stop halfware through the test.
         dynamicTestAppId = toSlug(`test_app_${crypto.randomUUID()}`);
-        const postRes = await request(app)
-          .post(`/api/v3/projects/${dynamicTestAppId}`)
-          .auth(USER1_TOKEN, { type: "bearer" })
-          .send(createProjectProps);
+        const postRes = await post(app, `/api/v3/projects/${dynamicTestAppId}`, {
+          headers: auth(USER1_TOKEN),
+        });
         expect(postRes.statusCode.toString()).toMatch(/2\d\d/);
-        const getRes = await request(app)
-          .get(`/api/v3/projects/${dynamicTestAppId}/draft`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getRes = await get(app, `/api/v3/projects/${dynamicTestAppId}/draft`, auth(USER1_TOKEN));
         expect(getRes.statusCode).toBe(200); // Sanity check
         originalProject = getRes.body;
       });
 
       afterEach(async () => {
-        const getRes = await request(app)
-          .get(`/api/v3/projects/${dynamicTestAppId}/draft`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getRes = await get(app, `/api/v3/projects/${dynamicTestAppId}/draft`, auth(USER1_TOKEN));
         expect(getRes.statusCode).toBe(200); // Sanity check
         expect(getRes.body).toEqual(originalProject);
       });
 
       test("GET project", async () => {
-        const getRes = await request(app)
-          .get(`/api/v3/projects/${dynamicTestAppId}/draft`)
-          .auth(USER2_TOKEN, { type: "bearer" });
+        const getRes = await get(app, `/api/v3/projects/${dynamicTestAppId}/draft`, auth(USER2_TOKEN));
         expect(getRes.status).toBe(403);
         expect(getRes.body).not.toEqual(originalProject);
       });
 
       test("DELETE project", async () => {
-        const delRes = await request(app)
-          .delete(`/api/v3/projects/${dynamicTestAppId}`)
-          .auth(USER2_TOKEN, { type: "bearer" });
+        const delRes = await del(app, `/api/v3/projects/${dynamicTestAppId}`, auth(USER2_TOKEN));
         expect(delRes.status).toBe(403);
       });
 
       test("PATCH project", async () => {
-        const updateAppRes = await request(app)
-          .patch(`/api/v3/projects/${dynamicTestAppId}/draft/metadata`)
-          .auth(USER2_TOKEN, { type: "bearer" })
-          .send({
+        const updateAppRes = await patch(app, `/api/v3/projects/${dynamicTestAppId}/draft/metadata`, {
+          headers: { ...auth(USER2_TOKEN), "Content-Type": "application/json" },
+          body: JSON.stringify({
             description: "Test App Description Before Publish",
-          });
+          }),
+        });
         expect(updateAppRes.status).toBe(403);
       });
     });
@@ -183,20 +181,16 @@ describe(
     describe("/api/v3/projects/{slug}/publish", () => {
       test("publish version", async () => {
         // Verify the metadata was added
-        const getRes1 = await request(app)
-          .get(`/api/v3/projects/${user1AppId}/draft`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getRes1 = await get(app, `/api/v3/projects/${user1AppId}/draft`, auth(USER1_TOKEN));
         expect(getRes1.statusCode).toBe(200);
 
         // Try Publish the project to create a new version
-        const publishRes = await request(app)
-          .patch(`/api/v3/projects/${user1AppId}/publish`)
-          .auth(USER2_TOKEN, { type: "bearer" });
+        const publishRes = await patch(app, `/api/v3/projects/${user1AppId}/publish`, {
+          headers: auth(USER2_TOKEN),
+        });
         expect(publishRes.statusCode).toEqual(403);
 
-        const getRes2 = await request(app)
-          .get(`/api/v3/projects/${user1AppId}/draft`)
-          .auth(USER1_TOKEN, { type: "bearer" });
+        const getRes2 = await get(app, `/api/v3/projects/${user1AppId}/draft`, auth(USER1_TOKEN));
         expect(getRes2.statusCode).toBe(200);
         expect(getRes2.body).toEqual(getRes1.body);
       });

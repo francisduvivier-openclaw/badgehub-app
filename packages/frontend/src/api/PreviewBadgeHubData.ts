@@ -69,4 +69,16 @@ export class PreviewBadgeHubData implements BackendDataAccess {
   async publishVersion(_slug: string): Promise<void> {
     // no-op in preview
   }
+
+  async reportInstall(): Promise<void> {
+    // no-op in preview
+  }
+
+  async reportLaunch(): Promise<void> {
+    // no-op in preview
+  }
+
+  async reportCrash(): Promise<void> {
+    // no-op in preview
+  }
 }
