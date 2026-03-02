@@ -14,6 +14,7 @@ export default defineConfig({
     },
   },
   build: {
+    minify: false,
     outDir: "public",
     emptyOutDir: false, // don't wipe the rest of public/
     rollupOptions: {
