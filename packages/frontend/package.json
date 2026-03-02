@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "mkdir -p dist && cp index-indirect-dev.html dist/index.html && vite",
-    "dev:sw": "cp ../../node_modules/sql.js/dist/sql-wasm.wasm public/ && vite build --config vite.sw.config.ts --watch",
-    "build:sw": "cp ../../node_modules/sql.js/dist/sql-wasm.wasm public/ && vite build --config vite.sw.config.ts",
+    "dev:sw": "cp ../../node_modules/sql.js/dist/sql-wasm-browser.wasm public/ && vite build --config vite.sw.config.ts --watch",
+    "build:sw": "cp ../../node_modules/sql.js/dist/sql-wasm-browser.wasm public/ && vite build --config vite.sw.config.ts",
     "check:ts": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && tsc -p tsconfig.sw.json",
     "build": "npm run build:sw && vite build",
     "lint": "eslint .",
