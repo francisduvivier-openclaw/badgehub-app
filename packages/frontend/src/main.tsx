@@ -40,24 +40,40 @@ async function bootstrap() {
         `${import.meta.env.BASE_URL}api-sw.js`,
         { scope: import.meta.env.BASE_URL, type: "module" },
       );
-      // Wait for the SW to claim this page before rendering so that the very
-      // first API requests (home page list, detail page fetch) are intercepted.
-      // Without this, hard refreshes and first-visit loads fire requests before
-      // clients.claim() has run, causing GitHub Pages to return 404s.
+      // Ensure the SW is controlling this page before the first render so that
+      // every API request is intercepted.  Two failure modes exist:
+      //
+      //   (a) First-ever load – SW just installed; clients.claim() is in-flight.
+      //       Fix: wait for the "controllerchange" event (fast, < 1 s).
+      //
+      //   (b) Hard-refresh (Ctrl+Shift+R in Chrome) – the browser bypasses the
+      //       SW entirely for all requests in that load, so controllerchange
+      //       never fires.
+      //       Fix: after 1.5 s with no controller, do a programmatic soft-reload
+      //       (window.location.reload()).  JS-initiated navigation does NOT
+      //       bypass the SW, so the next load is intercepted normally.
+      //       A sessionStorage flag prevents an infinite reload loop.
       if (!navigator.serviceWorker.controller) {
-        await Promise.race([
-          new Promise<void>((resolve) =>
+        const controlled = await Promise.race([
+          new Promise<boolean>((resolve) =>
             navigator.serviceWorker.addEventListener(
               "controllerchange",
-              () => resolve(),
+              () => resolve(true),
               { once: true },
             ),
           ),
-          // Safety valve: proceed after 5 s even if the SW never claims us
-          // (e.g. the browser blocks service workers in this context).
-          new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 1500)),
         ]);
+
+        if (!controlled && !sessionStorage.getItem("sw-reloaded")) {
+          // Soft-reload so the SW can intercept requests on the next load.
+          sessionStorage.setItem("sw-reloaded", "1");
+          window.location.reload();
+          return; // Don't render – we're about to reload.
+        }
       }
+      // Clear the guard so repeated hard-refreshes each get one reload attempt.
+      sessionStorage.removeItem("sw-reloaded");
     } catch (error) {
       console.error("Failed to register API service worker", error);
     }
