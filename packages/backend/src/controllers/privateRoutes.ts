@@ -161,8 +161,6 @@ export function registerPrivateRoutes(
     await badgeHubData.writeDraftFile(slug, filePath, {
       mimetype: detectedMimeType,
       fileContent,
-      directory: undefined,
-      fileName: file.name,
       size: file.size,
     });
     return c.body(null, 204);

@@ -83,8 +83,6 @@ async function main() {
       );
     }
 
-    // Close the database before copying so all pages are flushed to disk.
-    rawDb.close();
     copyFileSync(dbPath, OUT_PATH);
     console.log(`Wrote SQLite database → ${OUT_PATH}`);
   } finally {
