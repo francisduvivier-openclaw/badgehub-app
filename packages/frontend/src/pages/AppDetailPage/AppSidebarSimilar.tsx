@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import { ERROR_ICON_URL } from "@config.ts";
@@ -27,12 +28,12 @@ const ProjectItem: React.FC<{ project: ProjectSummary }> = ({ project }) => (
       />
     )}
     <div>
-      <a
-        href={`/page/project/${project.slug}`} // This link should point to your project detail page
+      <Link
+        to={`/page/project/${project.slug}`}
         className="text-sm font-semibold text-emerald-400 hover:underline"
       >
         {project.name}
-      </a>
+      </Link>
       {project.categories && project.categories.length > 0 && (
         <p className="text-xs text-slate-400">
           {project.categories.join(", ")}
