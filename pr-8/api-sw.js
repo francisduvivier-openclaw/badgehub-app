@@ -18,6 +18,7 @@ var __privateWrapper = (obj, member, setter, getter) => ({
   }
 });
 var _validatedData, _matchResult, _HonoRequest_instances, getDecodedParam_fn, getAllDecodedParams_fn, getParamValue_fn, _cachedBody, _a, _rawRequest, _req, _var, _status, _executionCtx, _res, _layout, _renderer, _notFoundHandler, _preparedHeaders, _matchResult2, _path, _Context_instances, newResponse_fn, _b, _path2, __Hono_instances, clone_fn, _notFoundHandler2, addRoute_fn, handleError_fn, dispatch_fn, _c, _index, _varIndex, _children, _d, _context, _root, _e, _middleware, _routes, _RegExpRouter_instances, buildMatcher_fn, _f, _routers, _routes2, _g, _methods, _children2, _patterns, _order, _params, __Node_instances, pushHandlerSets_fn, _h, _node, _i;
+globalThis.__SHARED_CONFIG__ = { "BADGE_SLUGS": ["why2025", "mch2022"], "CATEGORY_NAMES": ["Uncategorised", "Event related", "Games", "Graphics", "Hardware", "Utility", "Wearable", "Data", "Silly", "Hacking", "Troll", "Unusable", "Adult", "Virus", "SAO", "Interpreter"], "ADMIN_CATEGORY_NAMES": ["Default"], "BADGEHUB_API_BASE_URL": "https://api.example.invalid", "keycloakPublic": { "KEYCLOAK_BASE_URL": "https://auth.example.invalid", "KEYCLOAK_REALM": "badgehub", "KEYCLOAK_CLIENT_ID": "badgehub-frontend" }, "isDevEnvironment": false };
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -2170,8 +2171,9 @@ class SqlJsAdapter {
   }
   get(strings, ...values) {
     const { sql, params } = templateToSql(strings, values);
-    const stmt = this.db.prepare(sql, params);
+    const stmt = this.db.prepare(sql);
     try {
+      if (params.length > 0) stmt.bind(params);
       if (!stmt.step()) return void 0;
       return stmt.getAsObject();
     } finally {
@@ -2180,9 +2182,10 @@ class SqlJsAdapter {
   }
   all(strings, ...values) {
     const { sql, params } = templateToSql(strings, values);
-    const stmt = this.db.prepare(sql, params);
+    const stmt = this.db.prepare(sql);
     const rows = [];
     try {
+      if (params.length > 0) stmt.bind(params);
       while (stmt.step()) rows.push(stmt.getAsObject());
     } finally {
       stmt.free();
@@ -5831,11 +5834,11 @@ const coerce = {
   bigint: (arg) => ZodBigInt.create({ ...arg, coerce: true }),
   date: (arg) => ZodDate.create({ ...arg, coerce: true })
 };
-const __vite_import_meta_env__ = { "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SSR": false, "VITE_BADGEHUB_API_BASE_URL": "https://api.example.invalid", "VITE_BADGE_SLUGS": "why2025,mch2022", "VITE_BASE_PATH": "/badgehub-app/pr-8/", "VITE_ENABLE_BROWSER_BACKEND": "true", "VITE_KEYCLOAK_BASE_URL": "https://auth.example.invalid", "VITE_KEYCLOAK_CLIENT_ID": "badgehub-frontend", "VITE_KEYCLOAK_REALM": "badgehub" };
+const __vite_import_meta_env__ = { "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SSR": false, "VITE_ADMIN_CATEGORY_NAMES": "Default", "VITE_BADGEHUB_API_BASE_URL": "https://api.example.invalid", "VITE_BADGE_SLUGS": "why2025,mch2022", "VITE_BASE_PATH": "/badgehub-app/pr-8/", "VITE_CATEGORY_NAMES": "Uncategorised,Event related,Games,Graphics,Hardware,Utility,Wearable,Data,Silly,Hacking,Troll,Unusable,Adult,Virus,SAO,Interpreter", "VITE_ENABLE_BROWSER_BACKEND": "true", "VITE_KEYCLOAK_BASE_URL": "https://auth.example.invalid", "VITE_KEYCLOAK_CLIENT_ID": "badgehub-frontend", "VITE_KEYCLOAK_REALM": "badgehub" };
 var define_process_env_default = {};
 const viteEnv = __vite_import_meta_env__ ?? {};
 function getEnv(envVarName) {
-  return define_process_env_default[envVarName] ?? viteEnv[envVarName] ?? viteEnv[`VITE_${envVarName}`];
+  return (typeof process !== "undefined" ? define_process_env_default[envVarName] : void 0) ?? viteEnv[envVarName] ?? viteEnv[`VITE_${envVarName}`];
 }
 function getAndAssertEnv(envVarName) {
   const envVar = getEnv(envVarName);
