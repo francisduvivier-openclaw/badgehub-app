@@ -15,8 +15,9 @@ export class SqlJsAdapter implements SqliteDb {
     ...values: unknown[]
   ): T | undefined {
     const { sql, params } = templateToSql(strings, values);
-    const stmt = this.db.prepare(sql, params);
+    const stmt = this.db.prepare(sql);
     try {
+      if (params.length > 0) stmt.bind(params as any);
       if (!stmt.step()) return undefined;
       return stmt.getAsObject() as T;
     } finally {
@@ -29,9 +30,10 @@ export class SqlJsAdapter implements SqliteDb {
     ...values: unknown[]
   ): T[] {
     const { sql, params } = templateToSql(strings, values);
-    const stmt = this.db.prepare(sql, params);
+    const stmt = this.db.prepare(sql);
     const rows: T[] = [];
     try {
+      if (params.length > 0) stmt.bind(params as any);
       while (stmt.step()) rows.push(stmt.getAsObject() as T);
     } finally {
       stmt.free();

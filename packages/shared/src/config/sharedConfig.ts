@@ -17,7 +17,7 @@ const viteEnv: Record<string, string | undefined> =
 
 function getEnv(envVarName: string) {
   return (
-    process.env[envVarName] ??
+    (typeof process !== "undefined" ? process.env[envVarName] : undefined) ??
     viteEnv[envVarName] ??
     viteEnv[`VITE_${envVarName}`]
   );
