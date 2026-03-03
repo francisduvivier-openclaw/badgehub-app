@@ -30,25 +30,64 @@ const AppEditPageWrapper = () => {
   return <AppEditPage slug={slug} />;
 };
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <HashRouter>
-      <SessionProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/page/project/:slug" element={<AppDetailWrapper />} />
-          <Route
-            path="/page/project/:slug/edit"
-            element={<AppEditPageWrapper />}
-          />
-          <Route path="/page/my-projects" element={<MyProjectsPage />} />
-          <Route path="/page/todo" element={<TodoPage />} />
-          <Route path="/page/create-project" element={<CreateProjectPage />} />
-        </Routes>
-      </SessionProvider>
-    </HashRouter>
-  </StrictMode>
-);
+async function bootstrap() {
+  if (
+    import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true" &&
+    "serviceWorker" in navigator
+  ) {
+    try {
+      await navigator.serviceWorker.register(
+        `${import.meta.env.BASE_URL}api-sw.js`,
+        { scope: import.meta.env.BASE_URL, type: "module" },
+      );
+      // Wait for the SW to claim this page before rendering so that the very
+      // first API requests (home page list, detail page fetch) are intercepted.
+      // Without this, hard refreshes and first-visit loads fire requests before
+      // clients.claim() has run, causing GitHub Pages to return 404s.
+      if (!navigator.serviceWorker.controller) {
+        await Promise.race([
+          new Promise<void>((resolve) =>
+            navigator.serviceWorker.addEventListener(
+              "controllerchange",
+              () => resolve(),
+              { once: true },
+            ),
+          ),
+          // Safety valve: proceed after 5 s even if the SW never claims us
+          // (e.g. the browser blocks service workers in this context).
+          new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to register API service worker", error);
+    }
+  }
+
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <HashRouter>
+        <SessionProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/page/project/:slug" element={<AppDetailWrapper />} />
+            <Route
+              path="/page/project/:slug/edit"
+              element={<AppEditPageWrapper />}
+            />
+            <Route path="/page/my-projects" element={<MyProjectsPage />} />
+            <Route path="/page/todo" element={<TodoPage />} />
+            <Route
+              path="/page/create-project"
+              element={<CreateProjectPage />}
+            />
+          </Routes>
+        </SessionProvider>
+      </HashRouter>
+    </StrictMode>,
+  );
+}
+
+bootstrap();
 
 // Floating toggle button logic
 function setupTodoToggleButton() {
@@ -83,16 +122,3 @@ if (IS_DEV_ENVIRONMENT) {
   setupTodoToggleButton();
 }
 
-if (
-  import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true" &&
-  "serviceWorker" in navigator
-) {
-  navigator.serviceWorker
-    .register(`${import.meta.env.BASE_URL}api-sw.js`, {
-      scope: import.meta.env.BASE_URL,
-      type: "module",
-    })
-    .catch((error) => {
-      console.error("Failed to register API service worker", error);
-    });
-}
