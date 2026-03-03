@@ -43,33 +43,42 @@ async function bootstrap() {
       // Ensure the SW is controlling this page before the first render so that
       // every API request is intercepted.  Two failure modes exist:
       //
-      //   (a) First-ever load – SW just installed; clients.claim() is in-flight.
-      //       Fix: wait for the "controllerchange" event (fast, < 1 s).
+      //   (a) First-ever load – SW is actively installing (downloading WASM +
+      //       SQLite).  reg.installing is non-null.  We wait up to 60 s for
+      //       clients.claim() to fire.  60 s is a safety valve; in practice
+      //       the 644 KB WASM + 140 KB SQLite finish in seconds even on slow
+      //       connections.
       //
       //   (b) Hard-refresh (Ctrl+Shift+R in Chrome) – the browser bypasses the
-      //       SW entirely for all requests in that load, so controllerchange
-      //       never fires.
-      //       Fix: after 1.5 s with no controller, do a programmatic soft-reload
-      //       (window.location.reload()).  JS-initiated navigation does NOT
-      //       bypass the SW, so the next load is intercepted normally.
+      //       SW entirely for this load, so controllerchange never fires.
+      //       reg.installing is null (SW already installed, nothing to install).
+      //       Fix: do a programmatic soft-reload (window.location.reload()).
+      //       JS-initiated navigation does NOT bypass the SW.
       //       A sessionStorage flag prevents an infinite reload loop.
+      const reg = await navigator.serviceWorker.getRegistration(
+        import.meta.env.BASE_URL,
+      );
       if (!navigator.serviceWorker.controller) {
-        const controlled = await Promise.race([
-          new Promise<boolean>((resolve) =>
+        const isInstalling = reg?.installing != null;
+
+        if (isInstalling) {
+          // SW is downloading/initialising – wait as long as it needs.
+          await new Promise<void>((resolve) => {
+            const timer = setTimeout(resolve, 60_000); // 60 s safety valve
             navigator.serviceWorker.addEventListener(
               "controllerchange",
-              () => resolve(true),
+              () => { clearTimeout(timer); resolve(); },
               { once: true },
-            ),
-          ),
-          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 1500)),
-        ]);
-
-        if (!controlled && !sessionStorage.getItem("sw-reloaded")) {
-          // Soft-reload so the SW can intercept requests on the next load.
-          sessionStorage.setItem("sw-reloaded", "1");
-          window.location.reload();
-          return; // Don't render – we're about to reload.
+            );
+          });
+        } else {
+          // SW already installed but not controlling → hard-refresh bypass.
+          // Do one soft-reload; the guard prevents an infinite loop.
+          if (!sessionStorage.getItem("sw-reloaded")) {
+            sessionStorage.setItem("sw-reloaded", "1");
+            window.location.reload();
+            return; // Don't render – we're about to reload.
+          }
         }
       }
       // Clear the guard so repeated hard-refreshes each get one reload attempt.
