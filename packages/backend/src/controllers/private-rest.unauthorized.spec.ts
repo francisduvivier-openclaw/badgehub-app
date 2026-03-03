@@ -30,7 +30,7 @@ async function get(app: App, url: string, headers?: Record<string, string>) {
   return parseResponse(await app.request(url, { headers }));
 }
 
-type RequestBody = unknown;
+type RequestBody = RequestInit["body"];
 
 async function post(app: App, url: string, options?: { headers?: Record<string, string>; body?: RequestBody }) {
   return parseResponse(await app.request(url, { method: "POST", ...options }));
