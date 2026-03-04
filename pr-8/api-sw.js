@@ -8560,7 +8560,8 @@ async function loadFromIdb() {
       req.onerror = () => reject(req.error);
       tx.oncomplete = () => db.close();
     });
-  } catch {
+  } catch (e) {
+    console.warn("[api-sw] Could not read from IndexedDB", e);
     return null;
   }
 }
@@ -8583,7 +8584,8 @@ async function saveToIdb(data) {
 let honoApp = null;
 let appPromise = null;
 function fileUrl(slug, revision, filePath) {
-  return `/api/v3/projects/${encodeURIComponent(slug)}/versions/${revision}/files/${filePath}`;
+  const revSegment = typeof revision === "number" ? `rev${revision}` : revision;
+  return `/api/v3/projects/${encodeURIComponent(slug)}/${revSegment}/files/${filePath}`;
 }
 function loadApp() {
   if (honoApp) return Promise.resolve(honoApp);
