@@ -8404,6 +8404,23 @@ var Hono = class extends Hono$1 {
     });
   }
 };
+const MIME_TYPES = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".json": "application/json",
+  ".py": "text/plain",
+  ".txt": "text/plain",
+  ".md": "text/markdown"
+};
+function mimeTypeForPath(filePath) {
+  const dot = filePath.lastIndexOf(".");
+  const ext = dot >= 0 ? filePath.slice(dot).toLowerCase() : "";
+  return MIME_TYPES[ext] ?? "application/octet-stream";
+}
 function createPublicApiRouter(data) {
   const app = new Hono();
   app.get("/api/v3/badges", async (c) => {
@@ -8469,6 +8486,7 @@ function createPublicApiRouter(data) {
     if (!file) {
       return c.json({ reason: `No app with slug '${slug}' found` }, 404);
     }
+    c.header("Content-Type", mimeTypeForPath(filePath));
     c.header("Content-Disposition", `attachment; filename="${filePath}"`);
     return c.body(file);
   });
@@ -8485,6 +8503,7 @@ function createPublicApiRouter(data) {
         404
       );
     }
+    c.header("Content-Type", mimeTypeForPath(filePath));
     c.header("Content-Disposition", `attachment; filename="${filePath}"`);
     c.header("Cache-Control", "public, max-age=31536000, immutable");
     return c.body(file);
@@ -8541,7 +8560,7 @@ function createPublicApiRouter(data) {
   return app;
 }
 const API_PREFIX = "/api/v3";
-const PREVIEW_DATA_VERSION = 1;
+const PREVIEW_DATA_VERSION = 2;
 const IDB_NAME = "badgehub-preview";
 const IDB_STORE = "sqlite-cache";
 const IDB_KEY = "preview-data";
