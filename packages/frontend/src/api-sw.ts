@@ -49,7 +49,8 @@ async function loadFromIdb(): Promise<Uint8Array | null> {
       req.onerror = () => reject(req.error);
       tx.oncomplete = () => db.close();
     });
-  } catch {
+  } catch (e) {
+    console.warn("[api-sw] Could not read from IndexedDB", e);
     return null;
   }
 }
@@ -75,7 +76,10 @@ let honoApp: Hono | null = null;
 let appPromise: Promise<Hono> | null = null;
 
 function fileUrl(slug: string, revision: number | string, filePath: string): string {
-  return `/api/v3/projects/${encodeURIComponent(slug)}/versions/${revision}/files/${filePath}`;
+  // Segment must match the Hono routes: "rev<N>" for numbered revisions,
+  // or the alias as-is ("latest" / "draft") for the /latest/files/* route.
+  const revSegment = typeof revision === "number" ? `rev${revision}` : revision;
+  return `/api/v3/projects/${encodeURIComponent(slug)}/${revSegment}/files/${filePath}`;
 }
 
 /**

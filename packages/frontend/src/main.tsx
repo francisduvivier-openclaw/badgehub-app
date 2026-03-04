@@ -36,7 +36,9 @@ async function bootstrap() {
     "serviceWorker" in navigator
   ) {
     try {
-      await navigator.serviceWorker.register(
+      // register() returns the current registration (new or existing).
+      // Reuse it directly rather than making a redundant getRegistration() call.
+      const reg = await navigator.serviceWorker.register(
         `${import.meta.env.BASE_URL}api-sw.js`,
         { scope: import.meta.env.BASE_URL, type: "module" },
       );
@@ -55,9 +57,6 @@ async function bootstrap() {
       //       Fix: do a programmatic soft-reload (window.location.reload()).
       //       JS-initiated navigation does NOT bypass the SW.
       //       A sessionStorage flag prevents an infinite reload loop.
-      const reg = await navigator.serviceWorker.getRegistration(
-        import.meta.env.BASE_URL,
-      );
       if (!navigator.serviceWorker.controller) {
         const isInstalling = reg?.installing != null;
 
