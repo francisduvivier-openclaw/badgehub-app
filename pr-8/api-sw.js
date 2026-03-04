@@ -5933,7 +5933,7 @@ const appMetadataJSONSchema = objectType({
   license_file: stringType().optional().describe("Path to the License file. Default is LICENSE"),
   license_type: stringType().optional().describe("Short description of the license type, eg. 'MIT'"),
   version: stringType().optional().describe("Semantic version of the project"),
-  badges: arrayType(badgeSlugSchema).optional().describe("list of badges that are compatible with this project."),
+  badges: arrayType(stringType()).optional().describe("list of badges that are compatible with this project."),
   application: arrayType(variantJSONSchema).optional().describe(
     "A list of application variants that allows specifying badge-specific properties of the project"
   )
