@@ -6345,6 +6345,13 @@ class SQLiteBadgeHubMetadata {
     this.db.run`INSERT INTO event_reports (project_slug, revision, badge_id, event_type)
                 VALUES (${slug}, ${revision}, ${badgeId}, ${eventType})`;
   }
+  async writeFileContent(sha256, content) {
+    this.db.run`INSERT OR IGNORE INTO file_contents (sha256, content) VALUES (${sha256}, ${content})`;
+  }
+  async getFileContentBySha256(sha256) {
+    const row = this.db.get`SELECT content FROM file_contents WHERE sha256 = ${sha256}`;
+    return row == null ? void 0 : row.content;
+  }
   async revokeProjectApiToken(slug) {
     this.db.run`DELETE FROM project_api_token WHERE project_slug = ${slug}`;
   }
@@ -6388,9 +6395,10 @@ class PreviewBadgeHubData {
   getProjectSummaries(query, revision) {
     return this.metadata.getProjectSummaries(query, revision);
   }
-  // Files are not served in the preview SW
-  async getFileContents() {
-    return void 0;
+  async getFileContents(slug, revision, filePath) {
+    const meta = await this.metadata.getFileMetadata(slug, revision, filePath);
+    if (!meta) return void 0;
+    return this.metadata.getFileContentBySha256(meta.sha256);
   }
   async insertProject(_project) {
   }
