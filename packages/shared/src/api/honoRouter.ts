@@ -1,6 +1,25 @@
 import { Hono } from "hono";
 import type { BackendDataAccess } from "@shared/api/backendCoreHandlers";
 
+const MIME_TYPES: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".json": "application/json",
+  ".py": "text/plain",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+};
+
+function mimeTypeForPath(filePath: string): string {
+  const dot = filePath.lastIndexOf(".");
+  const ext = dot >= 0 ? filePath.slice(dot).toLowerCase() : "";
+  return MIME_TYPES[ext] ?? "application/octet-stream";
+}
+
 /**
  * Creates a Hono app with all public /api/v3 routes wired to the given
  * BackendDataAccess implementation.  Used in both the Node.js backend and the
@@ -80,6 +99,7 @@ export function createPublicApiRouter(data: BackendDataAccess): Hono {
     if (!file) {
       return c.json({ reason: `No app with slug '${slug}' found` }, 404);
     }
+    c.header("Content-Type", mimeTypeForPath(filePath));
     c.header("Content-Disposition", `attachment; filename="${filePath}"`);
     return c.body(file);
   });
@@ -98,6 +118,7 @@ export function createPublicApiRouter(data: BackendDataAccess): Hono {
         404,
       );
     }
+    c.header("Content-Type", mimeTypeForPath(filePath));
     c.header("Content-Disposition", `attachment; filename="${filePath}"`);
     c.header("Cache-Control", "public, max-age=31536000, immutable");
     return c.body(file);

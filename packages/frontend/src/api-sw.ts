@@ -17,7 +17,7 @@ const API_PREFIX = "/api/v3";
  * match will discard the old IndexedDB entry, re-download the file, and store
  * the new bytes under the updated version.
  */
-const PREVIEW_DATA_VERSION = 1;
+const PREVIEW_DATA_VERSION = 2;
 
 const IDB_NAME = "badgehub-preview";
 const IDB_STORE = "sqlite-cache";
