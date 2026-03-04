@@ -15,8 +15,9 @@ import type { CreateProjectProps } from "@shared/domain/writeModels/project/Writ
  * implementation is SqlJsAdapter (sql.js / browser) rather than
  * NodeSqliteAdapter (node:sqlite).
  *
- * File-content retrieval is a no-op because the preview SW does not serve
- * binary files.
+ * File-content retrieval looks up the sha256 from the files table and then
+ * reads the binary blob from the file_contents table (both embedded in the
+ * preview SQLite).
  */
 export class PreviewBadgeHubData implements BackendDataAccess {
   constructor(private readonly metadata: SQLiteBadgeHubMetadata) {}
@@ -57,9 +58,10 @@ export class PreviewBadgeHubData implements BackendDataAccess {
     return this.metadata.getProjectSummaries(query, revision);
   }
 
-  // Files are not served in the preview SW
-  async getFileContents(): Promise<undefined> {
-    return undefined;
+  async getFileContents(slug: string, revision: "latest" | "draft" | number, filePath: string): Promise<Uint8Array | undefined> {
+    const meta = await this.metadata.getFileMetadata(slug, revision, filePath);
+    if (!meta) return undefined;
+    return this.metadata.getFileContentBySha256(meta.sha256);
   }
 
   async insertProject(_project: CreateProjectProps): Promise<void> {

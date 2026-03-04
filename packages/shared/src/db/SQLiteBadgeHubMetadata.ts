@@ -512,6 +512,15 @@ export class SQLiteBadgeHubMetadata {
                 VALUES (${slug}, ${revision}, ${badgeId}, ${eventType})`;
   }
 
+  async writeFileContent(sha256: string, content: Uint8Array): Promise<void> {
+    this.db.run`INSERT OR IGNORE INTO file_contents (sha256, content) VALUES (${sha256}, ${content})`;
+  }
+
+  async getFileContentBySha256(sha256: string): Promise<Uint8Array | undefined> {
+    const row = this.db.get<{ content: Uint8Array }>`SELECT content FROM file_contents WHERE sha256 = ${sha256}`;
+    return row?.content;
+  }
+
   async revokeProjectApiToken(slug: string): Promise<void> {
     this.db.run`DELETE FROM project_api_token WHERE project_slug = ${slug}`;
   }

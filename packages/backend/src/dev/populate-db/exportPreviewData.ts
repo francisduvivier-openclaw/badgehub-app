@@ -7,10 +7,12 @@
  * Usage: npm run export-preview-data --workspace=packages/backend
  */
 import { mkdtempSync, rmSync, copyFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
+import sharp from "sharp";
 import { NodeSqliteAdapter } from "@db/NodeSqliteAdapter";
 import { SQLiteBadgeHubMetadata } from "@shared/db/SQLiteBadgeHubMetadata";
 import { BADGEHUB_SCHEMA_SQL } from "@shared/db/sqliteSchema";
@@ -42,8 +44,10 @@ async function main() {
   const adapter = new NodeSqliteAdapter(rawDb);
   const metadata = new SQLiteBadgeHubMetadata(
     adapter,
-    (slug, revision, filePath) =>
-      `/api/v3/projects/${encodeURIComponent(slug)}/versions/${revision}/files/${filePath}`
+    (slug, revision, filePath) => {
+      const revSegment = typeof revision === "number" ? `rev${revision}` : revision;
+      return `/api/v3/projects/${encodeURIComponent(slug)}/${revSegment}/files/${filePath}`;
+    }
   );
 
   try {
@@ -59,8 +63,22 @@ async function main() {
         { created_at, updated_at }
       );
 
-      const { appMetadata } = await createSemiRandomAppdata(projectName, "");
+      const { appMetadata, iconBuffer, iconRelativePath } = await createSemiRandomAppdata(projectName, "");
       await metadata.updateDraftMetadata(slug, appMetadata);
+
+      if (iconBuffer && iconRelativePath) {
+        const sha256 = createHash("sha256").update(iconBuffer).digest("hex");
+        const pathParts = iconRelativePath.split("/");
+        const { width, height } = await sharp(iconBuffer).metadata();
+        const iconUint8 = new Uint8Array(iconBuffer);
+        await metadata.writeDraftFileMetadata(
+          slug,
+          pathParts,
+          { mimetype: "image/png", fileContent: iconUint8, size: iconBuffer.length, image_width: width, image_height: height },
+          sha256
+        );
+        await metadata.writeFileContent(sha256, iconUint8);
+      }
     }
 
     console.log("Publishing half the projects…");

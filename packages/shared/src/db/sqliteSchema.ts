@@ -53,6 +53,11 @@ export const BADGEHUB_SCHEMA_SQL = `
     UNIQUE(version_id, dir, name, ext)
   );
 
+  CREATE TABLE IF NOT EXISTS file_contents (
+    sha256 TEXT PRIMARY KEY,
+    content BLOB NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS event_reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_slug TEXT NOT NULL,
