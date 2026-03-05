@@ -5957,7 +5957,7 @@ const fileMetadataSchema = datedDataSchema.extend({
   // Human readable size_of_content
   full_path: stringType(),
   // full path of file with filename and extensions (dir+'/'+name+'.'+ext)
-  url: stringType().url().describe("Url that should be used to download the file")
+  url: stringType().describe("Url that should be used to download the file")
 });
 const versionSchema = objectType({
   revision: numberType(),
