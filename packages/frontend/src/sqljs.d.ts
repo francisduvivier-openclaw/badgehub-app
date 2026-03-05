@@ -7,6 +7,7 @@ declare module "sql.js" {
       getAsObject(): Record<string, unknown>;
       free(): void;
     };
+    export(): Uint8Array;
   }
 
   export default function initSqlJs(config?: {

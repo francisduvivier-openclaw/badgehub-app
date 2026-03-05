@@ -17,6 +17,9 @@ public/api-sw.js
 public/sql-wasm.wasm
 public/sql-wasm-browser.wasm
 
+# Pre-generated preview database (no longer committed; DB is generated at runtime by the SW)
+public/preview-data.sqlite
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
