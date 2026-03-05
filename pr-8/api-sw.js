@@ -2167,7 +2167,13 @@ class SqlJsAdapter {
   }
   run(strings, ...values) {
     const { sql, params } = templateToSql(strings, values);
-    this.db.run(sql, params);
+    const stmt = this.db.prepare(sql);
+    try {
+      if (params.length > 0) stmt.bind(params);
+      stmt.step();
+    } finally {
+      stmt.free();
+    }
   }
   get(strings, ...values) {
     const { sql, params } = templateToSql(strings, values);
@@ -2196,7 +2202,13 @@ class SqlJsAdapter {
     this.db.run(sql);
   }
   runRaw(sql, params) {
-    this.db.run(sql, params);
+    const stmt = this.db.prepare(sql);
+    try {
+      if (params.length > 0) stmt.bind(params);
+      stmt.step();
+    } finally {
+      stmt.free();
+    }
   }
 }
 var util;
