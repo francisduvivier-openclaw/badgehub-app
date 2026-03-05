@@ -5875,6 +5875,9 @@ const categoryNameSchema = enumType(getAllCategoryNames());
 function getAllCategoryNames() {
   return [...sharedConfig.CATEGORY_NAMES, ...sharedConfig.ADMIN_CATEGORY_NAMES];
 }
+function getAdminOnlyCategoryNames() {
+  return sharedConfig.ADMIN_CATEGORY_NAMES;
+}
 const variantJSONSchema = objectType({
   revision: coerce.number().int().nonnegative().optional().describe(`Revision of the project for this variant. If it is not present, then the revision of the project should be used.
 Warning: if it is present, then badgehub clients on badges will not update the app unless the this revision number is increased.`),
@@ -6373,6 +6376,74 @@ class SQLiteBadgeHubMetadata {
     return row == null ? void 0 : row.key_hash;
   }
 }
+const BADGEHUB_SCHEMA_SQL = `
+  CREATE TABLE IF NOT EXISTS projects (
+    slug TEXT PRIMARY KEY,
+    git TEXT,
+    idp_user_id TEXT,
+    latest_revision INTEGER,
+    draft_revision INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS registered_badges (
+    id TEXT PRIMARY KEY,
+    mac TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS project_api_token (
+    project_slug TEXT PRIMARY KEY,
+    key_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS versions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_slug TEXT NOT NULL,
+    revision INTEGER NOT NULL,
+    app_metadata TEXT NOT NULL DEFAULT '{}',
+    published_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(project_slug, revision)
+  );
+
+  CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_id INTEGER NOT NULL,
+    dir TEXT NOT NULL,
+    name TEXT NOT NULL,
+    ext TEXT NOT NULL,
+    mimetype TEXT NOT NULL,
+    size_of_content TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    image_width INTEGER,
+    image_height INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TEXT,
+    UNIQUE(version_id, dir, name, ext)
+  );
+
+  CREATE TABLE IF NOT EXISTS file_contents (
+    sha256 TEXT PRIMARY KEY,
+    content BLOB NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS event_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_slug TEXT NOT NULL,
+    revision INTEGER NOT NULL,
+    badge_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
 class PreviewBadgeHubData {
   constructor(metadata) {
     this.metadata = metadata;
@@ -8559,8 +8630,357 @@ function createPublicApiRouter(data) {
   });
   return app;
 }
+const PROJECT_NAMES = [
+  "CodeCraft",
+  "PixelPulse",
+  "BitBlast",
+  "NanoGames",
+  "ElectraPlay",
+  "CircuitForge",
+  "ByteBash",
+  "CodeCanvas",
+  "SparkScript",
+  "LogicLand",
+  "MicroArcade",
+  "CodeCraze",
+  "GameGenius",
+  "PixelPal",
+  "Electronica",
+  "CodeQuest",
+  "CircuitCraft",
+  "ByteBeat",
+  "NanoNexus",
+  "BitBox",
+  "CircuitChaos",
+  "CodeCrafter",
+  "PixelPioneer",
+  "LogicLab",
+  "ByteBlitz",
+  "CodeWave",
+  "NanoNet",
+  "ElectraForge",
+  "GameGrid",
+  "LogicLoom",
+  "PixelPlaza",
+  "CodeCity",
+  "NanoArcade",
+  "ElectronEra",
+  "BitBazaar",
+  "LogicLegends",
+  "CodeClan",
+  "PixelPortal",
+  "CircuitCraze",
+  "ByteBuster",
+  "NanoNovel",
+  "ElectraEden",
+  "CodeComet",
+  "PixelPlayground",
+  "LogicLandia",
+  "ByteBounce",
+  "CircuitCarnival",
+  "CodeCove",
+  "NanoNest",
+  "ElectraEntertain",
+  "GameGalaxy",
+  "LogicLabyrinth",
+  "ByteBlaster",
+  "CodeCompass",
+  "NanoNation",
+  "ElectraEmpire",
+  "GameGarden",
+  "PixelPeak",
+  "CircuitCelestial",
+  "CodeCrusade",
+  "NanoNebula",
+  "ElectraEnclave",
+  "GameGizmo",
+  "PixelPlanet",
+  "LogicLounge",
+  "ByteBeacon",
+  "CodeCircus",
+  "NanoNook",
+  "ElectraElysium",
+  "GameGlimpse",
+  "PixelParadise",
+  "CodeCoast",
+  "NanoNirvana",
+  "ElectraEdifice",
+  "GameGen",
+  "PixelPandemonium",
+  "LogicLagoon",
+  "ByteBlaze",
+  "CodeCorridor",
+  "HackSimulator",
+  "CodeCrunch",
+  "SecureCraft",
+  "CryptoPulse",
+  "DataForge",
+  "CipherQuest",
+  "HackQuest",
+  "SecureSphere"
+];
+const USERS = [
+  "TechTinkerer",
+  "CodeCrafter",
+  "PixelPilot",
+  "LogicLion",
+  "ElectronEager",
+  "NanoNomad",
+  "CircuitCraze",
+  "GameGlider",
+  "ByteBlast",
+  "CyberCraft",
+  "DigitalDynamo",
+  "CodeCreator",
+  "PixelPulse",
+  "LogicLuminary",
+  "ElectronEcho",
+  "NanoNinja",
+  "CircuitChampion",
+  "GameGazer",
+  "ByteBuddy",
+  "TechTornado",
+  "CodeChampion",
+  "PixelProdigy",
+  "LogicLabyrinth",
+  "ElectronExplorer",
+  "NanoNavigator",
+  "CircuitCatalyst",
+  "GameGuru",
+  "ByteBlaze",
+  "DigitalDreamer",
+  "CodeCommander",
+  "PixelPioneer",
+  "LogicLegend",
+  "ElectronElite",
+  "NanoNerd",
+  "CircuitCaptain",
+  "GameGenius",
+  "ByteBolt",
+  "CyberCipher",
+  "CodeConqueror",
+  "PixelPaladin",
+  "LogicLore",
+  "ElectronEnigma",
+  "CircuitConnoisseur",
+  "GameGuardian",
+  "ByteBandit",
+  "TechTinker",
+  "CodeCrusader",
+  "PixelPirate",
+  "ElectronEagle",
+  "CircuitSavant",
+  "GameGladiator",
+  "ByteBlitz",
+  "CyberSavvy",
+  "CodeCraftsman",
+  "PixelPro",
+  "LogicLoreMaster",
+  "ElectronEmperor",
+  "CircuitChamp",
+  "GameGizmo",
+  "ByteBrawler",
+  "TechTrailblazer",
+  "CodeCaptain",
+  "PixelPathfinder",
+  "LogicLionheart",
+  "ElectronExpedition",
+  "NanoNoble",
+  "CircuitCommander",
+  "GameGlobetrotter",
+  "CyberSherpa",
+  "CyberCraftsman",
+  "CodeConnoisseur"
+];
+const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1e3;
+const SIX_HUNDRED_DAYS_IN_MS = 600 * TWENTY_FOUR_HOURS_IN_MS;
+const CATEGORY_NAMES = getAllCategoryNames().filter(
+  (c) => !getAdminOnlyCategoryNames().includes(c)
+);
+const ICON_COUNT = 16;
+const ICON_FILENAMES = Array.from(
+  { length: ICON_COUNT },
+  (_, i) => `icon${i}.png`
+);
+const BADGE_IDS = Array(50).fill(0).map((_, i) => "badgeid" + i);
+const stringToSemiRandomNumber = async (inputString) => {
+  const ec = new TextEncoder();
+  const msgUint8 = ec.encode(inputString);
+  const digest = await crypto.subtle.digest("SHA-1", msgUint8);
+  const hashArray = Array.from(new Uint8Array(digest));
+  return hashArray.slice(-10).reduce((prev, curr, index) => prev + curr * 8 ** index, 0);
+};
+const getSemiRandomDates = async (stringToDigest) => {
+  const semiRandomNumber = await stringToSemiRandomNumber(stringToDigest);
+  const createMillisBack = semiRandomNumber % SIX_HUNDRED_DAYS_IN_MS;
+  const created_at = date(createMillisBack);
+  const updated_at = date(
+    createMillisBack - Math.min(
+      0,
+      createMillisBack - semiRandomNumber % (1234 * TWENTY_FOUR_HOURS_IN_MS)
+    )
+  );
+  return { created_at, updated_at };
+};
+const get1DayAfterSemiRandomUpdatedAt = async (projectSlug) => {
+  return new Date(
+    Date.parse((await getSemiRandomDates(projectSlug)).updated_at) + TWENTY_FOUR_HOURS_IN_MS
+  ).toISOString();
+};
+function date(millisBackFrom2025) {
+  const JAN_FIRST_2025_BRUSSELS = 1735686e6;
+  const MAX_DATE_MILLIS = JAN_FIRST_2025_BRUSSELS;
+  return new Date(MAX_DATE_MILLIS - millisBackFrom2025).toISOString();
+}
+function getSemiRandomElementSelection(semiRandomNumber, items, max_items) {
+  const nbItems = Math.max(semiRandomNumber % max_items, 1);
+  const selection = /* @__PURE__ */ new Set();
+  for (let i = 0; i < nbItems; i++) {
+    selection.add(items[(i + semiRandomNumber) % items.length]);
+  }
+  return [...selection];
+}
+async function createSemiRandomAppdata(projectName, semanticVersion, loadIcon) {
+  const semiRandomNumber = await stringToSemiRandomNumber(projectName);
+  const projectSlug = projectName.toLowerCase();
+  const description = await getDescription(projectName);
+  const userId = semiRandomNumber % USERS.length;
+  const { created_at, updated_at } = await getSemiRandomDates(projectName);
+  let iconBytes = void 0;
+  const iconIndex = semiRandomNumber % (ICON_COUNT + 4);
+  const iconFilename = ICON_FILENAMES[iconIndex];
+  const iconRelativePath = iconFilename;
+  if (iconFilename) {
+    iconBytes = await loadIcon(iconFilename);
+  }
+  const categories = getSemiRandomElementSelection(
+    semiRandomNumber,
+    CATEGORY_NAMES,
+    3
+  );
+  const allBadges = getBadgeSlugs();
+  const badges = getSemiRandomElementSelection(
+    semiRandomNumber,
+    allBadges,
+    allBadges.length
+  );
+  const appMetadata = {
+    name: projectName,
+    description,
+    author: USERS[userId],
+    license_type: "MIT",
+    badges,
+    categories,
+    icon_map: iconRelativePath ? { "64x64": iconRelativePath } : void 0
+  };
+  if (semiRandomNumber % 2 === 0) {
+    appMetadata.git_url = "https://github.com/badgehubcrew/badgehub-app";
+  } else if (semiRandomNumber % 3 === 0) {
+    appMetadata.git_url = "https://gitlab.com/team-badge/badgevms-badgehub";
+  }
+  if (semiRandomNumber % 2 === 0) {
+    appMetadata.hidden = false;
+  }
+  if (semiRandomNumber % 9 === 0) {
+    appMetadata.hidden = true;
+  }
+  return {
+    projectSlug,
+    created_at,
+    updated_at,
+    iconBytes,
+    iconRelativePath,
+    appMetadata
+  };
+}
+async function getDescription(appName) {
+  switch (await stringToSemiRandomNumber(appName) % 4) {
+    case 0:
+      return `Use ${appName} for some cool graphical effects.`;
+    case 1:
+      return `With ${appName}, you can do interesting things with the sensors.`;
+    case 2:
+      return `Make some magic happen with ${appName}.`;
+    case 3:
+      return `${appName} is just some silly test app.`;
+  }
+}
+async function sha256Hex(data) {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function writeFile(db, slug, pathParts, content, mimetype) {
+  const sha256 = await sha256Hex(content);
+  await db.writeDraftFileMetadata(
+    slug,
+    pathParts,
+    { mimetype, fileContent: content, size: content.length },
+    sha256
+  );
+  await db.writeFileContent(sha256, content);
+}
+async function populatePreviewDb(metadata, loadIcon) {
+  console.log(`[populatePreviewDb] Inserting ${PROJECT_NAMES.length} projects…`);
+  for (const projectName of PROJECT_NAMES) {
+    const semiRandomNumber = await stringToSemiRandomNumber(projectName);
+    const slug = projectName.toLowerCase();
+    const userName = USERS[semiRandomNumber % USERS.length];
+    const { created_at, updated_at } = await getSemiRandomDates(projectName);
+    await metadata.insertProject(
+      { slug, idp_user_id: userName },
+      { created_at, updated_at }
+    );
+    const { appMetadata, iconBytes, iconRelativePath } = await createSemiRandomAppdata(projectName, "", loadIcon);
+    await metadata.updateDraftMetadata(slug, appMetadata);
+    if (iconBytes && iconRelativePath) {
+      const sha256 = await sha256Hex(iconBytes);
+      const pathParts = iconRelativePath.split("/");
+      await metadata.writeDraftFileMetadata(
+        slug,
+        pathParts,
+        { mimetype: "image/png", fileContent: iconBytes, size: iconBytes.length },
+        sha256
+      );
+      await metadata.writeFileContent(sha256, iconBytes);
+    }
+    const metadataJson = new TextEncoder().encode(
+      JSON.stringify(appMetadata, null, 2)
+    );
+    await writeFile(metadata, slug, ["metadata.json"], metadataJson, "application/json");
+    const pythonLines = [
+      `# ${projectName} badge app`,
+      `import display`,
+      ``,
+      `def main():`,
+      `    display.print("${projectName}")`,
+      ``,
+      `main()`
+    ];
+    const pythonSrc = new TextEncoder().encode(pythonLines.join("\n") + "\n");
+    await writeFile(metadata, slug, ["__init__.py"], pythonSrc, "text/x-python");
+  }
+  console.log("[populatePreviewDb] Publishing half the projects…");
+  const halfNames = PROJECT_NAMES.slice(0, PROJECT_NAMES.length >> 1);
+  for (const projectName of halfNames) {
+    const publishDate = await get1DayAfterSemiRandomUpdatedAt(projectName);
+    await metadata.publishVersion(projectName.toLowerCase(), publishDate);
+  }
+  console.log("[populatePreviewDb] Reporting installs…");
+  const publishedSlugs = halfNames.map((n) => n.toLowerCase());
+  const nbDownloads = 500;
+  for (let i = 0; i < nbDownloads; i++) {
+    const semiRandomIndex = await stringToSemiRandomNumber("download" + i);
+    await metadata.reportEvent(
+      publishedSlugs[semiRandomIndex % publishedSlugs.length],
+      1,
+      BADGE_IDS[i % BADGE_IDS.length >> 2] + "-v1",
+      "install_count"
+    );
+  }
+  console.log("[populatePreviewDb] Done.");
+}
 const API_PREFIX = "/api/v3";
-const PREVIEW_DATA_VERSION = 3;
+const PREVIEW_DATA_VERSION = 4;
 const IDB_NAME = "badgehub-preview";
 const IDB_STORE = "sqlite-cache";
 const IDB_KEY = "preview-data";
@@ -8614,21 +9034,35 @@ function fileUrl(slug, revision, filePath) {
   const revSegment = typeof revision === "number" ? `rev${revision}` : revision;
   return `/api/v3/projects/${encodeURIComponent(slug)}/${revSegment}/files/${filePath}`;
 }
+async function loadIconFromNetwork(filename) {
+  try {
+    const resp = await fetch(new URL(`dev-icons/${filename}`, self.location.href));
+    if (!resp.ok) return void 0;
+    return new Uint8Array(await resp.arrayBuffer());
+  } catch {
+    return void 0;
+  }
+}
 function loadApp() {
   if (honoApp) return Promise.resolve(honoApp);
   if (!appPromise) {
     appPromise = Promise.all([
       initSqlJs({ locateFile: (file) => new URL(file, self.location.href).href }),
-      loadFromIdb().then(async (cached) => {
-        if (cached) return cached;
-        const buffer = await fetch(
-          new URL("preview-data.sqlite", self.location.href)
-        ).then((r) => r.arrayBuffer());
-        const bytes = new Uint8Array(buffer);
+      loadFromIdb()
+    ]).then(async ([SQL, cached]) => {
+      let bytes;
+      if (cached) {
+        bytes = cached;
+      } else {
+        console.log("[api-sw] Generating preview database from fixture data…");
+        const db2 = new SQL.Database();
+        db2.run(BADGEHUB_SCHEMA_SQL);
+        const adapter2 = new SqlJsAdapter(db2);
+        const metadata2 = new SQLiteBadgeHubMetadata(adapter2, fileUrl);
+        await populatePreviewDb(metadata2, loadIconFromNetwork);
+        bytes = db2.export();
         saveToIdb(bytes);
-        return bytes;
-      })
-    ]).then(([SQL, bytes]) => {
+      }
       const db = new SQL.Database(bytes);
       const adapter = new SqlJsAdapter(db);
       const metadata = new SQLiteBadgeHubMetadata(adapter, fileUrl);
@@ -8646,7 +9080,7 @@ function loadApp() {
 self.addEventListener("install", (event) => {
   event.waitUntil(
     loadApp().catch(
-      (e) => console.warn("[api-sw] Could not pre-load preview-data.sqlite", e)
+      (e) => console.warn("[api-sw] Could not generate preview database", e)
     ).then(() => self.skipWaiting())
   );
 });
