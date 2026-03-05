@@ -11,7 +11,7 @@ vi.mock("@api/tsRestClient.ts", () => ({
       if (params.filePath === "test.json") {
         return Promise.resolve({
           status: 200,
-          body: '{"name": "test", "version": "1.0.0", "description": "A test JSON file"}',
+          body: { name: "test", version: "1.0.0", description: "A test JSON file" },
         });
       }
       if (params.filePath === "example.py") {

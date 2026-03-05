@@ -392,6 +392,9 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
               const text = await res.body.text();
               setFileContent(text);
               setImageBlob(null);
+            } else if (res.body !== null && typeof res.body === "object") {
+              setFileContent(JSON.stringify(res.body, null, 2));
+              setImageBlob(null);
             } else {
               setFileContent("// Unable to display file content");
               setImageBlob(null);
