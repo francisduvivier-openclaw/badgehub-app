@@ -7,7 +7,13 @@ export class SqlJsAdapter implements SqliteDb {
 
   run(strings: TemplateStringsArray, ...values: unknown[]): void {
     const { sql, params } = templateToSql(strings, values);
-    this.db.run(sql, params);
+    const stmt = this.db.prepare(sql);
+    try {
+      if (params.length > 0) stmt.bind(params as any);
+      stmt.step();
+    } finally {
+      stmt.free();
+    }
   }
 
   get<T extends Record<string, unknown>>(
@@ -46,6 +52,12 @@ export class SqlJsAdapter implements SqliteDb {
   }
 
   runRaw(sql: string, params: unknown[]): void {
-    this.db.run(sql, params);
+    const stmt = this.db.prepare(sql);
+    try {
+      if (params.length > 0) stmt.bind(params as any);
+      stmt.step();
+    } finally {
+      stmt.free();
+    }
   }
 }
