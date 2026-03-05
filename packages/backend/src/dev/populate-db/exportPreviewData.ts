@@ -35,6 +35,18 @@ const OUT_PATH = path.resolve(
   "preview-data.sqlite"
 );
 
+async function writeFile(
+  db: SQLiteBadgeHubMetadata,
+  slug: string,
+  pathParts: string[],
+  content: Uint8Array,
+  mimetype: string
+) {
+  const sha256 = createHash("sha256").update(content).digest("hex");
+  await db.writeDraftFileMetadata(slug, pathParts, { mimetype, fileContent: content, size: content.length }, sha256);
+  await db.writeFileContent(sha256, content);
+}
+
 async function main() {
   const tempDir = mkdtempSync(path.join(tmpdir(), "badgehub-preview-export-"));
   const dbPath = path.join(tempDir, "preview.sqlite");
@@ -79,6 +91,21 @@ async function main() {
         );
         await metadata.writeFileContent(sha256, iconUint8);
       }
+
+      const metadataJson = new TextEncoder().encode(JSON.stringify(appMetadata, null, 2));
+      await writeFile(metadata, slug, ["metadata.json"], metadataJson, "application/json");
+
+      const pythonLines = [
+        `# ${projectName} badge app`,
+        `import display`,
+        ``,
+        `def main():`,
+        `    display.print("${projectName}")`,
+        ``,
+        `main()`,
+      ];
+      const pythonSrc = new TextEncoder().encode(pythonLines.join("\n") + "\n");
+      await writeFile(metadata, slug, ["__init__.py"], pythonSrc, "text/x-python");
     }
 
     console.log("Publishing half the projects…");
