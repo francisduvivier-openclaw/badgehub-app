@@ -8560,7 +8560,7 @@ function createPublicApiRouter(data) {
   return app;
 }
 const API_PREFIX = "/api/v3";
-const PREVIEW_DATA_VERSION = 2;
+const PREVIEW_DATA_VERSION = 3;
 const IDB_NAME = "badgehub-preview";
 const IDB_STORE = "sqlite-cache";
 const IDB_KEY = "preview-data";
