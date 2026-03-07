@@ -3,10 +3,10 @@ import { MLink } from "@sharedComponents/MLink.tsx";
 
 const Hero: React.FC = () => (
   <section className="text-center mb-12 pt-8">
-    <h1 className="text-4xl sm:text-5xl font-bold text-slate-100 mb-4">
+    <h1 className="text-4xl sm:text-5xl font-bold mb-4">
       Share. Build. Innovate.
     </h1>
-    <p className="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">
+    <p className="text-lg opacity-60 mb-8 max-w-2xl mx-auto">
       Badge applications at your fingertips. Discover projects or contribute
       your own.
     </p>
@@ -19,13 +19,13 @@ const Hero: React.FC = () => (
             .getElementById("apps-grid")
             ?.scrollIntoView({ behavior: "smooth" });
         }}
-        className="btn-primary px-8 py-3 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
+        className="btn btn-primary btn-lg"
       >
         Explore Projects
       </a>
       <MLink
         to="/page/create-project"
-        className="btn-secondary px-8 py-3 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
+        className="btn btn-neutral btn-lg"
       >
         Upload Your Creation
       </MLink>
