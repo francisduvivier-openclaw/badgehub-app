@@ -41,7 +41,7 @@ describe("HomePage", () => {
       .mockImplementation(() => {});
     render(<HomePage tsRestClient={tsRestClientWithError()} />);
     expect(
-      await screen.findByText(/Failed to fetch projects.*/i)
+      await screen.findByText(/(Failed to fetch projects.*|API error)/i)
     ).toBeInTheDocument();
     consoleErrorSpy.mockRestore();
   });

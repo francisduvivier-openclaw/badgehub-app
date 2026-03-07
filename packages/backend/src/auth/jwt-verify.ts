@@ -4,47 +4,9 @@ import {
   KEYCLOAK_CERTS_URL,
   KEYCLOAK_REALM_ISSUER_URL,
 } from "@config";
-import { NextFunction, Response } from "express";
+import type { Context, Next } from "hono";
 
 const JWKS = createRemoteJWKSet(new URL(KEYCLOAK_CERTS_URL!));
-
-async function jwtVerifyTokenMiddleware(
-  req: { headers: { authorization?: string; "badgehub-api-token"?: string } },
-  res: Response,
-  next: NextFunction
-) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    if (req.headers["badgehub-api-token"]) {
-      next();
-      return;
-    }
-    return res
-      .status(401)
-      .json({
-        error: "Authorization as well as badgehub-api-token header is missing",
-      });
-  }
-
-  const [bearer, token] = authHeader.split(" ");
-
-  if (
-    bearer !== "Bearer" ||
-    !token ||
-    token.trim() === "" ||
-    token === "undefined"
-  ) {
-    return res.status(401).json({ reason: "Not authenticated" });
-  }
-  try {
-    await jwtVerifyToken(token);
-    next();
-  } catch (error) {
-    console.error("JWT verification error:", error);
-    return res.status(401).json({ reason: "JWT verification failed" });
-  }
-}
 
 async function jwtVerifyToken(token: string) {
   if (DISABLE_AUTH) {
@@ -61,4 +23,29 @@ async function jwtVerifyToken(token: string) {
   }
 }
 
-export { jwtVerifyTokenMiddleware };
+export async function jwtVerifyTokenMiddleware(c: Context, next: Next) {
+  const authHeader = c.req.header("authorization");
+
+  if (!authHeader) {
+    if (c.req.header("badgehub-api-token")) {
+      await next();
+      return;
+    }
+    return c.json(
+      { error: "Authorization as well as badgehub-api-token header is missing" },
+      401,
+    );
+  }
+
+  const [bearer, token] = authHeader.split(" ");
+  if (bearer !== "Bearer" || !token || token.trim() === "" || token === "undefined") {
+    return c.json({ reason: "Not authenticated" }, 401);
+  }
+
+  try {
+    await jwtVerifyToken(token);
+    await next();
+  } catch {
+    return c.json({ reason: "JWT verification failed" }, 401);
+  }
+}

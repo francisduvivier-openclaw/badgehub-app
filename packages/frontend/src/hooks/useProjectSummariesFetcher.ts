@@ -18,11 +18,12 @@ export const useProjectSummariesFetcher = (
       switch (result.status) {
         case 200:
           return result.body;
-        default:
-          throw new Error(
-            "Failed to fetch projects, reason " +
-              (result.body as { reason: string })?.reason
-          );
+        default: {
+          const reason = (result.body as { reason: string })?.reason;
+          const err = new Error(`Failed to fetch projects, reason ${reason}`);
+          (err as Error & { httpStatus: number }).httpStatus = result.status;
+          throw err;
+        }
       }
     },
     [tsRestClient]

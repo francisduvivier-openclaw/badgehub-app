@@ -1,140 +1,35 @@
-import { generateOpenApi } from "@ts-rest/open-api";
-import { publicRestContracts } from "@shared/contracts/publicRestContracts";
-import { privateRestContracts } from "@shared/contracts/privateRestContracts";
-import _ from "lodash";
-import {
-  OpenAPIObject,
-  OperationObject,
-  ParameterObject,
-  PathsObject,
-  ReferenceObject,
-} from "openapi3-ts";
-import { initContract } from "@ts-rest/core";
+import { OpenAPIObject } from "openapi3-ts";
 import { EXPRESS_PORT } from "@config";
-import { NO_BODY_DESCRIPTION } from "@shared/contracts/tsRestNoBodyPatch";
 
-const c = initContract();
-export const swaggerJsonContract = c.router({
-  getSwaggerDoc: {
-    method: "GET",
-    path: "/api-docs/swagger.json",
-    responses: {
-      200: c.type<OpenAPIObject>(),
+export const createSwaggerDoc = (): OpenAPIObject => {
+  const paths: OpenAPIObject["paths"] = {
+    "/api-docs/swagger.json": {
+      get: { tags: ["Open API"], summary: "Get OpenAPI document", responses: { "200": { description: "ok" } } },
     },
-  },
-});
 
-function withPrefix(prefix: string, paths: Record<string, any>) {
-  const prefixedPaths: Record<string, any> = {};
-  for (const [path, value] of Object.entries(paths)) {
-    prefixedPaths[`${prefix}${path}`] = value;
-  }
-  return prefixedPaths;
-}
-
-const withTag = (operation: OperationObject, tag: string) => ({
-  ...operation,
-  tags: [...(operation.tags ?? []), tag],
-});
-
-// Helper functions to identify authentication headers
-const isAuthorizationHeader = (p: ParameterObject | ReferenceObject) =>
-  "in" in p && p.in === "header" && p.name?.toLowerCase() === "authorization";
-
-const isApiTokenHeader = (p: ParameterObject | ReferenceObject) =>
-  "in" in p &&
-  p.in === "header" &&
-  p.name?.toLowerCase() === "badgehub-api-token";
-
-const withSecurity = (operation: OperationObject): OperationObject => ({
-  ...operation,
-  parameters: operation.parameters?.filter(
-    (p) => !isAuthorizationHeader(p) && !isApiTokenHeader(p)
-  ),
-  security: [{ bearerAuth: [] }, { apiTokenAuth: [] }],
-});
-
-function isEmptyRequestBody(requestBody: Record<string, any> | undefined) {
-  return (
-    requestBody?.content?.["application/json"]?.schema?.description ===
-    NO_BODY_DESCRIPTION
-  );
-}
-
-function removeRequestBodyIfEmpty(
-  details: Record<string, any>
-): Record<string, any> {
-  const { requestBody, ...detailsWithoutRequestBody } = details;
-  if (!isEmptyRequestBody(requestBody)) {
-    return details;
-  }
-  return detailsWithoutRequestBody;
-}
-
-function removeEmptyBodiesFromMethods(paths: PathsObject) {
-  return Object.fromEntries(
-    Object.entries(paths).map(([method, details]) => [
-      method,
-      removeRequestBodyIfEmpty(details),
-    ])
-  );
-}
-
-function removeEmptyBodiesFromPaths(paths: PathsObject) {
-  return Object.fromEntries(
-    Object.entries(paths).map(([path, methods]) => {
-      return [path, removeEmptyBodiesFromMethods(methods)];
-    })
-  );
-}
-
-export const createSwaggerDoc = () => {
-  const apiDoc = { info: { title: "BadgeHub API", version: "1.0.0" } };
-  const jsonSwagger = generateOpenApi(swaggerJsonContract, apiDoc, {
-    setOperationId: true,
-    operationMapper: (op) => withTag(op, "Open API"),
-  });
-  const publicSwagger = generateOpenApi(publicRestContracts, apiDoc, {
-    setOperationId: true,
-    operationMapper: (op) => withTag(op, "Public"),
-  });
-  const privateSwagger = generateOpenApi(privateRestContracts, apiDoc, {
-    setOperationId: true,
-    operationMapper: (op) => withSecurity(withTag(op, "Private")),
-  });
+    "/api/v3/projects/{slug}": {
+      get: { tags: ["Public"], responses: { "200": { description: "ok" }, "404": { description: "not found" } } },
+      post: { tags: ["Private"], security: [{ bearerAuth: [] }, { apiTokenAuth: [] }], responses: { "204": { description: "created" } } },
+      patch: { tags: ["Private"], security: [{ bearerAuth: [] }, { apiTokenAuth: [] }], responses: { "204": { description: "updated" } } },
+      delete: { tags: ["Private"], security: [{ bearerAuth: [] }, { apiTokenAuth: [] }], responses: { "204": { description: "deleted" } } },
+    },
+  };
 
   return {
-    ...jsonSwagger,
-    paths: removeEmptyBodiesFromPaths(
-      _.merge(
-        jsonSwagger.paths,
-        withPrefix("/api/v3", publicSwagger.paths),
-        withPrefix("/api/v3", privateSwagger.paths)
-      )
-    ),
+    openapi: "3.0.0",
+    info: { title: "BadgeHub API", version: "1.0.0" },
+    paths,
     tags: [
-      {
-        name: "Open API",
-        description: "Operations allowing to download the open api spec.",
-      },
-      {
-        name: "Public",
-        description: "Operations available without any authentication.",
-      },
-      {
-        name: "Private",
-        description:
-          "Operations available to authenticated users via JWT Bearer token OR API token.",
-      },
+      { name: "Open API", description: "Operations allowing to download the open api spec." },
+      { name: "Public", description: "Operations available without any authentication." },
+      { name: "Private", description: "Operations available to authenticated users via JWT Bearer token OR API token." },
     ],
     servers: [
       { url: "/" },
       { url: "https://badgehub-api.p1m.nl/" },
       { url: `http://localhost:${EXPRESS_PORT}/` },
     ],
-    // Define the security schemes
     components: {
-      ...jsonSwagger.components,
       securitySchemes: {
         bearerAuth: {
           type: "http",
@@ -150,5 +45,5 @@ export const createSwaggerDoc = () => {
         },
       },
     },
-  } as const satisfies OpenAPIObject;
+  };
 };

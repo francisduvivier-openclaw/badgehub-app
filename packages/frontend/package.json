@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "mkdir -p dist && cp index-indirect-dev.html dist/index.html && vite",
-    "check:ts": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
-    "build": "vite build",
+    "dev:sw": "cp ../../node_modules/sql.js/dist/sql-wasm-browser.wasm public/ && vite build --config vite.sw.config.ts --watch",
+    "build:sw": "cp ../../node_modules/sql.js/dist/sql-wasm-browser.wasm public/ && vite build --config vite.sw.config.ts",
+    "check:ts": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && tsc -p tsconfig.sw.json",
+    "build": "npm run build:sw && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
   },
   "dependencies": {
+    "hono": "^4.12.3",
     "keycloak-js": "^26.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

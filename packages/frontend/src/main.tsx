@@ -12,7 +12,6 @@ import { TodoPage } from "@pages/TodoPage.tsx";
 import MyProjectsPage from "@pages/MyProjectsPage/MyProjectsPage.tsx";
 import { IS_DEV_ENVIRONMENT } from "@config.ts";
 import { useTitle } from "@hooks/useTitle.ts";
-import { installBrowserBackendIfNeeded } from "@browserBackend.ts";
 
 const AppDetailWrapper = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -32,10 +31,60 @@ const AppEditPageWrapper = () => {
 };
 
 async function bootstrap() {
-  try {
-    await installBrowserBackendIfNeeded();
-  } catch (error) {
-    console.error("Failed to initialize browser backend preview:", error);
+  if (
+    import.meta.env.VITE_ENABLE_BROWSER_BACKEND === "true" &&
+    "serviceWorker" in navigator
+  ) {
+    try {
+      // register() returns the current registration (new or existing).
+      // Reuse it directly rather than making a redundant getRegistration() call.
+      const reg = await navigator.serviceWorker.register(
+        `${import.meta.env.BASE_URL}api-sw.js`,
+        { scope: import.meta.env.BASE_URL, type: "module" },
+      );
+      // Ensure the SW is controlling this page before the first render so that
+      // every API request is intercepted.  Two failure modes exist:
+      //
+      //   (a) First-ever load – SW is actively installing (downloading WASM +
+      //       SQLite).  reg.installing is non-null.  We wait up to 60 s for
+      //       clients.claim() to fire.  60 s is a safety valve; in practice
+      //       the 644 KB WASM + 140 KB SQLite finish in seconds even on slow
+      //       connections.
+      //
+      //   (b) Hard-refresh (Ctrl+Shift+R in Chrome) – the browser bypasses the
+      //       SW entirely for this load, so controllerchange never fires.
+      //       reg.installing is null (SW already installed, nothing to install).
+      //       Fix: do a programmatic soft-reload (window.location.reload()).
+      //       JS-initiated navigation does NOT bypass the SW.
+      //       A sessionStorage flag prevents an infinite reload loop.
+      if (!navigator.serviceWorker.controller) {
+        const isInstalling = reg?.installing != null;
+
+        if (isInstalling) {
+          // SW is downloading/initialising – wait as long as it needs.
+          await new Promise<void>((resolve) => {
+            const timer = setTimeout(resolve, 60_000); // 60 s safety valve
+            navigator.serviceWorker.addEventListener(
+              "controllerchange",
+              () => { clearTimeout(timer); resolve(); },
+              { once: true },
+            );
+          });
+        } else {
+          // SW already installed but not controlling → hard-refresh bypass.
+          // Do one soft-reload; the guard prevents an infinite loop.
+          if (!sessionStorage.getItem("sw-reloaded")) {
+            sessionStorage.setItem("sw-reloaded", "1");
+            window.location.reload();
+            return; // Don't render – we're about to reload.
+          }
+        }
+      }
+      // Clear the guard so repeated hard-refreshes each get one reload attempt.
+      sessionStorage.removeItem("sw-reloaded");
+    } catch (error) {
+      console.error("Failed to register API service worker", error);
+    }
   }
 
   createRoot(document.getElementById("root")!).render(
@@ -51,15 +100,18 @@ async function bootstrap() {
             />
             <Route path="/page/my-projects" element={<MyProjectsPage />} />
             <Route path="/page/todo" element={<TodoPage />} />
-            <Route path="/page/create-project" element={<CreateProjectPage />} />
+            <Route
+              path="/page/create-project"
+              element={<CreateProjectPage />}
+            />
           </Routes>
         </SessionProvider>
       </HashRouter>
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
-void bootstrap();
+bootstrap();
 
 // Floating toggle button logic
 function setupTodoToggleButton() {
@@ -93,3 +145,4 @@ function setupTodoToggleButton() {
 if (IS_DEV_ENVIRONMENT) {
   setupTodoToggleButton();
 }
+

@@ -5,10 +5,73 @@ import * as path from "node:path";
 
 const publicStaticFileDir = "static"
 
+function injectSharedConfigPlugin() {
+  return {
+    name: "inject-shared-config",
+    transformIndexHtml(html: string) {
+      if (process.env.VITE_ENABLE_BROWSER_BACKEND !== "true") return html;
+      const keycloakBaseUrl =
+        process.env.VITE_KEYCLOAK_BASE_URL ?? "https://auth.example.invalid";
+      const keycloakRealm = process.env.VITE_KEYCLOAK_REALM ?? "master";
+      const config = {
+        BADGE_SLUGS: (
+          process.env.VITE_BADGE_SLUGS ?? "why2025,troopers23,mch2022"
+        ).split(","),
+        CATEGORY_NAMES: (
+          process.env.VITE_CATEGORY_NAMES ??
+          "Uncategorised,Event related,Games,Graphics,Hardware,Utility,Wearable,Data,Silly,Hacking,Troll,Unusable,Adult,Virus,SAO,Interpreter"
+        ).split(","),
+        ADMIN_CATEGORY_NAMES: (
+          process.env.VITE_ADMIN_CATEGORY_NAMES ?? "Default"
+        ).split(","),
+        BADGEHUB_API_BASE_URL:
+          process.env.VITE_BADGEHUB_API_BASE_URL ??
+          "https://api.example.invalid",
+        keycloakPublic: {
+          KEYCLOAK_BASE_URL: keycloakBaseUrl,
+          KEYCLOAK_REALM: keycloakRealm,
+          KEYCLOAK_CLIENT_ID:
+            process.env.VITE_KEYCLOAK_CLIENT_ID ?? "badgehub-frontend",
+        },
+        isDevEnvironment: process.env.NODE_ENV === "development",
+      };
+      return html.replace(
+        "<!-- __SHARED_CONFIG_SCRIPT_PLACEHOLDER__ -->",
+        `<script type="application/javascript">globalThis.__SHARED_CONFIG__ = ${JSON.stringify(config)};</script>`,
+      );
+    },
+  };
+}
+
+// When running in browser-backend mode without a real .env file, provide the
+// same fallback values that injectSharedConfigPlugin uses for __SHARED_CONFIG__
+// so that config.ts (which reads import.meta.env) doesn't throw on startup.
+const browserBackendDefines =
+  process.env.VITE_ENABLE_BROWSER_BACKEND === "true"
+    ? {
+        "import.meta.env.VITE_KEYCLOAK_CLIENT_ID": JSON.stringify(
+          process.env.VITE_KEYCLOAK_CLIENT_ID ?? "badgehub-frontend",
+        ),
+        "import.meta.env.VITE_KEYCLOAK_BASE_URL": JSON.stringify(
+          process.env.VITE_KEYCLOAK_BASE_URL ?? "https://auth.example.invalid",
+        ),
+        "import.meta.env.VITE_KEYCLOAK_REALM": JSON.stringify(
+          process.env.VITE_KEYCLOAK_REALM ?? "master",
+        ),
+        "import.meta.env.VITE_BADGEHUB_API_BASE_URL": JSON.stringify(
+          process.env.VITE_BADGEHUB_API_BASE_URL ?? "https://api.example.invalid",
+        ),
+        "import.meta.env.VITE_BADGE_SLUGS": JSON.stringify(
+          process.env.VITE_BADGE_SLUGS ?? "why2025,troopers23,mch2022",
+        ),
+      }
+    : {};
+
 // https://vite.dev/config/
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || "/",
-  plugins: [...react(), tsconfigPaths()],
+  define: browserBackendDefines,
+  plugins: [...react(), tsconfigPaths(), injectSharedConfigPlugin()],
   resolve: {
     alias: {
       "@shared": path.resolve(__dirname, "../shared/src"),

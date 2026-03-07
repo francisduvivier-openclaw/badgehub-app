@@ -36,25 +36,47 @@ export const AppGridWithFilterAndPagination = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 12;
 
-  // Fetch apps with filters
+  // Fetch apps with filters, retrying while the preview service worker is
+  // still initialising (HTTP 503 from api-sw.js loading preview-data.json).
   useEffect(() => {
     setLoading(true);
+    setError(null);
+    setCurrentPage(1);
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    appFetcher({ badge, category })
-      .then((res) => {
-        if (typeof res === "object") {
-          const body = res;
-          setApps(body);
-          setError(null);
-        } else {
-          setError("Failed to fetch projects, invalid response type.");
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-        setError(e.message || "Failed to fetch projects");
-      })
-      .finally(() => setLoading(false));
+    const attempt = () => {
+      appFetcher({ badge, category })
+        .then((res) => {
+          if (cancelled) return;
+          if (Array.isArray(res)) {
+            setApps(res);
+            setError(null);
+            setLoading(false);
+          } else {
+            setError("Failed to fetch projects, invalid response type.");
+            setLoading(false);
+          }
+        })
+        .catch((e: Error & { httpStatus?: number }) => {
+          if (cancelled) return;
+          if (e.httpStatus === 503) {
+            // Preview SW is still loading preview-data.json — keep the spinner
+            // and retry automatically once it's ready.
+            retryTimer = setTimeout(attempt, 800);
+          } else {
+            console.error(e);
+            setError(e.message || "Failed to fetch projects");
+            setLoading(false);
+          }
+        });
+    };
+
+    attempt();
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
   }, [badge, category, appFetcher]);
 
   // Filter apps by search query before pagination
@@ -113,7 +135,7 @@ export const AppGridWithFilterAndPagination = ({
         <AppsGrid apps={paginatedApps} editable={editable} />
       )}
       {/* show pagination if more than one page */}
-      {Math.ceil(filteredSortedApps.length / pageSize) > 1 && (
+      {filteredSortedApps.length > pageSize && (
         <Pagination
           currentPage={currentPage}
           totalPages={Math.ceil(filteredSortedApps.length / pageSize)}

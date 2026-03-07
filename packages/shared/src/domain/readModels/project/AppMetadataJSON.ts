@@ -106,7 +106,7 @@ export const appMetadataJSONSchema = z.object({
     .describe("Short description of the license type, eg. 'MIT'"),
   version: z.string().optional().describe("Semantic version of the project"),
   badges: z
-    .array(badgeSlugSchema)
+    .array(z.string())
     .optional()
     .describe("list of badges that are compatible with this project."),
   application: z
