@@ -19,13 +19,13 @@ const Hero: React.FC = () => (
             .getElementById("apps-grid")
             ?.scrollIntoView({ behavior: "smooth" });
         }}
-        className="btn-primary px-8 py-3 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
+        className="btn btn-primary btn-lg"
       >
         Explore Projects
       </a>
       <MLink
         to="/page/create-project"
-        className="btn-secondary px-8 py-3 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
+        className="btn btn-neutral btn-lg"
       >
         Upload Your Creation
       </MLink>
