@@ -35,7 +35,7 @@ const ProjectItem: React.FC<{ project: ProjectSummary }> = ({ project }) => (
         {project.name}
       </Link>
       {project.categories && project.categories.length > 0 && (
-        <p className="text-xs text-slate-400">
+        <p className="text-xs opacity-60">
           {project.categories.join(", ")}
         </p>
       )}
@@ -93,7 +93,7 @@ const AppSidebarSimilar: React.FC<{
     }
     if (error) {
       return (
-        <p className="text-sm text-red-400">
+        <p className="text-sm text-error">
           {publicProjectErrorMessage(normalizePublicProjectError(error))}
         </p>
       );
@@ -104,7 +104,7 @@ const AppSidebarSimilar: React.FC<{
       ));
     }
     return (
-      <p className="text-sm text-slate-400">
+      <p className="text-sm opacity-60">
         No other projects by this author found.
       </p>
     );
