@@ -142,3 +142,7 @@ data
 
 # Claude local documentation
 CLAUDE.local.md
+
+# Playwright
+test-results/
+playwright-report/

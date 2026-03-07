@@ -13,6 +13,12 @@ const Hero: React.FC = () => (
     <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
       <a
         href="#apps-grid"
+        onClick={(e) => {
+          e.preventDefault();
+          document
+            .getElementById("apps-grid")
+            ?.scrollIntoView({ behavior: "smooth" });
+        }}
         className="btn-primary px-8 py-3 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
       >
         Explore Projects
