@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset='utf-8'><title>N1 Rulesplit CLI</title><style>body{font-family:Inter,Arial;background:#f8fafc;color:#0f172a;margin:36px;line-height:1.45}code,pre{background:#e2e8f0;padding:2px 6px;border-radius:6px}pre{padding:12px;overflow:auto}h1{margin:0 0 8px} .pill{background:#dcfce7;padding:4px 10px;border-radius:999px;font-size:12px}</style></head><body><span class='pill'>Non-agent proposal</span><h1>N1 — Rulesplit CLI</h1><p><b>Deterministic splitter</b> using strict rules: R100 renames, import-only hunks, generated files, then remainder.</p><pre>rulesplit analyze
+rulesplit apply --rename --imports --generated</pre><h2>Pseudo steps</h2><pre>capture staged patch
+bucket by rules
+commit rename bucket
+commit import bucket
+commit generated bucket
+commit remainder</pre><h2>Example</h2><pre>Input: 90 files mixed changes
+Output:
+- chore(rename): 50 files
+- chore(imports): 28 files
+- feat/fix: 12 files</pre><p><b>Strength:</b> reproducible and CI-friendly.<br/><b>Weakness:</b> no deep semantic intent inference.</p></body></html>

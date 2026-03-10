@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset='utf-8'><title>A1 SplitWise Agent</title><style>body{font-family:Inter,Arial;background:#f8fafc;color:#0f172a;margin:36px;line-height:1.45}code,pre{background:#e2e8f0;padding:2px 6px;border-radius:6px}pre{padding:12px;overflow:auto}h1{margin:0 0 8px} .pill{background:#dbeafe;padding:4px 10px;border-radius:999px;font-size:12px}</style></head><body><span class='pill'>Agent proposal</span><h1>A1 — SplitWise Agent (Local)</h1><p><b>Problem:</b> mixed commits combine mechanical and behavioral changes, making review expensive.</p><p><b>Core flow:</b> plan → review → apply → verify.</p><pre>splitwise plan --base origin/main
+splitwise review
+splitwise apply
+splitwise verify</pre><h2>Example output</h2><pre>Before: 1 commit, 120 files changed
+After:
+1) chore(rename): move pkg/foo -> pkg/core/foo
+2) chore(imports): rewrite @foo/* -> @core/foo/*
+3) refactor(symbols): FooClient -> CoreClient
+4) feat: add retry jitter</pre><h2>Pseudo implementation</h2><pre>hunks = parse(git_diff())
+for h in hunks:
+  cls, conf = classify(h)
+  if conf &lt; 0.85: queue_manual(h)
+  else: assign(h, cls)
+plan = order(assignments)
+for c in plan: stage(c); commit(c.msg)</pre><p><b>Guardrails:</b> backup branch, dry-run, no force push without confirmation.</p></body></html>

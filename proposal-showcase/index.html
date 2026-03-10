@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commit Splitting Product Proposals</title>
+  <style>
+    body{font-family:Inter,system-ui,Arial,sans-serif;margin:0;background:#0b1020;color:#e8ecff}
+    .wrap{max-width:1100px;margin:0 auto;padding:40px 24px}
+    h1{font-size:40px;margin:0 0 12px}
+    p.lead{color:#b7c0ea;max-width:900px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}
+    .card{background:#121933;border:1px solid #24305f;border-radius:14px;padding:18px}
+    .tag{display:inline-block;background:#253368;color:#c8d3ff;border-radius:999px;padding:4px 10px;font-size:12px;margin-bottom:8px}
+    a{color:#8bb2ff;text-decoration:none}
+    table{width:100%;border-collapse:collapse;margin-top:26px;background:#121933;border-radius:10px;overflow:hidden}
+    th,td{border:1px solid #26346a;padding:10px;text-align:left;font-size:14px}
+    th{background:#1a2450}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Commit Splitting Proposals</h1>
+    <p class="lead">Goal: split large mixed commits into clean, reviewable commits for moves/renames/import churn versus behavioral logic changes. Built from first principles with human-in-the-loop safety.</p>
+
+    <div class="grid">
+      <div class="card"><div class="tag">Agent</div><h3>A1 — SplitWise Agent (Local CLI/IDE)</h3><p>Classifies hunks by intent with confidence scores and lets users approve before commit materialization.</p></div>
+      <div class="card"><div class="tag">Agent</div><h3>A2 — PR Surgeon Bot (Server)</h3><p>Team-wide PR automation: proposes split plans, applies rewrite after maintainer approval, and audits outcomes.</p></div>
+      <div class="card"><div class="tag">Non-Agent</div><h3>N1 — Rulesplit CLI</h3><p>Deterministic rule-based splitting using Git metadata and configured heuristics.</p></div>
+      <div class="card"><div class="tag">Non-Agent</div><h3>N2 — Commit Workbench</h3><p>Interactive GUI/TUI with commit lanes and drag-drop hunk control for precision splitting.</p></div>
+    </div>
+
+    <table>
+      <thead><tr><th>Proposal</th><th>Automation</th><th>Determinism</th><th>Mixed-hunk handling</th><th>Best fit</th></tr></thead>
+      <tbody>
+        <tr><td>A1 SplitWise Agent</td><td>High</td><td>Medium</td><td>Good (confidence-gated)</td><td>Power users</td></tr>
+        <tr><td>A2 PR Surgeon Bot</td><td>Very High</td><td>Medium</td><td>Good</td><td>Platform teams</td></tr>
+        <tr><td>N1 Rulesplit CLI</td><td>Medium</td><td>High</td><td>Limited</td><td>CI-safe deterministic flow</td></tr>
+        <tr><td>N2 Commit Workbench</td><td>Low-Medium</td><td>High</td><td>Excellent (manual)</td><td>Refactor-heavy repos</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:20px"><a href="a1-local-agent.html">A1 details</a> · <a href="a2-pr-bot.html">A2 details</a> · <a href="n1-rulesplit.html">N1 details</a> · <a href="n2-workbench.html">N2 details</a></p>
+  </div>
+</body>
+</html>

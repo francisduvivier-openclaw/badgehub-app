@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset='utf-8'><title>A2 PR Surgeon Bot</title><style>body{font-family:Inter,Arial;background:#f8fafc;color:#0f172a;margin:36px;line-height:1.45}code,pre{background:#e2e8f0;padding:2px 6px;border-radius:6px}pre{padding:12px;overflow:auto}h1{margin:0 0 8px} .pill{background:#dbeafe;padding:4px 10px;border-radius:999px;font-size:12px}</style></head><body><span class='pill'>Agent proposal</span><h1>A2 — PR Surgeon Bot (Server)</h1><p><b>Problem:</b> teams need consistent split quality and governance across repositories.</p><p><b>Flow:</b> PR labeled <code>needs-split</code> → bot posts plan/risk → maintainer approves → bot rewrites branch with audit log.</p><h2>Pseudo implementation</h2><pre>onPR():
+  graph = load_commit_graph()
+  plan = classify_and_split(graph)
+  post_comment(plan, risk)
+
+onApproveApply():
+  create_backup_ref()
+  rewritten = replay(plan)
+  run_ci(rewritten)
+  if pass: push_force_with_lease()</pre><h2>Example bot summary</h2><pre>Mechanical ratio in logic commits: 78% -> 31%
+Low-confidence hunks requiring review: 2
+Proposed rewritten commits: 7</pre><p><b>Guardrails:</b> protected branch policy, explicit approval, abort on conflicts by default.</p></body></html>
