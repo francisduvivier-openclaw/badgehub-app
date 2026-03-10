@@ -20,6 +20,17 @@
 - Sanity check that worked: launch Chromium headless, open YouTube URL, read `window.ytInitialPlayerResponse`.
 - `npx playwright --version` can succeed even when `require('playwright')` fails, because npx may use a temporary package; local install is still needed for scripts.
 
+## User preference: package manager
+
+- User preference: always use `pnpm` by default (not npm) across workspaces/sessions.
+- If `pnpm` is missing, install/activate with Corepack:
+  1. `corepack enable`
+  2. `corepack prepare pnpm@latest --activate`
+  3. verify with `pnpm --version`
+- For monorepos, add `pnpm-workspace.yaml` (e.g. `packages/*`) to avoid workspace warnings.
+- Migration note: when switching from npm to pnpm, pnpm may move previously npm-installed deps to `node_modules/.ignored`; then run `pnpm install`.
+- Verified in this environment: pnpm v10.32.0 installed and `pnpm install --ignore-scripts` completed successfully.
+
 ## User preference (PR discipline)
 
 - For any branch/PR work: always push commits promptly and follow up on CI/PR build status until green or until blockers are clearly reported.
