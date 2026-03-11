@@ -6,7 +6,8 @@ import { assertDefined } from "@shared/util/assertions.ts";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import Keycloak from "keycloak-js";
-import { extractFilename, TEXT_FILE_EXTENSIONS, IMAGE_FILE_EXTENSIONS } from "@utils/fileUtils.ts";
+import { extractFilename } from "@utils/fileUtils.ts";
+import { getLanguageFromFile, getPreviewType } from "@utils/filePreview.ts";
 
 const DownloadIcon = () => (
   <svg
