@@ -50,11 +50,11 @@ const AppEditFileUpload: React.FC<{
           params: { slug, filePath: file.name },
           body: formData,
         });
-        if (file.name === "metadata.json") {
-          appMetadataChanged = true;
-        }
         if (res.status !== 204) {
           throw new Error(`Upload failed for ${file.name}`);
+        }
+        if (file.name === "metadata.json") {
+          appMetadataChanged = true;
         }
       }
       setSuccess("File(s) uploaded successfully.");
@@ -68,9 +68,6 @@ const AppEditFileUpload: React.FC<{
       });
     } catch (err: unknown) {
       console.error(err);
-      if (appMetadataChanged) {
-        onUploadSuccess({ metadataChanged: appMetadataChanged });
-      }
       setError(
         err instanceof Error ? err.message : "Failed to upload file(s)."
       );
