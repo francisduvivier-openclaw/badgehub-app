@@ -29,11 +29,7 @@ describe("AppEditFileList", () => {
   it("shows empty state when no files are present", () => {
     const project = withFiles(dummyApps[0]!.details, 0);
     render(
-      <AppEditFileList
-        project={project}
-        slug="demo"
-        keycloak={keycloak}
-      />
+      <AppEditFileList project={project} slug="demo" keycloak={keycloak} />
     );
 
     expect(
@@ -44,11 +40,7 @@ describe("AppEditFileList", () => {
   it("renders file list items when files exist", () => {
     const project = withFiles(dummyApps[0]!.details, 2);
     render(
-      <AppEditFileList
-        project={project}
-        slug="demo"
-        keycloak={keycloak}
-      />
+      <AppEditFileList project={project} slug="demo" keycloak={keycloak} />
     );
 
     expect(screen.getAllByTestId("file-list-item")).toHaveLength(2);
