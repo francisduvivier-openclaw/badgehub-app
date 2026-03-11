@@ -5,13 +5,15 @@ import { BadgeSelector } from "@sharedComponents/OptionSelector/BadgeSelector.ts
 import { OptionSelectorWithTitle } from "@sharedComponents/OptionSelector/OptionSelectorWithTitle.tsx";
 import { CategoryName } from "@shared/domain/readModels/project/Category.ts";
 
+export type SortOption = "mostInstalled" | undefined;
+
 interface FiltersProps {
   badge: BadgeSlug | undefined;
   category: CategoryName | undefined;
-  sortBy: string | undefined;
+  sortBy: SortOption;
   onBadgeChange: (value: BadgeSlug | undefined) => void;
   onCategoryChange: (value: CategoryName | undefined) => void;
-  onSortByChange: (value: string | undefined) => void;
+  onSortByChange: (value: SortOption) => void;
   onResetFilters: () => void;
 }
 
@@ -44,7 +46,11 @@ const Filters: React.FC<FiltersProps> = ({
           title={"Sort By"}
           noValueSetName={"Last Updated"}
           onValueSelection={onSortByChange}
-          valueMap={{}}
+          valueMap={
+            {
+              mostInstalled: "Most Installed",
+            } as const satisfies Record<"mostInstalled", string>
+          }
           value={sortBy}
         />
 

@@ -28,11 +28,10 @@ const AppSidebarDetails: React.FC<{ project: ProjectDetails }> = ({
         <strong>Type:</strong>{" "}
         {project.version.app_metadata.project_type ?? "app"}
       </li>
-      <li>
-        <strong>Downloads:</strong>{" "}
-        {project.version?.download_count ?? "Download count not available"}
+      <li className={"todoElement"}>
+        <strong>Downloads:</strong> {"Download count not available"}
       </li>
-      <li>
+      <li className={"todoElement"}>
         <strong>Rating:</strong>{" "}
         {
           "4.8/5 (120 votes)" // TODO

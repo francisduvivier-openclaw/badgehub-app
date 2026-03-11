@@ -3,6 +3,10 @@ import { FileMetadata, fileMetadataSchema } from "./FileMetadata";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails";
 import { z } from "zod/v3";
 import { __tsCheckSame } from "@shared/zodUtils/zodTypeComparison";
+import {
+  ISODateString,
+  isoDateStringSchema,
+} from "@shared/domain/readModels/ISODateString";
 
 export type LatestVersionAlias = "latest";
 type DraftVersionAlias = "draft";
@@ -16,26 +20,26 @@ export interface VersionRelation {
 
 export interface Version {
   revision: RevisionNumber;
-  zip?: string;
-  size_of_zip?: number;
-  git_commit_id?: string; // Allow spefifying a git commit ID for the version, if it exists // TODO allow updating this somehow
+  // zip?: null | string;
+  // size_of_zip?: null | number;
+  // git_commit_id?: null | string; // Allow spefifying a git commit ID for the version, if it exists // TODO allow updating this somehow
   files: Array<FileMetadata>;
   app_metadata: AppMetadataJSON; // Changed! New property that has the content of the metadata.json file that is installed on the project.
-  published_at?: Date;
-  download_count: number;
-  project_slug?: ProjectDetails["slug"]; // TODO remove because has no value in http response, is more of an internal detail
+  published_at?: null | ISODateString;
+  // download_count: number;
+  project_slug?: null | ProjectDetails["slug"]; // TODO remove because has no value in http response, is more of an internal detail
 }
 
 export const versionSchema = z.object({
   revision: z.number(),
-  zip: z.string().optional(),
-  size_of_zip: z.number().optional(),
-  git_commit_id: z.string().optional(),
+  // zip: z.string().optional().nullable(),
+  // size_of_zip: z.number().optional().nullable(),
+  // git_commit_id: z.string().optional().nullable(),
   files: z.array(fileMetadataSchema),
   app_metadata: appMetadataJSONSchema,
-  published_at: z.date().optional(),
-  download_count: z.number(),
-  project_slug: z.string().optional(), // Project slug
+  published_at: isoDateStringSchema.optional().nullable(),
+  // download_count: z.coerce.number(),
+  project_slug: z.string().optional().nullable(), // Project slug
 });
 
 __tsCheckSame<Version, Version, z.infer<typeof versionSchema>>(true);

@@ -14,6 +14,7 @@ const AppCard: React.FC<AppCardProps> = ({
   slug,
   icon_map,
   editable,
+  installs,
 }) => {
   const icon = icon_map?.["64x64"];
 
@@ -81,6 +82,12 @@ const AppCard: React.FC<AppCardProps> = ({
           Published:{" "}
           {published_at ? new Date(published_at).toLocaleDateString() : "-"}
         </p>
+        {installs !== undefined && (
+          <p className="text-sm text-slate-400 flex items-center">
+            <DownloadIcon />
+            <span className="ml-1">{installs}</span>
+          </p>
+        )}
       </div>
     </div>
   );

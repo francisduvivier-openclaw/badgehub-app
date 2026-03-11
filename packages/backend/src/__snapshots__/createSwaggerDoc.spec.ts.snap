@@ -327,6 +327,17 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
               "type": "string",
             },
           },
+          {
+            "in": "query",
+            "name": "orderBy",
+            "schema": {
+              "enum": [
+                "published_at",
+                "installs",
+              ],
+              "type": "string",
+            },
+          },
         ],
         "responses": {
           "200": {
@@ -370,6 +381,7 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                         "type": "string",
                       },
                       "git": {
+                        "nullable": true,
                         "type": "string",
                       },
                       "hidden": {
@@ -448,7 +460,12 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                       "idp_user_id": {
                         "type": "string",
                       },
+                      "installs": {
+                        "description": "The number of badges that have reported to have installed this app at least once.",
+                        "type": "number",
+                      },
                       "latest_revision": {
+                        "nullable": true,
                         "type": "number",
                       },
                       "license_type": {
@@ -458,7 +475,6 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                         "type": "string",
                       },
                       "published_at": {
-                        "format": "date-time",
                         "type": "string",
                       },
                       "revision": {
@@ -472,6 +488,7 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                       "slug",
                       "idp_user_id",
                       "name",
+                      "installs",
                       "revision",
                     ],
                     "type": "object",
@@ -583,35 +600,24 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
               "application/json": {
                 "schema": {
                   "properties": {
-                    "author": {
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                        },
-                      },
-                      "required": [
-                        "name",
-                      ],
-                      "type": "object",
-                    },
                     "created_at": {
-                      "format": "date-time",
                       "type": "string",
                     },
                     "git": {
+                      "nullable": true,
                       "type": "string",
                     },
                     "idp_user_id": {
                       "type": "string",
                     },
                     "latest_revision": {
+                      "nullable": true,
                       "type": "number",
                     },
                     "slug": {
                       "type": "string",
                     },
                     "updated_at": {
-                      "format": "date-time",
                       "type": "string",
                     },
                     "version": {
@@ -776,14 +782,10 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                           },
                           "type": "object",
                         },
-                        "download_count": {
-                          "type": "number",
-                        },
                         "files": {
                           "items": {
                             "properties": {
                               "created_at": {
-                                "format": "date-time",
                                 "type": "string",
                               },
                               "dir": {
@@ -818,7 +820,6 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                                 "type": "number",
                               },
                               "updated_at": {
-                                "format": "date-time",
                                 "type": "string",
                               },
                               "url": {
@@ -844,31 +845,22 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                           },
                           "type": "array",
                         },
-                        "git_commit_id": {
-                          "type": "string",
-                        },
                         "project_slug": {
+                          "nullable": true,
                           "type": "string",
                         },
                         "published_at": {
-                          "format": "date-time",
+                          "nullable": true,
                           "type": "string",
                         },
                         "revision": {
                           "type": "number",
-                        },
-                        "size_of_zip": {
-                          "type": "number",
-                        },
-                        "zip": {
-                          "type": "string",
                         },
                       },
                       "required": [
                         "revision",
                         "files",
                         "app_metadata",
-                        "download_count",
                       ],
                       "type": "object",
                     },
@@ -1110,35 +1102,24 @@ Warning: if it is present, then badgehub clients on badges will not update the a
               "application/json": {
                 "schema": {
                   "properties": {
-                    "author": {
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                        },
-                      },
-                      "required": [
-                        "name",
-                      ],
-                      "type": "object",
-                    },
                     "created_at": {
-                      "format": "date-time",
                       "type": "string",
                     },
                     "git": {
+                      "nullable": true,
                       "type": "string",
                     },
                     "idp_user_id": {
                       "type": "string",
                     },
                     "latest_revision": {
+                      "nullable": true,
                       "type": "number",
                     },
                     "slug": {
                       "type": "string",
                     },
                     "updated_at": {
-                      "format": "date-time",
                       "type": "string",
                     },
                     "version": {
@@ -1303,14 +1284,10 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                           },
                           "type": "object",
                         },
-                        "download_count": {
-                          "type": "number",
-                        },
                         "files": {
                           "items": {
                             "properties": {
                               "created_at": {
-                                "format": "date-time",
                                 "type": "string",
                               },
                               "dir": {
@@ -1345,7 +1322,6 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                                 "type": "number",
                               },
                               "updated_at": {
-                                "format": "date-time",
                                 "type": "string",
                               },
                               "url": {
@@ -1371,31 +1347,22 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                           },
                           "type": "array",
                         },
-                        "git_commit_id": {
-                          "type": "string",
-                        },
                         "project_slug": {
+                          "nullable": true,
                           "type": "string",
                         },
                         "published_at": {
-                          "format": "date-time",
+                          "nullable": true,
                           "type": "string",
                         },
                         "revision": {
                           "type": "number",
-                        },
-                        "size_of_zip": {
-                          "type": "number",
-                        },
-                        "zip": {
-                          "type": "string",
                         },
                       },
                       "required": [
                         "revision",
                         "files",
                         "app_metadata",
-                        "download_count",
                       ],
                       "type": "object",
                     },
@@ -2140,35 +2107,24 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
               "application/json": {
                 "schema": {
                   "properties": {
-                    "author": {
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                        },
-                      },
-                      "required": [
-                        "name",
-                      ],
-                      "type": "object",
-                    },
                     "created_at": {
-                      "format": "date-time",
                       "type": "string",
                     },
                     "git": {
+                      "nullable": true,
                       "type": "string",
                     },
                     "idp_user_id": {
                       "type": "string",
                     },
                     "latest_revision": {
+                      "nullable": true,
                       "type": "number",
                     },
                     "slug": {
                       "type": "string",
                     },
                     "updated_at": {
-                      "format": "date-time",
                       "type": "string",
                     },
                     "version": {
@@ -2333,14 +2289,10 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                           },
                           "type": "object",
                         },
-                        "download_count": {
-                          "type": "number",
-                        },
                         "files": {
                           "items": {
                             "properties": {
                               "created_at": {
-                                "format": "date-time",
                                 "type": "string",
                               },
                               "dir": {
@@ -2375,7 +2327,6 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                                 "type": "number",
                               },
                               "updated_at": {
-                                "format": "date-time",
                                 "type": "string",
                               },
                               "url": {
@@ -2401,31 +2352,22 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                           },
                           "type": "array",
                         },
-                        "git_commit_id": {
-                          "type": "string",
-                        },
                         "project_slug": {
+                          "nullable": true,
                           "type": "string",
                         },
                         "published_at": {
-                          "format": "date-time",
+                          "nullable": true,
                           "type": "string",
                         },
                         "revision": {
                           "type": "number",
-                        },
-                        "size_of_zip": {
-                          "type": "number",
-                        },
-                        "zip": {
-                          "type": "string",
                         },
                       },
                       "required": [
                         "revision",
                         "files",
                         "app_metadata",
-                        "download_count",
                       ],
                       "type": "object",
                     },
@@ -2532,6 +2474,263 @@ Warning: if it is present, then badgehub clients on badges will not update the a
           },
         },
         "summary": "Get a file for a specific revision of the project",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
+    "/api/v3/projects/{slug}/rev{revision}/report/crash": {
+      "post": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "reportCrash",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "nullable": true,
+              "type": "number",
+            },
+          },
+          {
+            "description": "the mac address of the badge",
+            "in": "query",
+            "name": "mac",
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "the id of the badge",
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "reason": {
+                    "description": "An optional reason for the app crash.",
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+            },
+          },
+          "description": "Body",
+        },
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {},
+              },
+            },
+            "description": "204",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "reason": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "reason",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Report a crash of an app.",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
+    "/api/v3/projects/{slug}/rev{revision}/report/install": {
+      "post": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "reportInstall",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "nullable": true,
+              "type": "number",
+            },
+          },
+          {
+            "description": "the mac address of the badge",
+            "in": "query",
+            "name": "mac",
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "the id of the badge",
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {},
+            },
+          },
+          "description": "Body",
+        },
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {},
+              },
+            },
+            "description": "204",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "reason": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "reason",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Report an installation of an app.",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
+    "/api/v3/projects/{slug}/rev{revision}/report/launch": {
+      "post": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "reportLaunch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "nullable": true,
+              "type": "number",
+            },
+          },
+          {
+            "description": "the mac address of the badge",
+            "in": "query",
+            "name": "mac",
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "the id of the badge",
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {},
+                "type": "object",
+              },
+            },
+          },
+          "description": "Body",
+        },
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {},
+              },
+            },
+            "description": "204",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "reason": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "reason",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Report a launch of an app.",
         "tags": [
           "Public",
         ],
@@ -2779,6 +2978,10 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                       "description": "number of project authors",
                       "type": "number",
                     },
+                    "projectInstalls": {
+                      "description": "Total number of project installations reported.",
+                      "type": "number",
+                    },
                     "projects": {
                       "description": "number of projects",
                       "type": "number",
@@ -2786,6 +2989,7 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                   },
                   "required": [
                     "projects",
+                    "projectInstalls",
                     "projectAuthors",
                     "badges",
                   ],
@@ -2875,6 +3079,7 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                         "type": "string",
                       },
                       "git": {
+                        "nullable": true,
                         "type": "string",
                       },
                       "hidden": {
@@ -2953,7 +3158,12 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                       "idp_user_id": {
                         "type": "string",
                       },
+                      "installs": {
+                        "description": "The number of badges that have reported to have installed this app at least once.",
+                        "type": "number",
+                      },
                       "latest_revision": {
+                        "nullable": true,
                         "type": "number",
                       },
                       "license_type": {
@@ -2963,7 +3173,6 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                         "type": "string",
                       },
                       "published_at": {
-                        "format": "date-time",
                         "type": "string",
                       },
                       "revision": {
@@ -2977,6 +3186,7 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                       "slug",
                       "idp_user_id",
                       "name",
+                      "installs",
                       "revision",
                     ],
                     "type": "object",

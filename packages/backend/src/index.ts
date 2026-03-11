@@ -15,7 +15,13 @@ async function startServer() {
     console.info(
       `Node.js server started with settings port [${EXPRESS_PORT}], IS_DEV_ENV [${IS_DEV_ENVIRONMENT}].\nApp available at http://localhost:${EXPRESS_PORT}/`
     );
-    startMqtt();
+    const badgeHubData = new BadgeHubData(
+      new PostgreSQLBadgeHubMetadata(),
+      new PostgreSQLBadgeHubFiles()
+    );
+
+    startMqtt(badgeHubData);
+    startRefreshReportsInterval(badgeHubData);
   });
 }
 
