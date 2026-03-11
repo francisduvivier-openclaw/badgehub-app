@@ -44,7 +44,7 @@ export async function startMqtt(
       try {
         client.publish(
           topic,
-          JSON.stringify({ ...stats, timestamp: new Date().toISOString() }),
+          JSON.stringify({ ...stats, timestamp: new Date().getDate() }),
           { qos: 1, retain: true }
         );
       } catch (error) {
