@@ -17,6 +17,7 @@ const AppDetailPage: React.FunctionComponent<{
   tsRestClient?: typeof defaultTsRestClient;
   slug: string;
 }> = ({ tsRestClient = defaultTsRestClient, slug }) => {
+  useTitle(slug);
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {

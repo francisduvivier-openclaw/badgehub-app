@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
             GitHub
           </a>
         </div>
-        <p className="text-sm font-roboto-mono">
+        <p className="text-sm font-mono">
           &copy; {year} BadgeHub. All rights reserved.
         </p>
         <p className="text-xs text-slate-500 mt-2">
