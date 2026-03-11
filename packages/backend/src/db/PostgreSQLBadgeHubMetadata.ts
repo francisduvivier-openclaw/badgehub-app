@@ -211,7 +211,8 @@ export class PostgreSQLBadgeHubMetadata {
     );
     const projectAuthorsP = this.pool.query(
       sql`SELECT COUNT(DISTINCT idp_user_id)
-          FROM projects WHERE deleted_at IS NULL`
+          FROM projects
+          WHERE deleted_at IS NULL`
     );
     const badgesP = this.pool.query(
       sql`SELECT COUNT(*)
@@ -525,7 +526,9 @@ and v.app_metadata->'badges' @>
     Pick<ProjectApiTokenMetadata, "last_used_at" | "created_at"> | undefined
   > {
     const { rows } = await this.pool.query<DBProjectApiKey>(
-      sql`select created_at, last_used_at from project_api_token where project_slug = ${slug}`
+      sql`select created_at, last_used_at
+          from project_api_token
+          where project_slug = ${slug}`
     );
     return (
       rows[0] && {
@@ -537,7 +540,9 @@ and v.app_metadata->'badges' @>
 
   async getProjectApiTokenHash(slug: ProjectSlug): Promise<string | undefined> {
     const { rows } = await this.pool.query<{ key_hash: string }>(
-      sql`select key_hash from project_api_token where project_slug = ${slug}`
+      sql`select key_hash
+          from project_api_token
+          where project_slug = ${slug}`
     );
     return rows[0]?.key_hash;
   }
@@ -548,7 +553,10 @@ and v.app_metadata->'badges' @>
   ): Promise<void> {
     await this.pool.query<DBProjectApiKey>(
       sql`insert into project_api_token (project_slug, key_hash)
-          values (${slug}, ${keyHash}) on conflict (project_slug) do update set key_hash = ${keyHash}, last_used_at = now(), created_at = now()`
+          values (${slug}, ${keyHash})
+          on conflict (project_slug) do update set key_hash     = ${keyHash},
+                                                   last_used_at = now(),
+                                                   created_at   = now()`
     );
   }
 
