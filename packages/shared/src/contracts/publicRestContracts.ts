@@ -158,14 +158,13 @@ const crashReportBodySchema = z.object({
     .optional(),
 });
 
-export const NO_BODY_DESCRIPTION = "No Request Body for this request";
 export const publicReportContracts = c.router({
   reportInstall: {
     method: "POST",
     path: "/projects/:slug/rev:revision/report/install",
     pathParams: projectRevisionParams,
     query: badgeIdentifiersSchema,
-    body: z.any().optional().describe(NO_BODY_DESCRIPTION), // Needed for ts-rest
+    body: NO_BODY_SCHEMA, // Needed for ts-rest
     responses: {
       204: z.void(),
       404: errorResponseSchema,
@@ -177,7 +176,7 @@ export const publicReportContracts = c.router({
     path: "/projects/:slug/rev:revision/report/launch",
     pathParams: projectRevisionParams,
     query: badgeIdentifiersSchema,
-    body: z.any().optional().describe(NO_BODY_DESCRIPTION), // Needed for ts-rest
+    body: NO_BODY_SCHEMA, // Needed for ts-rest
     responses: {
       204: z.void(),
       404: errorResponseSchema,
