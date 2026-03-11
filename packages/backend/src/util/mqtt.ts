@@ -27,7 +27,7 @@ export async function startMqtt(badgeHubData: BadgeHubData) {
     return;
   }
 
-  console.log("MQTT: ready to connect");
+    console.log("MQTT: ready to connect");
 
   try {
     let client = mqtt.connect(server, {
