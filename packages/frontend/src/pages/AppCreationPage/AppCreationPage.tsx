@@ -13,6 +13,7 @@ import { PleaseLoginMessage } from "@sharedComponents/PleaseLoginMessage.tsx";
 export interface AppCreationFormData {
   slug: string;
 }
+import { assertDefined } from "@shared/util/assertions.ts";
 
 // Define the valid slug regex
 

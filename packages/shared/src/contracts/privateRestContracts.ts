@@ -10,6 +10,7 @@ import {
   createProjectPropsSchema,
 } from "@shared/domain/writeModels/project/WriteProject";
 import { writeAppMetadataJSONSchema } from "@shared/domain/writeModels/AppMetadataJSON";
+import { projectApiTokenMetadataSchema } from "@shared/domain/readModels/project/ProjectApiToken";
 
 const c = initContract();
 

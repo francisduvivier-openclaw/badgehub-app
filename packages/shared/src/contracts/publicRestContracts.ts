@@ -7,6 +7,7 @@ import {
 import { categoryNameSchema } from "@shared/domain/readModels/project/Category";
 import { badgeSlugSchema } from "@shared/domain/readModels/Badge";
 import { projectLatestRevisionsSchema } from "@shared/domain/readModels/project/ProjectRevision";
+import { badgeHubStatsSchema } from "@shared/domain/readModels/BadgeHubStats";
 
 const c = initContract();
 

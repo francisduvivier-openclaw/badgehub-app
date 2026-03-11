@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
+import { getFreshAuthorizedTsRestClient } from "@api/tsRestClient.ts";
 import Header from "@sharedComponents/Header.tsx";
 import Footer from "@sharedComponents/Footer.tsx";
 import AppEditBreadcrumb from "./AppEditBreadcrumb.tsx";
@@ -16,9 +16,9 @@ import {
   IconSize,
 } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 import { useNavigate } from "react-router-dom";
-import { getAuthorizationHeader } from "@api/authorization.ts";
 import { VariantJSON } from "@shared/domain/readModels/project/VariantJSON.ts";
 import { assertDefined } from "@shared/util/assertions.ts";
+import AppEditTokenManager from "./AppEditTokenManager.tsx";
 
 function getAndEnsureApplication(newProjectData: ProjectDetails): VariantJSON {
   const application: VariantJSON =

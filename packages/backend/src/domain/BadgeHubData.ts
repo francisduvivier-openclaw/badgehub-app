@@ -15,12 +15,12 @@ import {
   getAdminOnlyCategoryNames,
   isAdminCategory,
 } from "@shared/domain/readModels/project/Category";
-import { DBProject } from "@shared/dbModels/project/DBProject";
-import { BadgeHubFiles } from "@shared/domain/BadgeHubFiles";
+import { DBProject } from "@db/models/project/DBProject";
+import { BadgeHubFiles } from "@domain/BadgeHubFiles";
 import { UploadedFile } from "@shared/domain/UploadedFile";
-import { DBDatedData } from "@shared/dbModels/project/DBDatedData";
-import { calcSha256 } from "@util/sha256";
-import { TimestampTZ } from "@shared/dbModels/DBTypes";
+import { DBDatedData } from "@db/models/project/DBDatedData";
+import { stringToSha256, uint8ToSha256 } from "@util/sha256";
+import { TimestampTZ } from "@db/models/DBTypes";
 import { CreateProjectProps } from "@shared/domain/writeModels/project/WriteProject";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
 import { LRUCache } from "lru-cache";
@@ -28,7 +28,8 @@ import { appMetadataJSONSchema } from "@shared/domain/readModels/project/AppMeta
 import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
 import { getImageProps } from "@util/imageProcessing";
 import { UserError } from "@domain/UserError";
-import { BadgeStats } from "@shared/contracts/publicRestContracts";
+import { randomBytes } from "node:crypto";
+import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
 type FileContext =
   | { projectSlug: string; revision: number; filePath: string }

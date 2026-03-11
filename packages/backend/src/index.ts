@@ -1,4 +1,4 @@
-import { EXPRESS_PORT, sharedConfig } from "@config";
+import { EXPRESS_PORT, IS_DEV_ENVIRONMENT } from "@config";
 import { runMigrations } from "@db/migrations";
 import { createExpressServer } from "@createExpressServer";
 import { startMqtt } from "@util/mqtt";

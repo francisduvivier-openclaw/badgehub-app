@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UploadedFile } from "@shared/domain/UploadedFile";
-import { calcSha256 } from "@util/sha256";
+import { stringToSha256, uint8ToSha256 } from "@util/sha256";
 
 describe("sha256", () => {
   describe("calcSha256", () => {
