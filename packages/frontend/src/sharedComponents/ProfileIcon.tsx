@@ -16,6 +16,10 @@ const ProfileIcon: React.FC = () => {
     await keycloak?.logout();
   }
 
+  async function account() {
+    await keycloak?.accountManagement()
+  }
+
   // Close menu on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -67,7 +71,15 @@ const ProfileIcon: React.FC = () => {
               <div className="font-semibold">{user.name}</div>
               <div className="text-gray-400 text-xs">{user.email}</div>
               <button
-                className="bg-gray-700 text-left px-4 py-2 text-gray-200 hover:bg-gray-600 rounded-md text-sm transition-colors mx-2 mt-2"
+                className="bg-gray-700 text-left px-4 py-2 text-gray-200 hover:bg-gray-600 rounded-md text-sm transition-colors mt-2"
+                style={{ width: "calc(100% - 1rem)" }}
+                onClick={account}
+                data-testid="logout-button"
+              >
+                Account
+              </button>
+              <button
+                className="bg-gray-700 text-left px-4 py-2 text-gray-200 hover:bg-gray-600 rounded-md text-sm transition-colors mt-2"
                 style={{ width: "calc(100% - 1rem)" }}
                 onClick={logout}
                 data-testid="logout-button"
