@@ -44,7 +44,7 @@ describe(
             "icon_map": {
               "64x64": {
                 "full_path": "icon5.png",
-                "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/icon5.png",
+                "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/icon5.png",
               },
             },
             "idp_user_id": "CyberSherpa",
@@ -52,7 +52,7 @@ describe(
             "license_type": "MIT",
             "name": "CodeCraft",
             "published_at": "2024-05-23T14:01:16.975Z",
-            "revision": 0,
+            "revision": 1,
             "slug": "codecraft",
           }
         `);
@@ -253,7 +253,7 @@ describe(
         {
           "created_at": "2024-05-22T14:01:16.975Z",
           "idp_user_id": "CyberSherpa",
-          "latest_revision": 0,
+          "latest_revision": 1,
           "slug": "codecraft",
           "updated_at": "2024-05-22T14:01:16.975Z",
         }
@@ -296,7 +296,7 @@ describe(
             "size_formatted": "0.04KB",
             "size_of_content": 43,
             "updated_at": "2024-05-22T14:01:16.975Z",
-            "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/__init__.py",
+            "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/__init__.py",
           },
           {
             "created_at": "2024-05-22T14:01:16.975Z",
@@ -311,7 +311,7 @@ describe(
             "size_formatted": "7.36KB",
             "size_of_content": 7532,
             "updated_at": "2024-05-22T14:01:16.975Z",
-            "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/icon5.png",
+            "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/icon5.png",
           },
           {
             "created_at": "2024-05-22T14:01:16.975Z",
@@ -324,7 +324,7 @@ describe(
             "size_formatted": "0.24KB",
             "size_of_content": 247,
             "updated_at": "2024-05-22T14:01:16.975Z",
-            "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/metadata.json",
+            "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/metadata.json",
           },
         ]
       `);
@@ -333,13 +333,13 @@ describe(
         {
           "project_slug": "codecraft",
           "published_at": "2024-05-23T14:01:16.975Z",
-          "revision": 0,
+          "revision": 1,
         }
       `);
     });
 
-    test("GET /api/v3/projects/codecraft/rev0", async () => {
-      const res = await request(app).get("/api/v3/projects/codecraft/rev0");
+    test("GET /api/v3/projects/codecraft/rev1", async () => {
+      const res = await request(app).get("/api/v3/projects/codecraft/rev1");
       expect(res.statusCode).toBe(200);
       const project = res.body as ProjectDetails;
 
@@ -348,7 +348,7 @@ describe(
         {
           "created_at": "2024-05-22T14:01:16.975Z",
           "idp_user_id": "CyberSherpa",
-          "latest_revision": 0,
+          "latest_revision": 1,
           "slug": "codecraft",
           "updated_at": "2024-05-22T14:01:16.975Z",
         }
@@ -359,7 +359,7 @@ describe(
         {
           "project_slug": "codecraft",
           "published_at": "2024-05-23T14:01:16.975Z",
-          "revision": 0,
+          "revision": 1,
         }
       `);
       expect(app_metadata).toMatchInlineSnapshot(`
@@ -399,7 +399,7 @@ describe(
             "size_formatted": "0.04KB",
             "size_of_content": 43,
             "updated_at": "2024-05-22T14:01:16.975Z",
-            "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/__init__.py",
+            "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/__init__.py",
           },
           {
             "created_at": "2024-05-22T14:01:16.975Z",
@@ -414,7 +414,7 @@ describe(
             "size_formatted": "7.36KB",
             "size_of_content": 7532,
             "updated_at": "2024-05-22T14:01:16.975Z",
-            "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/icon5.png",
+            "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/icon5.png",
           },
           {
             "created_at": "2024-05-22T14:01:16.975Z",
@@ -427,19 +427,19 @@ describe(
             "size_formatted": "0.24KB",
             "size_of_content": 247,
             "updated_at": "2024-05-22T14:01:16.975Z",
-            "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/metadata.json",
+            "url": "http://localhost:8081/api/v3/projects/codecraft/rev1/files/metadata.json",
           },
         ]
       `
       );
     });
 
-    test("GET /api/v3/projects/codecraft/rev1 (unpublished version)", async () => {
-      const res = await request(app).get("/api/v3/projects/codecraft/rev1");
+    test("GET /api/v3/projects/codecraft/rev2 (unpublished version)", async () => {
+      const res = await request(app).get("/api/v3/projects/codecraft/rev2");
       expect(res.statusCode).toBe(404);
     });
 
-    test.each(["latest", "rev0"])(
+    test.each(["latest", "rev1"])(
       "GET /projects/{slug}/%s/files/metadata.json",
       async (revision) => {
         const getRes = await request(app).get(
@@ -452,7 +452,7 @@ describe(
     );
 
     test("GET files using url prop should work same as from path", async () => {
-      const res = await request(app).get("/api/v3/projects/codecraft/rev0");
+      const res = await request(app).get("/api/v3/projects/codecraft/rev1");
       expect(res.statusCode).toBe(200);
       const project = res.body as ProjectDetails;
 
@@ -472,7 +472,7 @@ describe(
       }
     });
 
-    test.each(["latest", "rev0"])(
+    test.each(["latest", "rev1"])(
       "GET /projects/{slug}/%s/files/__init__.py",
       async (revision) => {
         const getRes = await request(app).get(
@@ -510,7 +510,7 @@ describe(
     });
 
     describe("unpublished versions should not be requestable", () => {
-      test.each(["rev1", "rev2"])(
+      test.each(["rev3", "rev2"])(
         "GET /projects/{slug}/%s/files/metadata.json",
         async (revision) => {
           const getRes = await request(app).get(
@@ -520,7 +520,7 @@ describe(
         }
       );
 
-      test.each(["rev1", "rev2"])(
+      test.each(["rev0", "rev2", "rev3"])(
         "GET /projects/{slug}/%s",
         async (revision) => {
           const getRes = await request(app).get(
@@ -543,11 +543,11 @@ describe(
         );
         expect(projectRevisionMap.find((p) => p.slug === "codecraft"))
           .toMatchInlineSnapshot(`
-          {
-            "revision": 0,
-            "slug": "codecraft",
-          }
-        `);
+            {
+              "revision": 1,
+              "slug": "codecraft",
+            }
+          `);
       });
       test("GET /api/v3/project-latest-revisions?slugs=codecraft,codecrafter", async () => {
         const getRes = await request(app).get(
@@ -559,11 +559,11 @@ describe(
         expect(projectRevisionMap).toMatchInlineSnapshot(`
           [
             {
-              "revision": 0,
+              "revision": 1,
               "slug": "codecraft",
             },
             {
-              "revision": 0,
+              "revision": 1,
               "slug": "codecrafter",
             },
           ]
@@ -580,7 +580,7 @@ describe(
         expect(projectRevisionMap).toMatchInlineSnapshot(`
           [
             {
-              "revision": 0,
+              "revision": 1,
               "slug": "codecraft",
             },
           ]
@@ -593,7 +593,7 @@ describe(
         );
         expect(getRes.statusCode).toBe(200);
         const projectRevisionMap = getRes.body as number;
-        expect(projectRevisionMap).toBe(0);
+        expect(projectRevisionMap).toBe(1);
       });
 
       test("GET /api/v3/stats", async () => {
