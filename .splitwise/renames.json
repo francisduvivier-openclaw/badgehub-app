@@ -1,24 +1,24 @@
 {
   "version": 1,
-  "commit": "f6dd21f821f16739bba98f9a64b4a7d369250ba5",
-  "parent": "fa0c8597a40254de13110d6c3306290047f9f761",
+  "commit": "3b9e20f04948d621d10d0ebaf7f45c0c954c4197",
+  "parent": "f6dd21f821f16739bba98f9a64b4a7d369250ba5",
   "entries": [
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "res",
-      "new": "updatedDraftProject",
-      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
-      "scope": "packages/frontend/src/pages/AppEditPage",
+      "old": "details",
+      "new": "projectDetails",
+      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
+      "scope": "packages/backend/src/controllers/ts-rest",
       "confidence": 0.9
     },
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "updatedDraftProject",
-      "new": "res",
-      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
-      "scope": "packages/frontend/src/pages/AppEditPage",
+      "old": "projectDetails",
+      "new": "details",
+      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
+      "scope": "packages/backend/src/controllers/ts-rest",
       "confidence": 0.9
     }
   ]
