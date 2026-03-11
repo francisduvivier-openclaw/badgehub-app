@@ -27,6 +27,7 @@ import { getImageProps } from "@util/imageProcessing";
 type FileContext =
   | { projectSlug: string; revision: number; filePath: string }
   | { sha256: string };
+import { UserError } from "@domain/UserError";
 
 export class BadgeHubData {
   private immutableFileCache: LRUCache<
