@@ -3,7 +3,6 @@ import { FileListItem } from "@pages/AppEditPage/FileListItem.tsx";
 import { IconSize } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { User } from "@sharedComponents/keycloakSession/SessionContext.tsx";
-import Keycloak from "keycloak-js";
 
 interface AppEditFilePreviewProps {
   user?: User; // Optional user prop for authentication

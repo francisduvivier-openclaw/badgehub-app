@@ -1,12 +1,7 @@
 import React from "react";
 import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata.ts";
 import { DeleteIcon } from "@sharedComponents/icons/DeleteIcon.tsx";
-import { DownloadIcon } from "@sharedComponents/AppsGrid/DownloadIcon.tsx";
 import { IconSize } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
-import { getFreshAuthorizedTsRestClient } from "@api/tsRestClient.ts";
-import { assertDefined } from "@shared/util/assertions.ts";
-import Keycloak from "keycloak-js";
-import { extractFilename } from "@utils/fileUtils.ts";
 
 /**
  * Checks if a file is a PNG image.
