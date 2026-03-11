@@ -19,26 +19,28 @@ const AppDetailPage: React.FunctionComponent<{
   slug: string;
 }> = ({ tsRestClient = defaultTsRestClient, slug }) => {
   useTitle(slug);
-  const [project, setProject] = useState<ProjectDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    tsRestClient.getProject({ params: { slug } }).then((res) => {
-      if (mounted && res.status === 200) {
-        setProject(res.body);
-      }
-      setLoading(false);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [slug, tsRestClient]);
+  const { data: project, error, loading } = useAsyncResource(
+    async () => {
+      const res = await tsRestClient.getProject({ params: { slug } });
+      return res.status === 200 ? res.body : null;
+    },
+    [slug, tsRestClient]
+  );
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64 text-slate-400 bg-gray-900 min-h-screen">
         Loading...
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div
+        data-testid="app-detail-error"
+        className="flex justify-center items-center h-64 text-red-400 bg-gray-900 min-h-screen"
+      >
+        Failed to load project.
       </div>
     );
   }
