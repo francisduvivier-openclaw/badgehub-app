@@ -36,10 +36,14 @@ describe("HomePage", () => {
   });
 
   it("shows an error message when the API call fails", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     render(<HomePage tsRestClient={tsRestClientWithError()} />);
     expect(
       await screen.findByText(/Failed to fetch projects.*/i)
     ).toBeInTheDocument();
+    consoleErrorSpy.mockRestore();
   });
 
   it("shows a message or empty state when there are no apps", async () => {
