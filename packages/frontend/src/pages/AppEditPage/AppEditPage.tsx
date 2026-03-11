@@ -18,6 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getAuthorizationHeader } from "@api/authorization.ts";
 import { VariantJSON } from "@shared/domain/readModels/project/VariantJSON.ts";
+import { assertDefined } from "@shared/util/assertions.ts";
 
 function getAndEnsureApplication(newProjectData: ProjectDetails): VariantJSON {
   const application: VariantJSON =
@@ -61,11 +62,14 @@ const AppEditPage: React.FC<{
   const appMetadata = project?.version.app_metadata;
 
   useEffect(() => {
+    if (!keycloak) {
+      return;
+    }
     if (project && !project.stale) return;
     let mounted = true;
     setLoading(true);
     (async () => {
-      await keycloak?.updateToken(30);
+      await keycloak.updateToken(30);
       const res = await tsRestClient.getDraftProject({
         headers: await getAuthorizationHeader(keycloak),
         params: { slug },
@@ -89,7 +93,8 @@ const AppEditPage: React.FC<{
     metadataChanged?: boolean;
     firstValidExecutable?: string | null;
   }) => {
-    await keycloak?.updateToken(30);
+    assertDefined(keycloak);
+    await keycloak.updateToken(30);
     if (result.metadataChanged) {
       // Full refresh if metadata.json was uploaded
       setProject(null);
@@ -125,7 +130,7 @@ const AppEditPage: React.FC<{
   };
 
   const handleDeleteFile = async (filePath: string) => {
-    if (!keycloak?.token) return;
+    assertDefined(keycloak);
     await tsRestClient.deleteDraftFile({
       headers: await getAuthorizationHeader(keycloak),
       params: { slug, filePath },
@@ -158,11 +163,12 @@ const AppEditPage: React.FC<{
     });
   };
   const handleSubmit = async (e: React.FormEvent) => {
+    assertDefined(keycloak);
     e.preventDefault();
     if (!appMetadata) return;
 
     try {
-      await keycloak?.updateToken(30);
+      await keycloak.updateToken(30);
       const changeAppMetdataResult = await tsRestClient.changeDraftAppMetadata({
         headers: await getAuthorizationHeader(keycloak),
         params: { slug },
