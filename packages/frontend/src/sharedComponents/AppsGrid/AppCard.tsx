@@ -2,6 +2,7 @@ import React from "react";
 import type { AppCardProps } from "../types.ts";
 import { MLink } from "@sharedComponents/MLink.tsx";
 import { ERROR_ICON_URL, FALLBACK_ICON_URL } from "@config.ts";
+import { DownloadIcon } from "@sharedComponents/AppsGrid/DownloadIcon.tsx";
 
 const AppCard: React.FC<AppCardProps> = ({
   name,

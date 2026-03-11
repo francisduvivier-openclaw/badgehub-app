@@ -52,6 +52,8 @@ import { getFileDownloadUrl } from "@db/getFileDownloadUrl";
 import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
 import { DBProjectApiKey } from "@db/models/project/DBProjectApiKey";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries";
+import { OrderByOption } from "@shared/domain/readModels/project/ordering";
 
 const ONE_KILO = 1024;
 

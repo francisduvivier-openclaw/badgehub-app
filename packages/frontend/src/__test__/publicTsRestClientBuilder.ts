@@ -4,7 +4,8 @@ import { DummyApp, dummyApps } from "@__test__/fixtures";
 import { matchRoute } from "@__test__/routeContractMatch.ts";
 import { tsRestApiContracts } from "@shared/contracts/restContracts.ts";
 import { ApiFetcherArgs, initClient } from "@ts-rest/core";
-import { ProjectSummary } from "@shared/domain/readModels/project/ProjectDetails.ts";
+
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries.ts";
 
 function parseProjectsQuery(rawQuery: unknown) {
   if (!rawQuery) return undefined;

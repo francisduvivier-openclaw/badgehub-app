@@ -8,6 +8,7 @@ import { __tsCheckSame } from "@shared/zodUtils/zodTypeComparison";
 import {
   CreateProjectProps,
   createProjectPropsSchema,
+import { projectSummarySchema } from "@shared/domain/readModels/project/ProjectSummaries";
 } from "@shared/domain/writeModels/project/WriteProject";
 import { writeAppMetadataJSONSchema } from "@shared/domain/writeModels/AppMetadataJSON";
 import { projectApiTokenMetadataSchema } from "@shared/domain/readModels/project/ProjectApiToken";

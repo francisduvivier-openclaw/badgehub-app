@@ -7,6 +7,7 @@ import {
   ProjectSummary,
 } from "@shared/domain/readModels/project/ProjectDetails";
 import { isInDebugMode } from "@util/debug";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries";
 import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { ProjectLatestRevisions } from "@shared/domain/readModels/project/ProjectRevision";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
