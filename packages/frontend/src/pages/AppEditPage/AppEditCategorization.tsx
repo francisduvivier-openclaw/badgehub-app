@@ -1,6 +1,7 @@
 import React from "react";
 import { ProjectEditFormData } from "@pages/AppEditPage/ProjectEditFormData.ts";
 import { CategorySelector } from "@sharedComponents/OptionSelector/CategorySelector.tsx";
+import { BadgeSelector } from "@sharedComponents/OptionSelector/BadgeSelector.tsx";
 
 const AppEditCategorization: React.FC<{
   form: ProjectEditFormData;
