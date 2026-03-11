@@ -1,6 +1,8 @@
 import { BadgeHubData } from "@domain/BadgeHubData";
 import { getAndAssertEnv } from "@shared/config/sharedConfig";
 import mqtt from "mqtt";
+import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
+import { PostgreSQLBadgeHubFiles } from "@db/PostgreSQLBadgeHubFiles";
 
 export async function startMqtt(badgeHubData: BadgeHubData) {
   const nodeEnv = getAndAssertEnv("NODE_ENV");
@@ -25,7 +27,7 @@ export async function startMqtt(badgeHubData: BadgeHubData) {
     return;
   }
 
-  console.log("MQTT: ready to connect");
+    console.log("MQTT: ready to connect");
 
   try {
     let client = mqtt.connect(server, {
