@@ -89,7 +89,7 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
       );
       return ok(data);
     },
-    getProjectLatestRevisions: async ({ query }) => {
+    getProjectLatestRevisions: async ({ query, res }) => {
       const slugs = (query.slugs && query.slugs?.split(",")) || undefined;
       const data = await badgeHubData.getProjectSummaries(
         { slugs: slugs, orderBy: "published_at" },
@@ -100,14 +100,16 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
         slug: p.slug,
         revision: p.revision,
       }));
+      res.setHeader("Cache-Control", "max-age=10");
       return ok(projectRevisionMap);
     },
-    getProjectLatestRevision: async ({ params: { slug } }) => {
+    getProjectLatestRevision: async ({ params: { slug }, res }) => {
       // TODO optimize this
       const projectDetails = await badgeHubData.getProject(slug, "latest");
       if (projectDetails?.latest_revision == undefined) {
         return nok(404, `No published app with slug '${slug}' found`);
       }
+      res.setHeader("Cache-Control", "max-age=10");
       return ok(projectDetails?.latest_revision);
     },
     getProjectForRevision: async ({ params: { slug, revision }, res }) => {

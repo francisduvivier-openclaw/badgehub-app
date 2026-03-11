@@ -1,87 +1,24 @@
 {
   "version": 1,
-  "commit": "8cc66c462ac20c0428306729d2900fcfd8d0b6ed",
-  "parent": "865a205323f40ef2ed45d704bcb7e106d42d8123",
+  "commit": "c5907686a1e65483c91e4b4eeaa2f39aa9988c7b",
+  "parent": "8cc66c462ac20c0428306729d2900fcfd8d0b6ed",
   "entries": [
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "dynamicTestAppId",
-      "new": "TEST_APP_ID",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
+      "old": "details",
+      "new": "projectDetails",
+      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
+      "scope": "packages/backend/src/controllers/ts-rest",
       "confidence": 0.9
     },
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "TEST_APP_ID",
-      "new": "dynamicTestAppId",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "postRes",
-      "new": "postRes1",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getRes",
-      "new": "getRes2",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getRes2",
-      "new": "getRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "postRes1",
-      "new": "postRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "postRes2",
-      "new": "postRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getRes1",
-      "new": "getDraftRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getDraftRes",
-      "new": "getRes1",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
+      "old": "projectDetails",
+      "new": "details",
+      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
+      "scope": "packages/backend/src/controllers/ts-rest",
       "confidence": 0.9
     }
   ]
