@@ -9,6 +9,7 @@ import {
 import { writeAppMetadataJSONSchema } from "@shared/domain/writeModels/AppMetadataJSON";
 import { projectApiTokenMetadataSchema } from "@shared/domain/readModels/project/ProjectApiToken";
 import { projectSummarySchema } from "@shared/domain/readModels/project/ProjectSummaries";
+import { NO_BODY_SCHEMA } from "@shared/contracts/tsRestNoBodyPatch";
 
 const c = initContract();
 
