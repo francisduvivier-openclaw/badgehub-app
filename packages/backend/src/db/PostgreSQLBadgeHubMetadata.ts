@@ -51,6 +51,7 @@ import {
 import { BadgeSlug, getBadgeSlugs } from "@shared/domain/readModels/Badge";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
 import { getFileDownloadUrl } from "@db/getFileDownloadUrl";
+import { BadgeStats } from "@shared/contracts/publicRestContracts";
 
 const ONE_KILO = 1024;
 
