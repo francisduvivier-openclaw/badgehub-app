@@ -1,14 +1,11 @@
-import {
-  ProjectDetails,
-  ProjectSummary,
-} from "@shared/domain/readModels/project/ProjectDetails.ts";
+import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries.ts";
 
 type DummyData = {
   slug: string;
   name: string;
   description: string;
   categories: string[];
-  published_at: Date;
   revision: number;
   badges: string[];
 };
@@ -19,7 +16,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 1",
     description: "A test app",
     categories: ["Silly"],
-    published_at: new Date(),
     revision: 1,
     badges: ["mch2022", "why2025"],
   },
@@ -28,7 +24,6 @@ const dummyData: DummyData[] = [
     name: "Dummy Game App 2",
     description: "Another test app",
     categories: ["Silly"],
-    published_at: new Date(),
     revision: 1,
     badges: ["troopers23"],
   },
@@ -37,7 +32,6 @@ const dummyData: DummyData[] = [
     name: "Dummy Game App 3",
     description: "Yet another test app",
     categories: ["Silly"],
-    published_at: new Date(),
     revision: 1,
     badges: ["troopers23", "why2025"],
   },
@@ -46,7 +40,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 4",
     description: "Wearable device app",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -55,7 +48,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 5",
     description: "Pagination test app 5",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -64,7 +56,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 6",
     description: "Pagination test app 6",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -73,7 +64,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 7",
     description: "Pagination test app 7",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -82,7 +72,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 8",
     description: "Pagination test app 8",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -91,7 +80,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 9",
     description: "Pagination test app 9",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -100,7 +88,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 10",
     description: "Pagination test app 10",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -109,7 +96,6 @@ const dummyData: DummyData[] = [
     name: "Dummy Game App 11",
     description: "Pagination test app 11",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -118,7 +104,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 12",
     description: "Pagination test app 12",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -127,7 +112,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 13",
     description: "Pagination test app 13",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -136,7 +120,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 14",
     description: "Pagination test app 14",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -145,7 +128,6 @@ const dummyData: DummyData[] = [
     name: "Dummy App 15",
     description: "Pagination test app 15",
     categories: ["Games"],
-    published_at: new Date(),
     revision: 1,
     badges: [],
   },
@@ -154,24 +136,25 @@ const dummyData: DummyData[] = [
 const toSummary = (dummyApp: DummyData): ProjectSummary => {
   return {
     ...dummyApp,
+    published_at: new Date().toISOString(),
+    installs: 1,
     license_type: "MIT",
     idp_user_id: "dummy-user-id",
   };
 };
 
 const toDetails = (dummyApp: DummyData): ProjectDetails => {
-  const { slug, revision, published_at, ...app_metadata } = dummyApp;
+  const { slug, revision, ...app_metadata } = dummyApp;
   return {
     idp_user_id: "dummy-user-id",
     slug,
-    created_at: published_at,
-    updated_at: published_at,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     version: {
       revision,
-      download_count: 0,
       files: [],
       project_slug: slug,
-      published_at,
+      published_at: new Date().toISOString(),
       app_metadata: {
         ...app_metadata,
         license_type: "MIT",

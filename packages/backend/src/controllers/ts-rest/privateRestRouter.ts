@@ -246,7 +246,7 @@ export const createPrivateRestRouter = (
         return nokResponse;
       }
       const projects = await badgeHubData.getProjectSummaries(
-        { pageStart, pageLength, userId },
+        { pageStart, pageLength, userId, orderBy: "updated_at" },
         "draft"
       );
       return ok(projects);

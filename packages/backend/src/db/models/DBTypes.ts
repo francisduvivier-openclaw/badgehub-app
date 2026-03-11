@@ -1,1 +1,5 @@
-export type TimestampTZ = string; // it would be cool if we could use the following: `${string}-${string}-${string} ${string}:${string}:${string}.${string} +${string}`, but this would result in a TSOA generation error
+import { ISODateString } from "@shared/domain/readModels/ISODateString";
+
+export type TimestampTZ =
+  | `${number}-${number}-${number} ${number}:${number}:${number}.${number} +${number}`
+  | ISODateString;
