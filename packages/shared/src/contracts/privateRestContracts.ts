@@ -1,9 +1,6 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod/v3";
-import {
-  detailedProjectSchema,
-  projectSummarySchema,
-} from "@shared/domain/readModels/project/ProjectDetails";
+import { detailedProjectSchema } from "@shared/domain/readModels/project/ProjectDetails";
 import { __tsCheckSame } from "@shared/zodUtils/zodTypeComparison";
 import {
   CreateProjectProps,
@@ -11,6 +8,7 @@ import {
 } from "@shared/domain/writeModels/project/WriteProject";
 import { writeAppMetadataJSONSchema } from "@shared/domain/writeModels/AppMetadataJSON";
 import { projectApiTokenMetadataSchema } from "@shared/domain/readModels/project/ProjectApiToken";
+import { projectSummarySchema } from "@shared/domain/readModels/project/ProjectSummaries";
 
 const c = initContract();
 

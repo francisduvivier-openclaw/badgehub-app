@@ -2,6 +2,7 @@ import React from "react";
 import type { AppCardProps } from "../types.ts";
 import { MLink } from "@sharedComponents/MLink.tsx";
 import { ERROR_ICON_URL, FALLBACK_ICON_URL } from "@config.ts";
+import { DownloadIcon } from "@sharedComponents/AppsGrid/DownloadIcon.tsx";
 
 const AppCard: React.FC<AppCardProps> = ({
   name,
@@ -13,6 +14,7 @@ const AppCard: React.FC<AppCardProps> = ({
   slug,
   icon_map,
   editable,
+  installs,
 }) => {
   const icon = icon_map?.["64x64"];
 
@@ -80,6 +82,12 @@ const AppCard: React.FC<AppCardProps> = ({
           Published:{" "}
           {published_at ? new Date(published_at).toLocaleDateString() : "-"}
         </p>
+        {installs !== undefined && (
+          <p className="text-sm text-slate-400 flex items-center">
+            <DownloadIcon />
+            <span className="ml-1">{installs}</span>
+          </p>
+        )}
       </div>
     </div>
   );

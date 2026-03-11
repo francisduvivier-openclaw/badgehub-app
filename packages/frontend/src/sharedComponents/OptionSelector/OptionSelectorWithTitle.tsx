@@ -1,7 +1,7 @@
 import React from "react";
+import { SortOption } from "@sharedComponents/AppsGrid/Filters.tsx";
 
 const NO_FILTER_OPTION_VALUE = "All";
-type SortByOption = string | undefined;
 export const OptionSelectorWithTitle: React.FC<
   {
     title: string;
@@ -13,9 +13,9 @@ export const OptionSelectorWithTitle: React.FC<
         onValueSelection: (newValue: string) => void;
       }
     | {
-        valueMap: undefined;
-        value: SortByOption | undefined;
-        onValueSelection: (newValue: SortByOption | undefined) => void;
+        valueMap: Record<"mostInstalled", string>;
+        value: SortOption;
+        onValueSelection: (value: SortOption) => void;
       }
   )
 > = ({ title, noValueSetName, valueMap, value, onValueSelection }) => {
