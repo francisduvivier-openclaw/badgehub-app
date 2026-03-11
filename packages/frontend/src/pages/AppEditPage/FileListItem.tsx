@@ -6,7 +6,7 @@ import { IconSize } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 import { getFreshAuthorizedTsRestClient } from "@api/tsRestClient.ts";
 import { assertDefined } from "@shared/util/assertions.ts";
 import Keycloak from "keycloak-js";
-import { extractFilename } from "@utils/fileUtils.ts";
+import { extractFilename, IMAGE_FILE_EXTENSIONS } from "@utils/fileUtils.ts";
 
 /**
  * Checks if a file is a PNG image.
