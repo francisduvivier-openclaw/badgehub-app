@@ -42,11 +42,7 @@ export async function startMqtt(
 
       console.log("MQTT: send message");
       try {
-        client.publish(
-          topic,
-          JSON.stringify({ ...stats, timestamp: new Date().getDate() }),
-          { qos: 1, retain: true }
-        );
+        client.publish(topic, JSON.stringify(stats), { qos: 1, retain: true });
       } catch (error) {
         console.error(`MQTT: error publishing message`, error);
       }
