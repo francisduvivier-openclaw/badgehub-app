@@ -18,9 +18,7 @@ const AppDetailHeader: React.FC<{ project: ProjectDetails }> = ({
           {(project.version?.app_metadata.author && (
             <p className="text-slate-400 mb-1">
               By{" "}
-              <a href="#" className="text-emerald-400 hover:underline">
                 {project.version?.app_metadata.author}
-              </a>
             </p>
           )) ||
             null}

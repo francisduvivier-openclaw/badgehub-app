@@ -25,7 +25,7 @@ export const getSharedConfig = (): SharedConfig => {
   return (
     (globalThis as any).__SHARED_CONFIG__ ?? {
       keycloakIssuer: {
-        url: URL.parse(getAndAssertEnv("KEYCLOAK_ISSUER"))?.origin,
+        url: new URL(getAndAssertEnv("KEYCLOAK_ISSUER"))?.origin,
         realm: getAndAssertEnv("KEYCLOAK_ISSUER").split("/").at(-1),
         clientId: process.env.KEYCLOAK_CLIENT_ID ?? "badgehub-api-frontend",
       },
