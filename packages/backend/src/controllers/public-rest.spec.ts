@@ -252,7 +252,6 @@ describe(
       expect(restProject).toMatchInlineSnapshot(`
         {
           "created_at": "2024-05-22T14:01:16.975Z",
-          "git": null,
           "idp_user_id": "CyberSherpa",
           "latest_revision": 0,
           "slug": "codecraft",
@@ -348,7 +347,6 @@ describe(
       expect(restProject).toMatchInlineSnapshot(`
         {
           "created_at": "2024-05-22T14:01:16.975Z",
-          "git": null,
           "idp_user_id": "CyberSherpa",
           "latest_revision": 0,
           "slug": "codecraft",

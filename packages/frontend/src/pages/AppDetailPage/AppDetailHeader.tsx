@@ -17,8 +17,7 @@ const AppDetailHeader: React.FC<{ project: ProjectDetails }> = ({
           </h1>
           {(project.version?.app_metadata.author && (
             <p className="text-slate-400 mb-1">
-              By{" "}
-                {project.version?.app_metadata.author}
+              By {project.version?.app_metadata.author}
             </p>
           )) ||
             null}
@@ -30,9 +29,9 @@ const AppDetailHeader: React.FC<{ project: ProjectDetails }> = ({
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-col space-y-2 items-stretch">
-          {project.git && (
+          {appMetadata.git_url && (
             <a
-              href={project.git}
+              href={appMetadata.git_url}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary px-6 py-3 rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105 flex items-center justify-center"
