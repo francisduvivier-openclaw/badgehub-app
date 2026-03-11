@@ -1,152 +1,8 @@
 {
   "version": 1,
-  "commit": "19cd6314213408d05cb373096d3904b4ef31aa4c",
-  "parent": "dce21de3d3dadb7d9ab4cafdd7eefac54782ed5f",
+  "commit": "cc7e0ef95ae8c5b4e595f488252c5259c1bc6f6f",
+  "parent": "19cd6314213408d05cb373096d3904b4ef31aa4c",
   "entries": [
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "token",
-      "new": "authorizationHeader",
-      "file": "packages/backend/src/auth/jwt-decode.ts",
-      "scope": "packages/backend/src/auth",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_DB",
-      "new": "POSTGRES_USER",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_USER",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_PASSWORD",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_HOST",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "KEYCLOAK_ISSUER",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "user1AppId",
-      "new": "dynamicTestAppId",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "postRes",
-      "new": "postRes1",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getRes",
-      "new": "getRes2",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getRes2",
-      "new": "getRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "postRes1",
-      "new": "postRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "postRes2",
-      "new": "postRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "dynamicTestAppId",
-      "new": "TEST_APP_ID",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "TEST_APP_ID",
-      "new": "dynamicTestAppId",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getRes1",
-      "new": "getDraftRes",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "getDraftRes",
-      "new": "getRes1",
-      "file": "packages/backend/src/controllers/private-rest.spec.ts",
-      "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
     {
       "lang": "ts/js",
       "kind": "variable",
@@ -161,6 +17,51 @@
       "kind": "variable",
       "old": "ERROR_ICON_URL",
       "new": "FALLBACK_ICON_URL",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "KEYCLOAK_CLIENT_ID",
+      "new": "KEYCLOAK_BASE_URL",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "BADGEHUB_API_BASE_URL",
+      "new": "BADGE_SLUGS",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "KEYCLOAK_BASE_URL",
+      "new": "KEYCLOAK_CLIENT_ID",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "KEYCLOAK_REALM",
+      "new": "KEYCLOAK_CLIENT_ID",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "BADGE_SLUGS",
+      "new": "BADGEHUB_API_BASE_URL",
       "file": "packages/frontend/src/config.ts",
       "scope": "packages/frontend/src",
       "confidence": 0.9

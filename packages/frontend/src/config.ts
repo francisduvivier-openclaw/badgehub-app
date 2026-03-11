@@ -18,3 +18,4 @@ export const KEYCLOAK_REALM_ISSUER_URL =
 export const IS_DEV_ENVIRONMENT = sharedConfig.isDevEnvironment;
 
 export const BADGE_SLUGS = sharedConfig.BADGE_SLUGS;
+export const BADGHUB_API_V3_URL = BADGEHUB_API_BASE_URL + "/api/v3";
