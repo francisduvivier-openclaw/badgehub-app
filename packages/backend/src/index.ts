@@ -1,6 +1,7 @@
 import { EXPRESS_PORT, sharedConfig } from "@config";
 import { runMigrations } from "@db/migrations";
 import { createExpressServer } from "@createExpressServer";
+import { startMqtt } from "@util/mqtt";
 
 async function startServer() {
   const app = createExpressServer();
