@@ -141,8 +141,10 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
             "No file provided with multipart/form-data under field file"
           );
         }
+        const detectedMimeType = detectMimeType(typedFile.mimetype, filePath);
+
         await badgeHubData.writeDraftFile(slug, filePath, {
-          mimetype: typedFile.mimetype,
+          mimetype: detectedMimeType,
           fileContent: typedFile.buffer,
           directory: typedFile.destination,
           fileName: typedFile.filename,
@@ -289,7 +291,8 @@ const checkProjectAuthorization = async (
     return nok(HTTP_NOT_FOUND, `No project with slug '${slug}' found`);
   }
   const authenticatedRequest = request as AuthenticatedRequest;
-  if (!authenticatedRequest.user || authenticatedRequest.apiToken) {
+  // Handle API token authentication (if API token is provided)
+  if (authenticatedRequest.apiToken) {
     const tokenIsValidForProject = await badgeHubData.checkApiToken(
       slug,
       authenticatedRequest.apiToken
@@ -301,10 +304,20 @@ const checkProjectAuthorization = async (
           `The given badgehub-api-token not authorized for project with slug '${slug}'`
         );
   }
+
+  // If no user authentication is present, deny access
+  if (!authenticatedRequest.user) {
+    return nok(HTTP_FORBIDDEN, "No authentication provided");
+  }
+
+  // Handle user authentication
   if (
-    !requestIsFromAllowedUser(authenticatedRequest, {
-      allowedUsers: [project?.idp_user_id],
-    })
+    !requestIsFromAllowedUser(
+      authenticatedRequest,
+      {
+        allowedUsers: [project?.idp_user_id],
+      }
+    )
   ) {
     return nok(
       HTTP_FORBIDDEN,
