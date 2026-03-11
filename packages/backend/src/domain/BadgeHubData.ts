@@ -232,6 +232,10 @@ export class BadgeHubData {
     return this.badgeHubMetadata.getCategories();
   }
 
+  getStats(): Promise<BadgeStats> {
+    return this.badgeHubMetadata.getStats();
+  }
+
   getProjectSummaries(
     filter: {
       pageStart?: number;
