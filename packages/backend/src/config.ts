@@ -47,3 +47,6 @@ export const MQTT_CONFIG =
     MQTT_INTERVAL_SEC: getAndAssertEnv("MQTT_INTERVAL_SEC"),
   }) ||
   undefined;
+
+export const REFRESH_REPORTS_INTERVAL_SEC =
+  process.env.REFRESH_REPORTS_INTERVAL_SEC || "300";
