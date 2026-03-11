@@ -84,15 +84,17 @@ export const AppGridWithFilterAndPagination = ({
 
   return (
     <>
-      <Filters
-        badge={badge}
-        category={category}
-        sortBy={sortBy}
-        onBadgeChange={handleBadgeChange}
-        onCategoryChange={handleCategoryChange}
-        onSortByChange={handleSortByChange}
-        onResetFilters={handleResetFilters}
-      />
+      {!editable && (
+        <Filters
+          badge={badge}
+          category={category}
+          sortBy={sortBy}
+          onBadgeChange={handleBadgeChange}
+          onCategoryChange={handleCategoryChange}
+          onSortByChange={handleSortByChange}
+          onResetFilters={handleResetFilters}
+        />
+      )}
       {loading ? (
         <Spinner />
       ) : error ? (
