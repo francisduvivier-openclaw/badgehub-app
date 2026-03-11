@@ -5,6 +5,7 @@ import { memo, useState } from "react";
 import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import {
   AppFetcher,
+import { useProjectSummariesFetcher } from "@hooks/useProjectSummariesFetcher.ts";
   AppGridWithFilterAndPagination,
 } from "@sharedComponents/AppGridWithFilterAndPagination.tsx";
 import { useTitle } from "@hooks/useTitle.ts";
