@@ -14,7 +14,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   return (
     <nav
-      className="mt-10 flex justify-center"
+      className="mt-10 flex justify-center gap-2"
       aria-label="Pagination"
       data-testid="pagination"
     >

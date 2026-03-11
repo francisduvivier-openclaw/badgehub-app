@@ -23,6 +23,7 @@ const AppDetailWrapper = () => {
 
 const AppEditPageWrapper = () => {
   const { slug } = useParams<{ slug: string }>();
+  useTitle(`Edit project ${slug}`);
   if (!slug) {
     return <div>Error: App slug is required</div>;
   }

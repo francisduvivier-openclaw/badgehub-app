@@ -14,6 +14,7 @@ interface AppProps {
 }
 
 const HomePage = memo(({ tsRestClient = defaultTsRestClient }: AppProps) => {
+  useTitle('');
   const appFetcher: AppFetcher = async (filters) => {
     const result = await tsRestClient?.getProjectSummaries({
       query: {

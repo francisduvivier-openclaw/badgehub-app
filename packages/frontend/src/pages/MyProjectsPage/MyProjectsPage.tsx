@@ -16,6 +16,7 @@ interface AppProps {
 
 const MyProjectsPage = memo(
   ({ tsRestClient = defaultTsRestClient }: AppProps) => {
+    useTitle("My Projects");
     const { user, keycloak } = useSession();
     const [searchQuery, setSearchQuery] = useState("");
     const userIsLoggedIn = keycloak?.authenticated && user?.id;
