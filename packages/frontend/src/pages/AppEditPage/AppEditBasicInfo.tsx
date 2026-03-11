@@ -1,5 +1,6 @@
 import React from "react";
 import { ProjectEditFormData } from "@pages/AppEditPage/ProjectEditFormData.ts";
+import GitLink from "@sharedComponents/GitLink.tsx";
 
 /**
  * A component for editing the basic information of an application.
