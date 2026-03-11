@@ -1,41 +1,32 @@
 {
   "version": 1,
-  "commit": "8c285f12d93dbe887f649f1dd6acf9a675d7e420",
-  "parent": "683fa3db6109fd1137e95618dcf10330edb17ecd",
+  "commit": "313db4c8ca84650a3e574a04bb968e14d70b0724",
+  "parent": "4d2db2af4b1cee9fec72b0782c432c4a31e8b5da",
   "entries": [
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "res",
-      "new": "updatedDraftProject",
-      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
+      "old": "onDeleteFile",
+      "new": "onSetMainExecutable",
+      "file": "packages/frontend/src/pages/AppEditPage/FileListItem.test.tsx",
       "scope": "packages/frontend/src/pages/AppEditPage",
       "confidence": 0.9
     },
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "error",
-      "new": "e",
-      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
+      "old": "onSetMainExecutable",
+      "new": "onDeleteFile",
+      "file": "packages/frontend/src/pages/AppEditPage/FileListItem.test.tsx",
       "scope": "packages/frontend/src/pages/AppEditPage",
       "confidence": 0.9
     },
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "updatedDraftProject",
-      "new": "res",
-      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
-      "scope": "packages/frontend/src/pages/AppEditPage",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "e",
-      "new": "error",
-      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
+      "old": "onSetIcon",
+      "new": "onDeleteFile",
+      "file": "packages/frontend/src/pages/AppEditPage/FileListItem.test.tsx",
       "scope": "packages/frontend/src/pages/AppEditPage",
       "confidence": 0.9
     }
