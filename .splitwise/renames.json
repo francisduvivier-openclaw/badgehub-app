@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "commit": "360664e854bc2ef03d009c8ca365d088be946272",
+  "parent": "87fc5ba1d5a22d7eb434cf9614ad63c3d300a55f",
+  "entries": [
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "res",
+      "new": "updatedDraftProject",
+      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
+      "scope": "packages/frontend/src/pages/AppEditPage",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "updatedDraftProject",
+      "new": "res",
+      "file": "packages/frontend/src/pages/AppEditPage/AppEditPage.tsx",
+      "scope": "packages/frontend/src/pages/AppEditPage",
+      "confidence": 0.9
+    }
+  ]
+}
