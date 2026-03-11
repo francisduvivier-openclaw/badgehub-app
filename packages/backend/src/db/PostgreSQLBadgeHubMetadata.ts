@@ -456,7 +456,7 @@ and v.app_metadata->'badges' @>
       //@formatter:off
       query = sql`${query}
                     and (v.app_metadata->>'name' ilike ${matcher} or v.app_metadata->>'description' ilike ${matcher} or p.slug like ${matcher})
-                    or exists (select 1 from project_latest_categories plc where plc.project_slug = p.slug and plc.category_name ilike ${matcher})`;
+      or exists (select 1 from project_latest_categories plc where plc.project_slug = p.slug and plc.category_name ilike ${matcher})`;
       //@formatter:on
     }
 
