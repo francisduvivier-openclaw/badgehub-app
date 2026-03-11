@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "commit": "802bbd3e0c087a899cafa0224133c70398a35d49",
-  "parent": "3b9e20f04948d621d10d0ebaf7f45c0c954c4197",
+  "commit": "dce21de3d3dadb7d9ab4cafdd7eefac54782ed5f",
+  "parent": "58e79c5815b5ab1fb5416e2b26fb23666f973286",
   "entries": [
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "e",
-      "new": "error",
+      "old": "error",
+      "new": "e",
       "file": "packages/backend/src/controllers/ts-rest/privateRestRouter.ts",
       "scope": "packages/backend/src/controllers/ts-rest",
       "confidence": 0.9
