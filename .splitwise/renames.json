@@ -1,24 +1,24 @@
 {
   "version": 1,
-  "commit": "c5907686a1e65483c91e4b4eeaa2f39aa9988c7b",
-  "parent": "8cc66c462ac20c0428306729d2900fcfd8d0b6ed",
+  "commit": "072337119b50ab7caf3d52f4cc01db6716131d6e",
+  "parent": "24238c7ca9e00cfc378e7a9cfa8d43c4f5ddc5b1",
   "entries": [
     {
       "lang": "ts/js",
-      "kind": "variable",
-      "old": "details",
-      "new": "projectDetails",
-      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
-      "scope": "packages/backend/src/controllers/ts-rest",
+      "kind": "function",
+      "old": "login",
+      "new": "logout",
+      "file": "packages/frontend/src/sharedComponents/ProfileIcon.tsx",
+      "scope": "packages/frontend/src/sharedComponents",
       "confidence": 0.9
     },
     {
       "lang": "ts/js",
-      "kind": "variable",
-      "old": "projectDetails",
-      "new": "details",
-      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
-      "scope": "packages/backend/src/controllers/ts-rest",
+      "kind": "function",
+      "old": "logout",
+      "new": "login",
+      "file": "packages/frontend/src/sharedComponents/ProfileIcon.tsx",
+      "scope": "packages/frontend/src/sharedComponents",
       "confidence": 0.9
     }
   ]
