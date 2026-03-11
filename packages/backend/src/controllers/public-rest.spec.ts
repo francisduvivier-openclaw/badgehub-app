@@ -2,14 +2,12 @@ import { beforeEach, describe, expect, test } from "vitest";
 import request from "supertest";
 import express from "express";
 import { createExpressServer } from "@createExpressServer";
-import {
-  ProjectDetails,
-  ProjectSummary,
-} from "@shared/domain/readModels/project/ProjectDetails";
+import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails";
 import { isInDebugMode } from "@util/debug";
 import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { ProjectLatestRevisions } from "@shared/domain/readModels/project/ProjectRevision";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries";
 
 describe(
   "Public API Routes",
@@ -50,6 +48,7 @@ describe(
               },
             },
             "idp_user_id": "CyberSherpa",
+            "installs": 9,
             "license_type": "MIT",
             "name": "CodeCraft",
             "published_at": "2024-05-23T14:01:16.975Z",
@@ -65,6 +64,41 @@ describe(
       expect(
         res.body.find((app: ProjectSummary) => !app.published_at)
       ).toBeUndefined();
+    });
+
+    test("GET /api/v3/project-summaries should contain apps with non-0 number of installs", async () => {
+      const res = await request(app).get("/api/v3/project-summaries");
+      expect(res.statusCode).toBe(200);
+      expect(
+        res.body.filter((app: ProjectSummary) => app.installs).length
+      ).toBeGreaterThan(0);
+    });
+
+    test("GET /api/v3/project-summaries should allow sorting by installs", async () => {
+      const res = await request(app).get(
+        "/api/v3/project-summaries?orderBy=installs"
+      );
+      expect(res.statusCode).toBe(200);
+      const summaries = res.body as ProjectSummary[];
+      const sortedExpected = summaries
+        .map((p) => p.installs)
+        .sort((a, b) => b - a);
+      expect(
+        summaries.map((app: ProjectSummary) => app.installs)
+      ).toStrictEqual(sortedExpected);
+    });
+
+    test("GET /api/v3/project-summaries should sort by default using published_at", async () => {
+      const res = await request(app).get("/api/v3/project-summaries");
+      expect(res.statusCode).toBe(200);
+      const summaries = res.body as ProjectSummary[];
+
+      const sortedExpected = summaries
+        .map((p) => p.published_at)
+        .sort((a, b) => Date.parse(b!) - Date.parse(a!));
+      expect(
+        summaries.map((app: ProjectSummary) => app.published_at)
+      ).toStrictEqual(sortedExpected);
     });
 
     test("GET /api/v3/project-summaries should not contain hidden apps unless the slug is given", async () => {
@@ -218,7 +252,6 @@ describe(
       expect(restProject).toMatchInlineSnapshot(`
         {
           "created_at": "2024-05-22T14:01:16.975Z",
-          "draft_revision": 1,
           "git": null,
           "idp_user_id": "CyberSherpa",
           "latest_revision": 0,
@@ -258,7 +291,6 @@ describe(
             "dir": "",
             "ext": ".py",
             "full_path": "__init__.py",
-            "id": 3,
             "mimetype": "text/x-python-script",
             "name": "__init__",
             "sha256": "4028201b6ebf876b3ee30462c4d170146a2d3d92c5aca9fefc5e3d1a0508f5df",
@@ -272,7 +304,6 @@ describe(
             "dir": "",
             "ext": ".png",
             "full_path": "icon5.png",
-            "id": 2,
             "image_height": 64,
             "image_width": 64,
             "mimetype": "image/png",
@@ -288,7 +319,6 @@ describe(
             "dir": "",
             "ext": ".json",
             "full_path": "metadata.json",
-            "id": 1,
             "mimetype": "application/json",
             "name": "metadata",
             "sha256": "a41227adaa729b4519feffd5d05ddfbdeee99a7b2784378d1369d8d731fa0e3d",
@@ -302,13 +332,9 @@ describe(
 
       expect(restVersion).toMatchInlineSnapshot(`
         {
-          "download_count": "0",
-          "git_commit_id": null,
           "project_slug": "codecraft",
           "published_at": "2024-05-23T14:01:16.975Z",
           "revision": 0,
-          "size_of_zip": null,
-          "zip": null,
         }
       `);
     });
@@ -322,7 +348,6 @@ describe(
       expect(restProject).toMatchInlineSnapshot(`
         {
           "created_at": "2024-05-22T14:01:16.975Z",
-          "draft_revision": 1,
           "git": null,
           "idp_user_id": "CyberSherpa",
           "latest_revision": 0,
@@ -334,13 +359,9 @@ describe(
       const { app_metadata, files, ...restVersion } = version!;
       expect(restVersion).toMatchInlineSnapshot(`
         {
-          "download_count": "0",
-          "git_commit_id": null,
           "project_slug": "codecraft",
           "published_at": "2024-05-23T14:01:16.975Z",
           "revision": 0,
-          "size_of_zip": null,
-          "zip": null,
         }
       `);
       expect(app_metadata).toMatchInlineSnapshot(`
@@ -374,7 +395,6 @@ describe(
             "dir": "",
             "ext": ".py",
             "full_path": "__init__.py",
-            "id": 3,
             "mimetype": "text/x-python-script",
             "name": "__init__",
             "sha256": "4028201b6ebf876b3ee30462c4d170146a2d3d92c5aca9fefc5e3d1a0508f5df",
@@ -388,7 +408,6 @@ describe(
             "dir": "",
             "ext": ".png",
             "full_path": "icon5.png",
-            "id": 2,
             "image_height": 64,
             "image_width": 64,
             "mimetype": "image/png",
@@ -404,7 +423,6 @@ describe(
             "dir": "",
             "ext": ".json",
             "full_path": "metadata.json",
-            "id": 1,
             "mimetype": "application/json",
             "name": "metadata",
             "sha256": "a41227adaa729b4519feffd5d05ddfbdeee99a7b2784378d1369d8d731fa0e3d",
@@ -586,20 +604,16 @@ describe(
         const stats: BadgeHubStats = getRes.body;
         expect(stats.projectAuthors).toBeGreaterThan(0);
         expect(stats.projects).toBeGreaterThan(0);
-        expect(stats).toMatchInlineSnapshot(
-          // Prevent extra properties being added without unit test update
-          {
-            projectAuthors: expect.any(Number),
-            projects: expect.any(Number),
-          },
-          `
-          {
-            "badges": 2,
-            "projectAuthors": Any<Number>,
-            "projects": Any<Number>,
-          }
-        `
-        );
+        expect(stats.badges).toBeGreaterThan(0);
+        expect(stats.projectAuthors).toBeGreaterThan(0);
+        expect(Object.keys(stats)).toMatchInlineSnapshot(`
+          [
+            "projects",
+            "projectInstalls",
+            "projectAuthors",
+            "badges",
+          ]
+        `);
       });
     });
   },

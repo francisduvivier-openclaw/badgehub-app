@@ -1,7 +1,6 @@
 import {
   ProjectDetails,
   ProjectSlug,
-  ProjectSummary,
 } from "@shared/domain/readModels/project/ProjectDetails";
 import {
   LatestOrDraftAlias,
@@ -12,7 +11,6 @@ import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata";
 import { BadgeSlug } from "@shared/domain/readModels/Badge";
 import {
   CategoryName,
-  getAdminOnlyCategoryNames,
   isAdminCategory,
 } from "@shared/domain/readModels/project/Category";
 import { DBProject } from "@db/models/project/DBProject";
@@ -30,6 +28,8 @@ import { getImageProps } from "@util/imageProcessing";
 import { UserError } from "@domain/UserError";
 import { randomBytes } from "node:crypto";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries";
+import { OrderByOption } from "@shared/domain/readModels/project/ordering";
 
 type FileContext =
   | { projectSlug: string; revision: number; filePath: string }
@@ -57,6 +57,8 @@ export class BadgeHubData {
       versionRevision: RevisionNumberOrAlias;
     }
   >;
+
+  private statsCache: LRUCache<string, BadgeHubStats, void>;
 
   constructor(
     private badgeHubMetadata: PostgreSQLBadgeHubMetadata,
@@ -105,6 +107,14 @@ export class BadgeHubData {
           context.projectSlug,
           context.versionRevision
         );
+      },
+    });
+    this.statsCache = new LRUCache({
+      max: 1,
+      ttl: 5 * 60_000,
+      allowStale: true,
+      fetchMethod: () => {
+        return this.badgeHubMetadata.getStats();
       },
     });
   }
@@ -167,7 +177,7 @@ export class BadgeHubData {
   }
 
   async getFileContents(
-    projectSlug: ProjectDetails["slug"],
+    projectSlug: ProjectSlug,
     versionRevision: RevisionNumberOrAlias,
     filePath: FileMetadata["name"]
   ): Promise<Uint8Array | undefined> {
@@ -218,10 +228,11 @@ export class BadgeHubData {
   }
 
   getVersionZipContents(
-    projectSlug: ProjectDetails["slug"],
+    projectSlug: ProjectSlug,
     versionRevision: RevisionNumberOrAlias
   ): Promise<Uint8Array> {
     // TODO here we should get the file path from the DB in order to fetch the correct file
+    // TODO do not forget download counts
     throw new Error("Method not implemented.");
   }
 
@@ -233,12 +244,16 @@ export class BadgeHubData {
     return this.badgeHubMetadata.getCategories();
   }
 
-  getStats(): Promise<BadgeHubStats> {
-    return this.badgeHubMetadata.getStats();
+  async refreshReports(): Promise<void> {
+    return await this.badgeHubMetadata.refreshReports();
+  }
+
+  async getStats(): Promise<BadgeHubStats> {
+    return (await this.statsCache.fetch("stats"))!;
   }
 
   getProjectSummaries(
-    filter: {
+    query: {
       pageStart?: number;
       pageLength?: number;
       badge?: BadgeSlug;
@@ -246,10 +261,11 @@ export class BadgeHubData {
       search?: string;
       slugs?: ProjectSlug[];
       userId?: User["idp_user_id"];
+      orderBy: OrderByOption;
     },
     revision: LatestOrDraftAlias
   ): Promise<ProjectSummary[]> {
-    return this.badgeHubMetadata.getProjectSummaries(filter, revision);
+    return this.badgeHubMetadata.getProjectSummaries(query, revision);
   }
 
   async writeDraftFile(
@@ -363,6 +379,55 @@ export class BadgeHubData {
 
   async registerBadge(flashId: string, mac: string | undefined) {
     await this.badgeHubMetadata.registerBadge(flashId, mac);
+  }
+
+  async reportInstall(
+    slug: ProjectSlug,
+    revision: number,
+    badge: { id?: string; mac?: string }
+  ): Promise<void> {
+    if (badge.id) {
+      await this.registerBadge(badge.id, badge.mac);
+      await this.badgeHubMetadata.reportEvent(
+        slug,
+        revision,
+        badge.id,
+        "install_count"
+      );
+    }
+  }
+
+  async reportLaunch(
+    slug: ProjectSlug,
+    revision: number,
+    badge: { id?: string; mac?: string }
+  ): Promise<void> {
+    if (badge.id) {
+      await this.registerBadge(badge.id, badge.mac);
+      await this.badgeHubMetadata.reportEvent(
+        slug,
+        revision,
+        badge.id,
+        "launch_count"
+      );
+    }
+  }
+
+  async reportCrash(
+    slug: ProjectSlug,
+    revision: number,
+    badge: { id?: string; mac?: string },
+    body: { reason?: string }
+  ): Promise<void> {
+    if (badge.id) {
+      await this.registerBadge(badge.id, badge.mac);
+      await this.badgeHubMetadata.reportEvent(
+        slug,
+        revision,
+        badge.id,
+        "crash_count"
+      );
+    }
   }
 
   async revokeProjectAPIToken(slug: ProjectSlug) {

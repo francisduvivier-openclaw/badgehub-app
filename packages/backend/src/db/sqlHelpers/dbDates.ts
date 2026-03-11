@@ -5,8 +5,8 @@ import { ISODateString } from "@shared/domain/readModels/ISODateString";
 
 export function extractDatedDataConverted(dbDatedData: DBDatedData): DatedData {
   const datedData: DatedData = {
-    created_at: timestampTZToDate(dbDatedData.created_at),
-    updated_at: timestampTZToDate(dbDatedData.updated_at),
+    created_at: timestampTZToISODateString(dbDatedData.created_at),
+    updated_at: timestampTZToISODateString(dbDatedData.updated_at),
   };
   return datedData;
 }
