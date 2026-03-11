@@ -69,7 +69,7 @@ export class BadgeHubData {
       },
       // how long to live in ms
       ttl: 60_000 * 60 * 12, // 12 hours
-
+      allowStale: true,
       // async method to use for cache.fetch(), for
       // stale-while-revalidate type of behavior
       fetchMethod: async (_key, _staleValue, { context }) => {
@@ -85,7 +85,8 @@ export class BadgeHubData {
     });
     this.latestProjectCache = new LRUCache({
       max: 1000,
-      ttl: 10_000,
+      ttl: 1000,
+      allowStale: true,
       fetchMethod: (_key, _staleValue, { context }) => {
         return this.badgeHubMetadata.getProject(
           context.projectSlug,
