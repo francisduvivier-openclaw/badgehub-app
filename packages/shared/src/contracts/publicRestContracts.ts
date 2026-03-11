@@ -1,13 +1,11 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod/v3";
-import {
-  detailedProjectSchema,
-  projectSummarySchema,
-} from "@shared/domain/readModels/project/ProjectDetails";
+import { detailedProjectSchema } from "@shared/domain/readModels/project/ProjectDetails";
 import { categoryNameSchema } from "@shared/domain/readModels/project/Category";
 import { badgeSlugSchema } from "@shared/domain/readModels/Badge";
 import { projectLatestRevisionsSchema } from "@shared/domain/readModels/project/ProjectRevision";
 import { badgeHubStatsSchema } from "@shared/domain/readModels/BadgeHubStats";
+import { projectSummarySchema } from "@shared/domain/readModels/project/ProjectSummaries";
 
 const c = initContract();
 
@@ -27,8 +25,13 @@ export const getProjectsQuerySchema = z.object({
     .max(50, "the search string should not be longer than 50 characters long")
     .optional()
     .describe("allow a text search over the apps' slug, name and descriptions"),
+  orderBy: z.enum(["published_at", "installs"]).optional(),
 });
 
+const projectRevisionParams = z.object({
+  slug: z.string(),
+  revision: z.coerce.number(),
+});
 export const publicProjectContracts = c.router({
   getProject: {
     method: "GET",
@@ -72,10 +75,7 @@ export const publicProjectContracts = c.router({
   getProjectForRevision: {
     method: "GET",
     path: `/projects/:slug/rev:revision`,
-    pathParams: z.object({
-      slug: z.string(),
-      revision: z.coerce.number(),
-    }),
+    pathParams: projectRevisionParams,
     responses: {
       200: detailedProjectSchema,
       404: errorResponseSchema,
@@ -102,9 +102,7 @@ export const publicFilesContracts = c.router({
   getFileForRevision: {
     method: "GET",
     path: `/projects/:slug/rev:revision/files/:filePath`,
-    pathParams: z.object({
-      slug: z.string(),
-      revision: z.coerce.number(),
+    pathParams: projectRevisionParams.extend({
       filePath: z.string(),
     }),
     responses: {
@@ -115,7 +113,7 @@ export const publicFilesContracts = c.router({
   },
 });
 
-export const pingQuerySchema = z.object({
+export const badgeIdentifiersSchema = z.object({
   mac: z.string().describe("the mac address of the badge").optional(),
   id: z.string().describe("the id of the badge").optional(),
 });
@@ -138,7 +136,7 @@ export const publicOtherContracts = c.router({
   ping: {
     method: "GET",
     path: `/ping`,
-    query: pingQuerySchema,
+    query: badgeIdentifiersSchema,
     responses: {
       200: z.string().describe("Ping the server to check if it's alive"),
     },
@@ -152,8 +150,55 @@ export const publicOtherContracts = c.router({
   },
 });
 
+const crashReportBodySchema = z.object({
+  reason: z
+    .string()
+    .describe("An optional reason for the app crash.")
+    .optional(),
+});
+
+export const publicReportContracts = c.router({
+  reportInstall: {
+    method: "POST",
+    path: "/projects/:slug/rev:revision/report/install",
+    pathParams: projectRevisionParams,
+    query: badgeIdentifiersSchema,
+    body: z.undefined().optional(),
+    responses: {
+      204: z.void(),
+      404: errorResponseSchema,
+    },
+    summary: "Report an installation of an app.",
+  },
+  reportLaunch: {
+    method: "POST",
+    path: "/projects/:slug/rev:revision/report/launch",
+    pathParams: projectRevisionParams,
+    query: badgeIdentifiersSchema,
+    body: z.object({}),
+    responses: {
+      204: z.void(),
+      404: errorResponseSchema,
+    },
+    summary: "Report a launch of an app.",
+  },
+  reportCrash: {
+    method: "POST",
+    path: "/projects/:slug/rev:revision/report/crash",
+    pathParams: projectRevisionParams,
+    query: badgeIdentifiersSchema,
+    body: crashReportBodySchema,
+    responses: {
+      204: z.void(),
+      404: errorResponseSchema,
+    },
+    summary: "Report a crash of an app.",
+  },
+});
+
 export const publicRestContracts = c.router({
   ...publicProjectContracts,
   ...publicFilesContracts,
   ...publicOtherContracts,
+  ...publicReportContracts,
 });
