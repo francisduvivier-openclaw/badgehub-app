@@ -189,6 +189,9 @@ export const createPrivateRestRouter = (
   )
 ) => {
   const s = initServer();
+
+  startMqtt(badgeHubData);
+
   return s.router(privateRestContracts, {
     ...createProjectRouter(badgeHubData),
     getUserDraftProjects: async ({

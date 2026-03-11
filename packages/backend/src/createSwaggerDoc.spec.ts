@@ -2524,6 +2524,44 @@ describe("createSwaggerDoc", () => {
               ],
             },
           },
+          "/api/v3/stats": {
+            "get": {
+              "deprecated": undefined,
+              "description": undefined,
+              "operationId": "getStats",
+              "parameters": [],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "properties": {
+                          "appAuthors": {
+                            "description": "number of app authors",
+                            "type": "number",
+                          },
+                          "apps": {
+                            "description": "number of apps",
+                            "type": "number",
+                          },
+                          "badges": {
+                            "description": "number of registered badges",
+                            "type": "number",
+                          },
+                        },
+                        "type": "object",
+                      },
+                    },
+                  },
+                  "description": "200",
+                },
+              },
+              "summary": undefined,
+              "tags": [
+                "Public",
+              ],
+            },
+          },
           "/api/v3/users/{userId}/drafts": {
             "get": {
               "deprecated": undefined,
