@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import AppDetailHeader from "./AppDetailHeader.tsx";
 import AppDescription from "./AppDescription.tsx";
@@ -12,6 +12,7 @@ import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails
 import Header from "@sharedComponents/Header.tsx";
 import Footer from "@sharedComponents/Footer.tsx";
 import { useTitle } from "@hooks/useTitle.ts";
+import { useAsyncResource } from "@hooks/useAsyncResource.ts";
 
 const AppDetailPage: React.FunctionComponent<{
   tsRestClient?: typeof defaultTsRestClient;
