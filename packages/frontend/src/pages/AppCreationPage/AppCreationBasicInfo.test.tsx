@@ -4,23 +4,11 @@ import AppCreationBasicInfo from "./AppCreationBasicInfo.tsx";
 
 describe("AppCreationBasicInfo", () => {
   it("sanitizes slug input", async () => {
-    const user = userEvent.setup();
-    const Wrapper = () => {
-      const [form, setForm] = useState<AppCreationFormData>({ slug: "" });
-      return (
-        <AppCreationBasicInfo
-          form={form}
-          onChange={(changes) =>
-            setForm((prev) => ({ ...prev, ...changes }))
-          }
-        />
-      );
-    };
-
-    render(<Wrapper />);
+    const onChange = vi.fn();
+    render(<AppCreationBasicInfo form={{ slug: "" }} onChange={onChange} />);
     const input = screen.getByTestId("app-creation-slug-input");
 
-    await user.type(input, "1abc-DEF");
-    expect(input).toHaveValue("abc");
+    fireEvent.change(input, { target: { value: "1abc-DEF" } });
+    expect(onChange).toHaveBeenLastCalledWith({ slug: "abc" });
   });
 });
