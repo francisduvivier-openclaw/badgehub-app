@@ -6,11 +6,11 @@ import { assertDefined } from "@shared/util/assertions.ts";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import Keycloak from "keycloak-js";
-import { extractFilename } from "@utils/fileUtils.ts";
 import { getLanguageFromFile, getPreviewType } from "@utils/filePreview.ts";
 
 const DownloadIcon = () => (
   <svg
+import { downloadProjectFile } from "@utils/downloadProjectFile.ts";
     xmlns="http://www.w3.org/2000/svg"
     className="w-4 h-4 text-slate-300 hover:text-slate-100"
     fill="none"
