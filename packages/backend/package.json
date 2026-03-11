@@ -19,7 +19,8 @@
     "test:watch": "vitest watch --coverage.enabled true",
     "db-migrate:up": "db-migrate up",
     "db-migrate:down": "db-migrate down",
-    "db-migrate:create": "db-migrate create --sql-file true"
+    "db-migrate:create": "db-migrate create --sql-file true",
+    "mqtt-monitor": "node --env-file=.env src/util/mqtt-monitor.js "
   },
   "license": "MIT",
   "engines": {
