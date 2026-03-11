@@ -159,10 +159,7 @@ describe("AppCodePreview", () => {
     expect(await screen.findByText("Image file (100×50)")).toBeInTheDocument();
     const img = screen.getByAltText("image.png");
     expect(img).toBeInTheDocument();
-    // Wait for the async useEffect in ImagePreview to set the src attribute
-    await waitFor(() => {
-      expect(img).toHaveAttribute("src", "http://example.com/image.png");
-    });
+    expect(img).toHaveAttribute("src", "http://example.com/image.png");
   });
 
   it("shows JSON preview with pretty print functionality", async () => {
