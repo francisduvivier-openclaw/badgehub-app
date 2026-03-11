@@ -190,12 +190,6 @@ export const createPrivateRestRouter = (
 ) => {
   const s = initServer();
 
-  try {
-    startMqtt(badgeHubData);
-  } catch (error) {
-    console.error("MQTT: error thrown", error);
-  }
-
   return s.router(privateRestContracts, {
     ...createProjectRouter(badgeHubData),
     getUserDraftProjects: async ({
