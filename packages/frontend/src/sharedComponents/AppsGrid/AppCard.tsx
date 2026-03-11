@@ -68,22 +68,49 @@ const AppCard: React.FC<
 
         {/* Tags section pushed to bottom */}
         <div className="mt-auto mb-3">
-          {categories?.map((category) => (
-            <span
-              key={category}
-              className="tag text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full"
-            >
-              {category}
-            </span>
-          )) ?? false}
-          {badges?.map((badge) => (
-            <span
-              key={badge}
-              className="tag-mcu text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full"
-            >
-              {badge}
-            </span>
-          )) ?? false}
+          {(() => {
+            const MAX_VISIBLE_TAGS = 3;
+            const allTags = [
+              ...(categories?.map((cat, index) => ({
+                text: cat,
+                type: "category",
+                id: `category-${index}`,
+              })) ?? []),
+              ...(badges?.map((badge, index) => ({
+                text: badge,
+                type: "badge",
+                id: `badge-${index}`,
+              })) ?? []),
+            ];
+            const visibleTags = allTags.slice(0, MAX_VISIBLE_TAGS);
+            const hiddenCount = allTags.length - MAX_VISIBLE_TAGS;
+
+            return (
+              <>
+                {visibleTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className={`${
+                      tag.type === "category" ? "tag" : "tag-mcu"
+                    } text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full`}
+                  >
+                    {tag.text}
+                  </span>
+                ))}
+                {hiddenCount > 0 && (
+                  <span
+                    className="text-xs text-slate-500 font-medium cursor-help"
+                    title={allTags
+                      .slice(MAX_VISIBLE_TAGS)
+                      .map((tag) => tag.text)
+                      .join(", ")}
+                  >
+                    +{hiddenCount} more
+                  </span>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
