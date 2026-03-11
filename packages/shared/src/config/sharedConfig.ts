@@ -20,10 +20,8 @@ export function getAndAssertEnv(envVarName: string) {
   }
   return envVar;
 }
+
 export const getSharedConfig = (): SharedConfig => {
-  const ADMIN_CATEGORY_NAMES = process.env["ADMIN_CATEGORY_NAMES"]?.split(
-    ","
-  ) ?? ["Default"];
   return (
     (globalThis as any).__SHARED_CONFIG__ ?? {
       keycloakIssuer: {
@@ -34,7 +32,9 @@ export const getSharedConfig = (): SharedConfig => {
       badgeHubBaseUrl: getAndAssertEnv("BADGEHUB_API_BASE_URL"),
       badges: getAndAssertEnv("BADGE_SLUGS")?.split(","),
       categories: [...getAndAssertEnv("CATEGORY_NAMES")?.split(",")],
-      adminOnlyCategories: ADMIN_CATEGORY_NAMES,
+      adminOnlyCategories: process.env["ADMIN_CATEGORY_NAMES"]?.split(",") ?? [
+        "Default",
+      ],
       isDevEnvironment: process.env.NODE_ENV === "development",
     }
   );
