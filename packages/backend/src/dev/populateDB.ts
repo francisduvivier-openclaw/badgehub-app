@@ -278,6 +278,12 @@ const writeDraftAppFiles = async (
     categories,
     icon_map: iconRelativePath ? { "64x64": iconRelativePath } : undefined,
   };
+  if (semiRandomNumber % 2 === 0) {
+    appMetadata.hidden = false;
+  }
+  if (semiRandomNumber % 9 === 0) {
+    appMetadata.hidden = true;
+  }
   if (semanticVersion !== "") {
     appMetadata.version = semanticVersion;
   }

@@ -42,6 +42,7 @@ export type IconMapWithUrls = {
 
 export interface ProjectSummary extends ProjectCore {
   // Computed
+  hidden?: boolean;
   name: string;
   published_at?: Date; // Can be undefined if not published yet
   icon_map?: IconMapWithUrls; // Relative path to the icon of the project
@@ -96,6 +97,7 @@ export const iconMapWithUrlsSchema = z
 
 export const projectSummarySchema = projectCoreSchema.extend({
   name: z.string(),
+  hidden: z.boolean().optional(),
   published_at: z.date().optional(),
   icon_map: iconMapWithUrlsSchema.optional(),
   license_type: z.string().optional(),

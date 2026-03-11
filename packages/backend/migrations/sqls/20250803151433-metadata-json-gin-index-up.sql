@@ -1,0 +1,1 @@
+create index if not exists idx_v_app_metadata on versions using gin (app_metadata);

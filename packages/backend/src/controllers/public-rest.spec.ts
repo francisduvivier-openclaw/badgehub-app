@@ -33,39 +33,58 @@ describe(
       ).toBeDefined();
       expect(res.body.find((app: ProjectSummary) => app.slug === "codecraft"))
         .toMatchInlineSnapshot(`
-        {
-          "badges": [
-            "mch2022",
-            "why2025",
-          ],
-          "categories": [
-            "Event related",
-            "Games",
-          ],
-          "description": "With CodeCraft, you can do interesting things with the sensors.",
-          "git": null,
-          "icon_map": {
-            "64x64": {
-              "full_path": "icon5.png",
-              "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/icon5.png",
+          {
+            "badges": [
+              "mch2022",
+              "why2025",
+            ],
+            "categories": [
+              "Event related",
+              "Games",
+            ],
+            "description": "With CodeCraft, you can do interesting things with the sensors.",
+            "icon_map": {
+              "64x64": {
+                "full_path": "icon5.png",
+                "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/icon5.png",
+              },
             },
-          },
-          "idp_user_id": "CyberSherpa",
-          "license_type": "MIT",
-          "name": "CodeCraft",
-          "published_at": "2024-05-23T14:01:16.975Z",
-          "revision": 0,
-          "slug": "codecraft",
-        }
-      `);
+            "idp_user_id": "CyberSherpa",
+            "license_type": "MIT",
+            "name": "CodeCraft",
+            "published_at": "2024-05-23T14:01:16.975Z",
+            "revision": 0,
+            "slug": "codecraft",
+          }
+        `);
     });
 
     test("GET /api/v3/project-summaries should not contain unpublished apps", async () => {
       const res = await request(app).get("/api/v3/project-summaries");
       expect(res.statusCode).toBe(200);
       expect(
-        res.body.find((app: ProjectSummary) => !app.published_at)?.name
+        res.body.find((app: ProjectSummary) => !app.published_at)
       ).toBeUndefined();
+    });
+
+    test("GET /api/v3/project-summaries should not contain hidden apps unless the slug is given", async () => {
+      const res = await request(app).get("/api/v3/project-summaries");
+      expect(res.statusCode).toBe(200);
+      expect(
+        res.body.find((app: ProjectSummary) => app.slug === "nanogames")
+      ).toBeUndefined();
+      expect(
+        res.body.find((app: ProjectSummary) => app.hidden)
+      ).toBeUndefined();
+
+      const withSlugRes = await request(app).get(
+        "/api/v3/project-summaries?slugs=nanogames"
+      );
+      expect(withSlugRes.statusCode).toBe(200);
+      expect(
+        withSlugRes.body.find((app: ProjectSummary) => app.slug === "nanogames")
+          ?.hidden
+      ).toBe(true);
     });
 
     test("GET /api/v3/project-summaries with device filter", async () => {
