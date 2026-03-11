@@ -1,23 +1,14 @@
 {
   "version": 1,
-  "commit": "3b9e20f04948d621d10d0ebaf7f45c0c954c4197",
-  "parent": "f6dd21f821f16739bba98f9a64b4a7d369250ba5",
+  "commit": "802bbd3e0c087a899cafa0224133c70398a35d49",
+  "parent": "3b9e20f04948d621d10d0ebaf7f45c0c954c4197",
   "entries": [
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "details",
-      "new": "projectDetails",
-      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
-      "scope": "packages/backend/src/controllers/ts-rest",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "projectDetails",
-      "new": "details",
-      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
+      "old": "e",
+      "new": "error",
+      "file": "packages/backend/src/controllers/ts-rest/privateRestRouter.ts",
       "scope": "packages/backend/src/controllers/ts-rest",
       "confidence": 0.9
     }
