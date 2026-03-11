@@ -11,6 +11,7 @@ import {
   ParameterObject,
   PathsObject,
   ReferenceObject,
+import { NO_BODY_DESCRIPTION } from "@shared/contracts/tsRestNoBodyPatch";
 } from "openapi3-ts";
 import { initContract } from "@ts-rest/core";
 import { EXPRESS_PORT } from "@config";

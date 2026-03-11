@@ -6,6 +6,7 @@ import { badgeSlugSchema } from "@shared/domain/readModels/Badge";
 import { projectLatestRevisionsSchema } from "@shared/domain/readModels/project/ProjectRevision";
 import { badgeHubStatsSchema } from "@shared/domain/readModels/BadgeHubStats";
 import { projectSummarySchema } from "@shared/domain/readModels/project/ProjectSummaries";
+import { NO_BODY_SCHEMA } from "@shared/contracts/tsRestNoBodyPatch";
 
 const c = initContract();
 
