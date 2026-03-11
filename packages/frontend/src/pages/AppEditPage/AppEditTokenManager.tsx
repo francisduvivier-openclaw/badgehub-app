@@ -31,7 +31,8 @@ const AppEditTokenManager: React.FC<AppEditTokenManagerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(true);
   const [isOperating, setIsOperating] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [tokenCopied, setTokenCopied] = useState(false);
+  const [commandCopied, setCommandCopied] = useState(false);
 
   const fetchTokenMetadata = useCallback(async () => {
     setLoading(true);
@@ -117,12 +118,22 @@ const AppEditTokenManager: React.FC<AppEditTokenManagerProps> = ({
     }
   };
 
-  const handleCopyToClipboard = () => {
+  const handleCopyToken = () => {
     if (newToken) {
       navigator.clipboard.writeText(newToken);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTokenCopied(true);
+      setTimeout(() => setTokenCopied(false), 2000);
     }
+  };
+  const draftContract = privateProjectContracts.getDraftProject;
+  const tokenForCommand =
+    newToken && showToken ? newToken : "YOUR_PROJECT_TOKEN";
+  const curlCommand = `curl -H "badgehub-api-token: ${tokenForCommand}" ${BADGHUB_API_V3_URL}${draftContract.path.replace(":slug", slug)}`;
+
+  const handleCopyCommand = () => {
+    navigator.clipboard.writeText(curlCommand);
+    setCommandCopied(true);
+    setTimeout(() => setCommandCopied(false), 2000);
   };
 
   if (loading) {
@@ -165,12 +176,12 @@ const AppEditTokenManager: React.FC<AppEditTokenManagerProps> = ({
                 {showToken ? <EyeOffIcon /> : <EyeIcon />}
               </button>
               <button
-                onClick={handleCopyToClipboard}
+                onClick={handleCopyToken}
                 className="text-slate-400 hover:text-white relative"
                 title="Copy to clipboard"
               >
                 <ClipboardCopyIcon />
-                {copied && (
+                {tokenCopied && (
                   <span className="absolute -top-7 right-0 bg-emerald-600 text-white text-xs rounded px-2 py-1">
                     Copied!
                   </span>
@@ -182,9 +193,11 @@ const AppEditTokenManager: React.FC<AppEditTokenManagerProps> = ({
 
         {tokenMetadata ? (
           <div className={newToken ? "mt-4" : ""}>
-            <p className="text-slate-300">
-              An API token exists for this project.
-            </p>
+            {!newToken && (
+              <p className="text-slate-300">
+                An API token exists for this project.
+              </p>
+            )}
             <p className="text-sm text-slate-500">
               Created: {new Date(tokenMetadata.created_at).toLocaleString()}
             </p>
@@ -194,7 +207,29 @@ const AppEditTokenManager: React.FC<AppEditTokenManagerProps> = ({
                 {new Date(tokenMetadata.last_used_at).toLocaleString()}
               </p>
             )}
-            <div className="mt-4 flex gap-4 items-center">
+            <div className="mt-6 mb-4">
+              <h4 className="text-lg font-semibold text-slate-200 mb-2">
+                Example Usage (cURL)
+              </h4>
+              <div className="flex items-start space-x-2 bg-gray-900 p-2 rounded-md font-mono text-sm">
+                <pre className="text-emerald-300 overflow-x-auto whitespace-pre-wrap flex-grow pt-1">
+                  <code>{curlCommand}</code>
+                </pre>
+                <button
+                  onClick={handleCopyCommand}
+                  className="text-slate-400 hover:text-white relative"
+                  title="Copy command"
+                >
+                  <ClipboardCopyIcon />
+                  {commandCopied && (
+                    <span className="absolute -top-7 right-0 bg-emerald-600 text-white text-xs rounded px-2 py-1">
+                      Copied!
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-4 items-center">
               <button
                 onClick={handleRevokeToken}
                 disabled={isOperating}

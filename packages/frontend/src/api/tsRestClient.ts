@@ -4,7 +4,7 @@ import { tsRestApiContracts } from "@shared/contracts/restContracts.ts";
 import Keycloak from "keycloak-js";
 
 export const publicTsRestClient = initClient(tsRestApiContracts, {
-  baseUrl: BADGEHUB_API_BASE_URL + "/api/v3",
+  baseUrl: BADGHUB_API_V3_URL,
 });
 
 export type TsRestClient = typeof publicTsRestClient;
@@ -21,7 +21,7 @@ export async function getAuthorizationHeader(keycloak: Keycloak | undefined) {
 export const getFreshAuthorizedTsRestClient = async (keycloak: Keycloak) => {
   const headers = await getAuthorizationHeader(keycloak);
   return initClient(tsRestApiContracts, {
-    baseUrl: BADGEHUB_API_BASE_URL + "/api/v3",
+    baseUrl: BADGHUB_API_V3_URL,
     baseHeaders: headers,
   });
 };
