@@ -10,7 +10,7 @@ import CreateProjectPage from "@pages/AppCreationPage/AppCreationPage.tsx";
 import { SessionProvider } from "@sharedComponents/keycloakSession/SessionProvider.tsx";
 import { TodoPage } from "@pages/TodoPage.tsx";
 import MyProjectsPage from "@pages/MyProjectsPage/MyProjectsPage.tsx";
-import { getSharedConfig } from "@shared/config/sharedConfig.ts";
+import { IS_DEV_ENVIRONMENT } from "@config.ts";
 
 const AppDetailWrapper = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -77,6 +77,6 @@ function setupTodoToggleButton() {
   updateRootClass();
 }
 
-if (getSharedConfig().isDevEnvironment) {
+if (IS_DEV_ENVIRONMENT) {
   setupTodoToggleButton();
 }

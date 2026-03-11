@@ -1,5 +1,7 @@
 import { UploadedFile } from "@shared/domain/UploadedFile";
-import { DBDatedData } from "@shared/dbModels/project/DBDatedData";
+import { DBDatedData } from "@db/models/project/DBDatedData";
+import { ProjectSlug } from "@shared/domain/readModels/project/ProjectDetails";
+import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken"; // TODO should better be replaced with DatedData
 
 export interface BadgeHubFiles {
   // Using path parts instead of a string to make it easier to work with paths in a cross-platform way

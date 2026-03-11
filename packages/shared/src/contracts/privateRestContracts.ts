@@ -10,6 +10,7 @@ import {
   createProjectPropsSchema,
 } from "@shared/domain/writeModels/project/WriteProject";
 import { writeAppMetadataJSONSchema } from "@shared/domain/writeModels/AppMetadataJSON";
+import { projectApiTokenMetadataSchema } from "@shared/domain/readModels/project/ProjectApiToken";
 
 const c = initContract();
 
@@ -28,7 +29,18 @@ __tsCheckSame<
 
 const errorResponseSchema = z.object({ reason: z.string() });
 
-const privateProjectContracts = c.router(
+const authorizationHeaderSchema = z.object({
+  authorization: z.string().optional(),
+});
+
+const authorizationOrTokenHeaderSchema = z.union([
+  z.object({
+    "badgehub-api-token": z.string().optional(),
+  }),
+  authorizationHeaderSchema,
+]);
+
+export const privateProjectContracts = c.router(
   {
     createProject: {
       method: "POST",
@@ -41,6 +53,7 @@ const privateProjectContracts = c.router(
         403: errorResponseSchema,
       },
       summary: "Create a new project",
+      headers: authorizationHeaderSchema,
     },
 
     updateProject: {
@@ -48,6 +61,7 @@ const privateProjectContracts = c.router(
       path: "/projects/:slug",
       pathParams: z.object({ slug: z.string() }),
       body: createProjectBodySchema,
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         204: z.void(),
         403: errorResponseSchema,
@@ -60,6 +74,7 @@ const privateProjectContracts = c.router(
       method: "DELETE",
       path: "/projects/:slug",
       pathParams: z.object({ slug: z.string() }),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         204: z.void(),
         403: errorResponseSchema,
@@ -77,6 +92,7 @@ const privateProjectContracts = c.router(
         slug: z.string(),
         filePath: z.string(),
       }),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         204: z.void(),
         403: errorResponseSchema,
@@ -92,6 +108,7 @@ const privateProjectContracts = c.router(
         slug: z.string(),
         filePath: z.string(),
       }),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         204: z.void(),
         403: errorResponseSchema,
@@ -105,6 +122,7 @@ const privateProjectContracts = c.router(
       path: "/projects/:slug/draft/metadata",
       pathParams: z.object({ slug: z.string() }),
       body: writeAppMetadataJSONSchema,
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         204: z.void(),
         403: errorResponseSchema,
@@ -121,6 +139,7 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
         slug: z.string(),
         filePath: z.string(),
       }),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         200: z.unknown().describe("File content as a stream"),
         403: errorResponseSchema,
@@ -133,6 +152,7 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
       method: "GET",
       path: "/projects/:slug/draft",
       pathParams: z.object({ slug: z.string() }),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         200: detailedProjectSchema,
         403: errorResponseSchema,
@@ -145,6 +165,7 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
       method: "PATCH",
       path: "/projects/:slug/publish",
       pathParams: z.object({ slug: z.string() }),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
         204: z.void(),
         403: errorResponseSchema,
@@ -153,30 +174,42 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
       body: z.unknown().optional().nullable(),
       summary: "Publish the current draft as a new version",
     },
-  },
-  {
-    baseHeaders: {
-      authorization: z.string(),
-    },
-  }
-);
-
-const privateRestContracts = c.router(
-  {
-    ...privateProjectContracts,
-    getUserDraftProjects: {
-      method: "GET",
-      path: "/users/:userId/drafts",
-      pathParams: z.object({ userId: z.string() }),
-      query: z.object({
-        pageStart: z.coerce.number().optional(),
-        pageLength: z.coerce.number().optional(),
-      }),
+    createProjectAPIToken: {
+      method: "POST",
+      path: "/projects/:slug/token",
+      body: z.unknown().optional().nullable(),
+      headers: authorizationOrTokenHeaderSchema,
       responses: {
-        200: z.array(projectSummarySchema),
+        200: z
+          .object({ token: z.string() })
+          .describe(`An object containing the API token for the project.`),
         403: errorResponseSchema,
       },
-      summary: "Get all draft projects for a user",
+      summary:
+        "Create a new API token for the project (and invalidate the old one if there was one).\n" +
+        "This is an api key that can be used in the 'badgehub-api-token' header. Eg. set this header: 'badgehub-api-token:{token}'.",
+    },
+    getProjectApiTokenMetadata: {
+      method: "GET",
+      path: "/projects/:slug/token",
+      headers: authorizationOrTokenHeaderSchema,
+      responses: {
+        200: projectApiTokenMetadataSchema,
+        404: errorResponseSchema,
+        403: errorResponseSchema,
+      },
+      summary:
+        "Allow to check if there is an API token for the project and when it was last used and created.",
+    },
+    revokeProjectAPIToken: {
+      method: "DELETE",
+      path: "/projects/:slug/token",
+      headers: authorizationOrTokenHeaderSchema,
+      responses: {
+        204: z.void(),
+        403: errorResponseSchema,
+      },
+      summary: "Delete the API token for the project",
     },
   },
   {
@@ -186,4 +219,21 @@ const privateRestContracts = c.router(
   }
 );
 
-export { privateProjectContracts, privateRestContracts };
+export const privateRestContracts = c.router({
+  ...privateProjectContracts,
+  getUserDraftProjects: {
+    method: "GET",
+    path: "/users/:userId/drafts",
+    pathParams: z.object({ userId: z.string() }),
+    query: z.object({
+      pageStart: z.coerce.number().optional(),
+      pageLength: z.coerce.number().optional(),
+    }),
+    responses: {
+      200: z.array(projectSummarySchema),
+      403: errorResponseSchema,
+    },
+    summary: "Get all draft projects for a user",
+    headers: authorizationHeaderSchema,
+  },
+});

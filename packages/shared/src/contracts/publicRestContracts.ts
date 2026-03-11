@@ -7,6 +7,7 @@ import {
 import { categoryNameSchema } from "@shared/domain/readModels/project/Category";
 import { badgeSlugSchema } from "@shared/domain/readModels/Badge";
 import { projectLatestRevisionsSchema } from "@shared/domain/readModels/project/ProjectRevision";
+import { badgeHubStatsSchema } from "@shared/domain/readModels/BadgeHubStats";
 
 const c = initContract();
 
@@ -119,14 +120,6 @@ export const pingQuerySchema = z.object({
   id: z.string().describe("the id of the badge").optional(),
 });
 
-export const statsSchema = z.object({
-  apps: z.number().describe("number of apps").optional(),
-  appAuthors: z.number().describe("number of app authors").optional(),
-  badges: z.number().describe("number of registered badges").optional(),
-});
-
-export type BadgeStats = z.infer<typeof statsSchema>;
-
 export const publicOtherContracts = c.router({
   getCategories: {
     method: "GET",
@@ -154,7 +147,7 @@ export const publicOtherContracts = c.router({
     method: "GET",
     path: `/stats`,
     responses: {
-      200: statsSchema,
+      200: badgeHubStatsSchema,
     },
   },
 });

@@ -15,12 +15,12 @@ import {
   getAdminOnlyCategoryNames,
   isAdminCategory,
 } from "@shared/domain/readModels/project/Category";
-import { DBProject } from "@shared/dbModels/project/DBProject";
-import { BadgeHubFiles } from "@shared/domain/BadgeHubFiles";
+import { DBProject } from "@db/models/project/DBProject";
+import { BadgeHubFiles } from "@domain/BadgeHubFiles";
 import { UploadedFile } from "@shared/domain/UploadedFile";
-import { DBDatedData } from "@shared/dbModels/project/DBDatedData";
-import { calcSha256 } from "@util/sha256";
-import { TimestampTZ } from "@shared/dbModels/DBTypes";
+import { DBDatedData } from "@db/models/project/DBDatedData";
+import { stringToSha256, uint8ToSha256 } from "@util/sha256";
+import { TimestampTZ } from "@db/models/DBTypes";
 import { CreateProjectProps } from "@shared/domain/writeModels/project/WriteProject";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
 import { LRUCache } from "lru-cache";
@@ -28,7 +28,8 @@ import { appMetadataJSONSchema } from "@shared/domain/readModels/project/AppMeta
 import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
 import { getImageProps } from "@util/imageProcessing";
 import { UserError } from "@domain/UserError";
-import { BadgeStats } from "@shared/contracts/publicRestContracts";
+import { randomBytes } from "node:crypto";
+import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
 type FileContext =
   | { projectSlug: string; revision: number; filePath: string }
@@ -232,7 +233,7 @@ export class BadgeHubData {
     return this.badgeHubMetadata.getCategories();
   }
 
-  getStats(): Promise<BadgeStats> {
+  getStats(): Promise<BadgeHubStats> {
     return this.badgeHubMetadata.getStats();
   }
 
@@ -340,7 +341,7 @@ export class BadgeHubData {
     uploadedFile: UploadedFile,
     mockDates?: DBDatedData
   ) {
-    const sha256 = await calcSha256(uploadedFile);
+    const sha256 = await uint8ToSha256(uploadedFile.fileContent);
     await this.badgeHubFiles.writeFile(uploadedFile, sha256, mockDates);
     await this.badgeHubMetadata.writeDraftFileMetadata(
       slug,
@@ -351,7 +352,7 @@ export class BadgeHubData {
     );
   }
 
-  async deleteDraftFile(slug: string, filePath: string) {
+  async deleteDraftFile(slug: ProjectSlug, filePath: string) {
     if (filePath === "metadata.json") {
       throw new Error(
         `[project: ${slug}] Cannot delete metadata.json because it is required.`
@@ -360,7 +361,27 @@ export class BadgeHubData {
     await this.badgeHubMetadata.deleteDraftFile(slug, filePath);
   }
 
-  async registerBadge(id: string, mac: string | undefined) {
-    await this.badgeHubMetadata.registerBadge(id, mac);
+  async registerBadge(flashId: string, mac: string | undefined) {
+    await this.badgeHubMetadata.registerBadge(flashId, mac);
+  }
+
+  async revokeProjectAPIToken(slug: ProjectSlug) {
+    await this.badgeHubMetadata.revokeProjectApiToken(slug);
+  }
+
+  async getProjectApiTokenMetadata(slug: ProjectSlug) {
+    return this.badgeHubMetadata.getProjectApiTokenMetadata(slug);
+  }
+
+  async createProjectApiToken(slug: ProjectSlug) {
+    const apiKey = randomBytes(16).toString("hex");
+    const keyHash = await stringToSha256(apiKey);
+    await this.badgeHubMetadata.createProjectApiToken(slug, keyHash);
+    return apiKey;
+  }
+
+  async checkApiToken(slug: ProjectSlug, apiToken: string) {
+    const tokenHash = await this.badgeHubMetadata.getProjectApiTokenHash(slug);
+    return Boolean(apiToken && (await stringToSha256(apiToken)) === tokenHash);
   }
 }

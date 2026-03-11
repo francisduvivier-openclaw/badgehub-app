@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
+import {
+  getFreshAuthorizedTsRestClient,
+  publicTsRestClient as defaultTsRestClient,
+} from "../../api/tsRestClient.ts";
 import Keycloak from "keycloak-js";
-import { getAuthorizationHeader } from "@api/authorization.ts";
+import { assertDefined } from "@shared/util/assertions.ts";
 
 const AppEditFileUpload: React.FC<{
   slug: string;
@@ -11,12 +14,7 @@ const AppEditFileUpload: React.FC<{
     firstValidExecutable?: string | null;
   }) => void;
   keycloak?: Keycloak | undefined;
-}> = ({
-  slug,
-  tsRestClient = defaultTsRestClient,
-  onUploadSuccess,
-  keycloak,
-}) => {
+}> = ({ slug, onUploadSuccess, keycloak }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -35,6 +33,7 @@ const AppEditFileUpload: React.FC<{
     !excludedExtensions.some((ext) => fileName.toLowerCase().endsWith(ext));
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    assertDefined(keycloak);
     setError(null);
     setSuccess(null);
     const files = e.target.files;
@@ -45,8 +44,9 @@ const AppEditFileUpload: React.FC<{
       for (const file of Array.from(files)) {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await tsRestClient.writeDraftFile({
-          headers: await getAuthorizationHeader(keycloak),
+        const res = await (
+          await getFreshAuthorizedTsRestClient(keycloak)
+        ).writeDraftFile({
           params: { slug, filePath: file.name },
           body: formData,
         });

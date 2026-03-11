@@ -3,7 +3,7 @@ import { __tsCheckSame } from "@shared/zodUtils/zodTypeComparison";
 import { BadgeSlug, badgeSlugSchema } from "@shared/domain/readModels/Badge";
 
 export const variantJSONSchema = z.object({
-  revision: z.coerce.number().int().positive().optional()
+  revision: z.coerce.number().int().nonnegative().optional()
     .describe(`Revision of the project for this variant. If it is not present, then the revision of the project should be used.
 Warning: if it is present, then badgehub clients on badges will not update the app unless the this revision number is increased.`),
   type: z

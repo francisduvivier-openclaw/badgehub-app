@@ -1,9 +1,7 @@
-import {
-  DBDatedData,
-  DBSoftDeletable,
-} from "@shared/dbModels/project/DBDatedData";
+import { DBDatedData, DBSoftDeletable } from "@db/models/project/DBDatedData";
 import { DatedData } from "@shared/domain/readModels/project/DatedData";
 import moment from "moment";
+import { ISODateString } from "@shared/domain/readModels/ISODateString";
 
 export function extractDatedDataConverted(dbDatedData: DBDatedData): DatedData {
   const datedData: DatedData = {
@@ -19,6 +17,9 @@ type DateIfPossible<T extends string | undefined | null> = T extends undefined
     ? null
     : Date;
 
+type ISODateStringIfPossible<T extends string | undefined | null> =
+  T extends undefined ? undefined : T extends null ? null : ISODateString;
+
 export function timestampTZToDate<T extends string | undefined | null>(
   dbDate: T
 ): DateIfPossible<T> {
@@ -29,6 +30,12 @@ export function timestampTZToDate<T extends string | undefined | null>(
         ? null
         : moment(dbDate).toDate()
   ) as DateIfPossible<T>;
+}
+
+export function timestampTZToISODateString<T extends string | undefined | null>(
+  dbDate: T
+): ISODateStringIfPossible<T> {
+  return timestampTZToDate(dbDate)?.toISOString() as ISODateStringIfPossible<T>;
 }
 
 export type OmitDatedData<

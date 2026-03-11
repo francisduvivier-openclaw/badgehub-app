@@ -1,5 +1,5 @@
 import { RevisionNumberOrAlias } from "@shared/domain/readModels/project/Version";
-import { sharedConfig } from "@config";
+import { BADGEHUB_API_BASE_URL } from "@config";
 
 type RevisionPathPart = "draft" | `rev${number}` | "latest";
 
@@ -12,5 +12,5 @@ export function getFileDownloadUrl(
     typeof versionRevision === "number"
       ? `rev${versionRevision}`
       : versionRevision;
-  return `${sharedConfig.badgeHubBaseUrl}/api/v3/projects/${project}/${revisionPathPart}/files/${encodeURIComponent(full_path)}`;
+  return `${BADGEHUB_API_BASE_URL}/api/v3/projects/${project}/${revisionPathPart}/files/${encodeURIComponent(full_path)}`;
 }
