@@ -29,7 +29,6 @@ export const projectStatusNameSchema = z.enum([
 export interface ProjectCore {
   slug: string;
   idp_user_id: User["idp_user_id"];
-  git?: null | string; // Git URL of the project, if it exists
   latest_revision?: null | number; // Latest revision number of the project
 }
 
@@ -47,7 +46,6 @@ export type ProjectSlug = ProjectDetails["slug"];
 export const projectCoreSchema = z.object({
   slug: z.string(),
   idp_user_id: z.string(),
-  git: z.string().optional().nullable(),
   latest_revision: z.number().optional().nullable(),
 });
 

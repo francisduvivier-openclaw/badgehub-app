@@ -3,8 +3,13 @@ import type { AppCardProps } from "../types.ts";
 import { MLink } from "@sharedComponents/MLink.tsx";
 import { ERROR_ICON_URL, FALLBACK_ICON_URL } from "@config.ts";
 import { DownloadIcon } from "@sharedComponents/AppsGrid/DownloadIcon.tsx";
+import GitLink from "@sharedComponents/GitLink.tsx";
 
-const AppCard: React.FC<AppCardProps> = ({
+const AppCard: React.FC<
+  AppCardProps & {
+    git_url?: string; // Add git_url to props
+  }
+> = ({
   name,
   description,
   categories,
@@ -15,17 +20,18 @@ const AppCard: React.FC<AppCardProps> = ({
   icon_map,
   editable,
   installs,
+  git_url,
 }) => {
   const icon = icon_map?.["64x64"];
-
   const iconSrc = icon ? icon.url : FALLBACK_ICON_URL;
+
   return (
     <div
       data-testid="AppCard"
       className="bg-gray-800 rounded-lg shadow-lg overflow-hidden card-hover-effect flex flex-col h-60"
     >
       <div className="p-5 flex flex-col flex-grow">
-        {/* Header with icon and title */}
+        {/* Header with icon, title, and Git link */}
         <div className="flex items-center mb-3">
           <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center mr-4 flex-shrink-0 overflow-hidden">
             <img
@@ -38,15 +44,21 @@ const AppCard: React.FC<AppCardProps> = ({
               }}
             />
           </div>
-          <MLink
-            to={
-              editable ? `/page/project/${slug}/edit` : `/page/project/${slug}`
-            }
-          >
-            <h3 className="text-xl font-semibold text-emerald-400 hover:text-emerald-300 transition-colors line-clamp-2">
-              {name}
-            </h3>
-          </MLink>
+          <div className="flex-grow flex items-center justify-between min-w-0">
+            <MLink
+              to={
+                editable
+                  ? `/page/project/${slug}/edit`
+                  : `/page/project/${slug}`
+              }
+              className="min-w-0" // Prevents the link from pushing other elements
+            >
+              <h3 className="text-xl font-semibold text-emerald-400 hover:text-emerald-300 transition-colors truncate">
+                {name}
+              </h3>
+            </MLink>
+            <GitLink url={git_url} />
+          </div>
         </div>
 
         {/* Description with line clamp */}

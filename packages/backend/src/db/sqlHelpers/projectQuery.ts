@@ -18,7 +18,6 @@ export function getBaseSelectProjectQuery(
   const revision_column =
     revision === "draft" ? raw(`p.draft_revision`) : raw(`p.latest_revision`);
   return sql`select p.slug,
-                    p.git,
                     p.idp_user_id,
                     p.created_at,
                     p.updated_at,
@@ -50,6 +49,7 @@ export const projectQueryResponseToReadModel = (
     published_at: timestampTZToISODateString(enrichedDBProject.published_at),
     revision: enrichedDBProject.revision,
     slug: enrichedDBProject.slug,
+    git_url: appMetadata.git_url,
     // states: undefined,
     // status: undefined, // TODO
     // dependencies: undefined, // TODO
@@ -78,7 +78,7 @@ export const projectQueryResponseToReadModel = (
     projectSummary.hidden = appMetadata.hidden;
   }
   if (enrichedDBProject.git) {
-    projectSummary.git = enrichedDBProject.git;
+    projectSummary.git_url = enrichedDBProject.git;
   }
   return projectSummarySchema.parse(projectSummary);
 };
