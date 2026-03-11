@@ -623,6 +623,12 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                               "description": "A list of application variants that allows specifying badge-specific properties of the project",
                               "items": {
                                 "properties": {
+                                  "args": {
+                                    "items": {
+                                      "type": "string",
+                                    },
+                                    "type": "array",
+                                  },
                                   "assets": {
                                     "description": "List of assets that are part of the variant, with optionally an indication of how the files should be mapped on the badge. 
 if the assets property is not present, then all project files should be considered part of the variant.",
@@ -1124,6 +1130,12 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                               "description": "A list of application variants that allows specifying badge-specific properties of the project",
                               "items": {
                                 "properties": {
+                                  "args": {
+                                    "items": {
+                                      "type": "string",
+                                    },
+                                    "type": "array",
+                                  },
                                   "assets": {
                                     "description": "List of assets that are part of the variant, with optionally an indication of how the files should be mapped on the badge. 
 if the assets property is not present, then all project files should be considered part of the variant.",
@@ -1710,6 +1722,12 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                     "description": "A list of application variants that allows specifying badge-specific properties of the project",
                     "items": {
                       "properties": {
+                        "args": {
+                          "items": {
+                            "type": "string",
+                          },
+                          "type": "array",
+                        },
                         "assets": {
                           "description": "List of assets that are part of the variant, with optionally an indication of how the files should be mapped on the badge. 
 if the assets property is not present, then all project files should be considered part of the variant.",
@@ -2131,6 +2149,12 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
                               "description": "A list of application variants that allows specifying badge-specific properties of the project",
                               "items": {
                                 "properties": {
+                                  "args": {
+                                    "items": {
+                                      "type": "string",
+                                    },
+                                    "type": "array",
+                                  },
                                   "assets": {
                                     "description": "List of assets that are part of the variant, with optionally an indication of how the files should be mapped on the badge. 
 if the assets property is not present, then all project files should be considered part of the variant.",

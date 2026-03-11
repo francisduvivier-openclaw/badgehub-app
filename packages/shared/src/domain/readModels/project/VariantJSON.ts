@@ -19,6 +19,7 @@ Warning: if it is present, then badgehub clients on badges will not update the a
       `Path to the source_file path of the file that should be executed to launch an app.
 If the executable property is not present, then it can be guessed by the badge firmware (eg. case of only one file with correct extension, or case of __init__.py file in micropython app.`
     ),
+  args: z.array(z.string()).optional(),
   assets: z
     .array(
       z.object({
@@ -51,6 +52,7 @@ export type VariantJSON = {
   revision?: number;
   type?: string;
   executable?: string;
+  args?: string[];
   assets?: AssetEntry[];
   badges?: BadgeSlug[];
 };
