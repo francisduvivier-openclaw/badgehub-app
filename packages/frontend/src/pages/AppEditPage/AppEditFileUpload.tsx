@@ -5,6 +5,7 @@ import {
 } from "../../api/tsRestClient.ts";
 import Keycloak from "keycloak-js";
 import { assertDefined } from "@shared/util/assertions.ts";
+import { isExecutableFileName } from "@utils/fileUtils.ts";
 
 const AppEditFileUpload: React.FC<{
   slug: string;
