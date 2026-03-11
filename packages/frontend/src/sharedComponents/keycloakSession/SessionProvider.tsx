@@ -2,9 +2,9 @@ import Keycloak from "keycloak-js";
 import { useEffect, useRef, useState } from "react";
 import {
   BADGEHUB_FRONTEND_BASE_URL,
-  KEYCLOAK_CLIENT_ID,
   KEYCLOAK_REALM,
-  KEYCLOAK_URL,
+  KEYCLOAK_BASE_URL,
+  KEYCLOAK_CLIENT_ID,
 } from "@config.ts";
 import {
   SessionContext,
@@ -23,7 +23,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({
     initialized.current = true;
 
     const kc = new Keycloak({
-      url: KEYCLOAK_URL,
+      url: KEYCLOAK_BASE_URL,
       realm: KEYCLOAK_REALM,
       clientId: KEYCLOAK_CLIENT_ID,
     });

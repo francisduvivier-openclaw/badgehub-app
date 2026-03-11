@@ -8,7 +8,7 @@ export const BadgeSelector: React.FC<{
   onBadgeChange: (selectedBadge: BadgeSlug | undefined) => void;
   noValueSetName: string;
 }> = ({ badge, onBadgeChange, noValueSetName }) => {
-  const badges = getSharedConfig()?.badges;
+  const badges = BADGE_SLUGS;
   const valueMap = Object.fromEntries(badges.map((slug) => [slug, slug]));
   return (
     <OptionSelectorWithTitle

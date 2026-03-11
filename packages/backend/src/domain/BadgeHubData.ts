@@ -233,7 +233,7 @@ export class BadgeHubData {
     return this.badgeHubMetadata.getCategories();
   }
 
-  getStats(): Promise<BadgeStats> {
+  getStats(): Promise<BadgeHubStats> {
     return this.badgeHubMetadata.getStats();
   }
 
@@ -341,7 +341,7 @@ export class BadgeHubData {
     uploadedFile: UploadedFile,
     mockDates?: DBDatedData
   ) {
-    const sha256 = await calcSha256(uploadedFile);
+    const sha256 = await uint8ToSha256(uploadedFile.fileContent);
     await this.badgeHubFiles.writeFile(uploadedFile, sha256, mockDates);
     await this.badgeHubMetadata.writeDraftFileMetadata(
       slug,
@@ -352,7 +352,7 @@ export class BadgeHubData {
     );
   }
 
-  async deleteDraftFile(slug: string, filePath: string) {
+  async deleteDraftFile(slug: ProjectSlug, filePath: string) {
     if (filePath === "metadata.json") {
       throw new Error(
         `[project: ${slug}] Cannot delete metadata.json because it is required.`
@@ -361,7 +361,27 @@ export class BadgeHubData {
     await this.badgeHubMetadata.deleteDraftFile(slug, filePath);
   }
 
-  async registerBadge(id: string, mac: string | undefined) {
-    await this.badgeHubMetadata.registerBadge(id, mac);
+  async registerBadge(flashId: string, mac: string | undefined) {
+    await this.badgeHubMetadata.registerBadge(flashId, mac);
+  }
+
+  async revokeProjectAPIToken(slug: ProjectSlug) {
+    await this.badgeHubMetadata.revokeProjectApiToken(slug);
+  }
+
+  async getProjectApiTokenMetadata(slug: ProjectSlug) {
+    return this.badgeHubMetadata.getProjectApiTokenMetadata(slug);
+  }
+
+  async createProjectApiToken(slug: ProjectSlug) {
+    const apiKey = randomBytes(16).toString("hex");
+    const keyHash = await stringToSha256(apiKey);
+    await this.badgeHubMetadata.createProjectApiToken(slug, keyHash);
+    return apiKey;
+  }
+
+  async checkApiToken(slug: ProjectSlug, apiToken: string) {
+    const tokenHash = await this.badgeHubMetadata.getProjectApiTokenHash(slug);
+    return Boolean(apiToken && (await stringToSha256(apiToken)) === tokenHash);
   }
 }

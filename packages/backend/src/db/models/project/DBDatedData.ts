@@ -1,4 +1,4 @@
-import { TimestampTZ } from "@shared/dbModels/DBTypes";
+import { TimestampTZ } from "@db/models/DBTypes";
 
 export interface DBDatedData {
   created_at: TimestampTZ; // Creation date

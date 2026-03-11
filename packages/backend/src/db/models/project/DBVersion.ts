@@ -1,4 +1,4 @@
-import { DBDatedData } from "./DBDatedData";
+import { DBDatedData } from "@db/models/project/DBDatedData";
 import { TimestampTZ } from "../DBTypes";
 import { ProjectSlugRelation } from "./DBProject";
 import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
