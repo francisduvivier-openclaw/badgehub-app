@@ -57,11 +57,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   const deletable = isDeletable(file);
 
   const excludedExtensions = [
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".svg",
+    ...IMAGE_FILE_EXTENSIONS.map(ext => `.${ext}`),
     ".md",
     ".txt",
     ".json",
