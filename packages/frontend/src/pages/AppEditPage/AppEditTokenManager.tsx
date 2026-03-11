@@ -198,15 +198,18 @@ const AppEditTokenManager: React.FC<AppEditTokenManagerProps> = ({
                 An API token exists for this project.
               </p>
             )}
-            <p className="text-sm text-slate-500">
-              Created: {new Date(tokenMetadata.created_at).toLocaleString()}
-            </p>
-            {tokenMetadata.last_used_at && (
+            <div className="flex flex-col sm:flex-row sm:gap-6">
               <p className="text-sm text-slate-500">
-                Last used:{" "}
-                {new Date(tokenMetadata.last_used_at).toLocaleString()}
+                <span className="font-semibold">Created:</span>{" "}
+                {new Date(tokenMetadata.created_at).toLocaleString()}
               </p>
-            )}
+              {tokenMetadata.last_used_at && (
+                <p className="text-sm text-slate-500">
+                  <span className="font-semibold">Last used:</span>{" "}
+                  {new Date(tokenMetadata.last_used_at).toLocaleString()}
+                </p>
+              )}
+            </div>
             <div className="mt-6 mb-4">
               <h4 className="text-lg font-semibold text-slate-200 mb-2">
                 Example Usage (cURL)
