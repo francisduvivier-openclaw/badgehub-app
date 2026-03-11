@@ -38,18 +38,14 @@ describe("Authenticated API Routes", () => {
         .auth(USER1_TOKEN, { type: "bearer" })
         .send();
       expect(postRes.statusCode).toBe(204);
-      const patchRes = await request(app)
-        .patch(`/api/v3/projects/${dynamicTestAppId}`)
-        .auth(USER1_TOKEN, { type: "bearer" })
-        .send({ git: "https://github.com" });
-      expect(patchRes.statusCode).toBe(204);
       const patchMetadataRes = await request(app)
         .patch(`/api/v3/projects/${dynamicTestAppId}/draft/metadata`)
         .auth(USER1_TOKEN, { type: "bearer" })
         .send({
           name: "Test App Name",
           description: "Test App Description",
-        });
+          git_url: "https://github.com/badgehubcrew/badgehub-app",
+        } as const satisfies AppMetadataJSON);
       expect(patchMetadataRes.statusCode).toBe(204);
 
       const getRes = await request(app)
@@ -70,7 +66,6 @@ describe("Authenticated API Routes", () => {
         }, `
         {
           "created_at": Any<String>,
-          "git": "https://github.com",
           "idp_user_id": "d8075337-0f10-4cdb-8b48-be1dc18747a3",
           "latest_revision": null,
           "slug": Any<String>,
@@ -78,6 +73,7 @@ describe("Authenticated API Routes", () => {
           "version": {
             "app_metadata": {
               "description": "Test App Description",
+              "git_url": "https://github.com/badgehubcrew/badgehub-app",
               "name": "Test App Name",
             },
             "files": Any<Array>,
