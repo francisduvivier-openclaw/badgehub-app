@@ -8,6 +8,7 @@ import {
 } from "@sharedComponents/AppGridWithFilterAndPagination.tsx";
 import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
 import { PleaseLoginMessage } from "@sharedComponents/PleaseLoginMessage.tsx";
+import { useTitle } from "@hooks/useTitle.ts";
 
 interface AppProps {
   tsRestClient?: typeof defaultTsRestClient;
@@ -15,6 +16,7 @@ interface AppProps {
 
 const MyProjectsPage = memo(
   ({ tsRestClient = defaultTsRestClient }: AppProps) => {
+    useTitle("My Projects");
     const { user, keycloak } = useSession();
     const [searchQuery, setSearchQuery] = useState("");
     const userIsLoggedIn = keycloak?.authenticated && user?.id;

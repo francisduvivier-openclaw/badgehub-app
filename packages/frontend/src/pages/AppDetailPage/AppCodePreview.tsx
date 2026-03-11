@@ -140,7 +140,7 @@ const AppCodePreview: React.FC<{ project: ProjectDetails }> = ({ project }) => {
         </div>
       </div>
       <div className="mt-6 md:ml-0">
-        <div className="code-block font-roboto-mono text-sm bg-gray-900 rounded p-4 overflow-x-auto min-h-[200px]">
+        <div className="code-block font-mono text-sm bg-gray-900 rounded p-4 overflow-x-auto min-h-[200px]">
           <pre>
             <code>
               {loading

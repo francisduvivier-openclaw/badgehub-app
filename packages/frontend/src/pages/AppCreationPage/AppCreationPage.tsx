@@ -8,12 +8,11 @@ import { VALID_SLUG_REGEX } from "@shared/contracts/slug.ts";
 import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
 import {
   getFreshAuthorizedTsRestClient,
-  publicTsRestClient as defaultTsRestClient,
-  TsRestClient,
-} from "../../api/tsRestClient.ts";
+} from "@api/tsRestClient.ts";
 import { useNavigate } from "react-router-dom";
 import { PleaseLoginMessage } from "@sharedComponents/PleaseLoginMessage.tsx";
 import { assertDefined } from "@shared/util/assertions.ts";
+import { useTitle } from "@hooks/useTitle.ts";
 
 export interface AppCreationFormData {
   slug: string;
@@ -26,6 +25,7 @@ const initialForm: AppCreationFormData = {
 };
 
 const AppCreationPage: React.FC = () => {
+  useTitle("Create project");
   const [form, setForm] = useState<AppCreationFormData>(initialForm);
   const [error, setError] = useState<string | null>(null);
   const { user, keycloak } = useSession();
