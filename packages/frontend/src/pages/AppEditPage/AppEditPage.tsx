@@ -8,7 +8,6 @@ import AppEditCategorization from "./AppEditCategorization.tsx";
 import AppEditActions from "./AppEditActions.tsx";
 import AppEditFileUpload from "./AppEditFileUpload";
 import AppEditFileList from "./AppEditFileList.tsx";
-import AppCodePreview from "@pages/AppDetailPage/AppCodePreview.tsx";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { ProjectEditFormData } from "@pages/AppEditPage/ProjectEditFormData.ts";
 import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
@@ -36,7 +35,6 @@ const AppEditPage: React.FC<{
 }> = ({ slug }) => {
   const [project, setProject] = useState<PossiblyStaleProject | null>(null);
   const [loading, setLoading] = useState(true);
-  const [previewedFile, setPreviewedFile] = useState<string | null>(null);
   const { user, keycloak } = useSession();
   const navigate = useNavigate();
 
@@ -237,10 +235,6 @@ const AppEditPage: React.FC<{
 
   const onSetMainExecutable = (filePath: string) => setMainExecutable(filePath);
 
-  const handlePreviewFile = (filePath: string) => {
-    setPreviewedFile(filePath);
-  };
-
   return (
     <div
       data-testid="app-edit-page"
@@ -283,31 +277,17 @@ const AppEditPage: React.FC<{
                   keycloak={keycloak}
                   onUploadSuccess={updateDraftFiles}
                 />
-                {keycloak && (
-                  <AppEditFileList
-                    user={user}
-                    project={project as ProjectDetails}
-                    onSetIcon={onSetIcon}
-                    iconFilePath={appMetadata?.icon_map?.["64x64"]}
-                    onDeleteFile={handleDeleteFile}
-                    mainExecutable={
-                      mainExecutable /*TODO multi variant support in frontend*/
-                    }
-                    onSetMainExecutable={onSetMainExecutable}
-                    onPreview={handlePreviewFile}
-                    slug={slug}
-                    keycloak={keycloak}
-                  />
-                )}
-                {keycloak && (
-                  <AppCodePreview
-                    project={project as ProjectDetails}
-                    isDraft={true}
-                    keycloak={keycloak}
-                    previewedFile={previewedFile}
-                    showFileList={false}
-                  />
-                )}
+                <AppEditFileList
+                  user={user}
+                  project={project as ProjectDetails}
+                  onSetIcon={onSetIcon}
+                  iconFilePath={appMetadata?.icon_map?.["64x64"]}
+                  onDeleteFile={handleDeleteFile}
+                  mainExecutable={
+                    mainExecutable /*TODO multi variant support in frontend*/
+                  }
+                  onSetMainExecutable={onSetMainExecutable}
+                />
               </form>
               {keycloak && (
                 <AppEditTokenManager slug={slug} keycloak={keycloak} />
