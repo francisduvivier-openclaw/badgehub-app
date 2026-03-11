@@ -3,6 +3,7 @@ import { render, screen } from "@__test__";
 import userEvent from "@testing-library/user-event";
 import AppEditBasicInfo from "./AppEditBasicInfo.tsx";
 import type { ProjectEditFormData } from "./ProjectEditFormData.ts";
+import React, { useState } from "react";
 
 const baseForm: ProjectEditFormData = {
   name: "Demo",
