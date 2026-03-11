@@ -1,5 +1,6 @@
 import React from "react";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
+import GitLink from "@sharedComponents/GitLink.tsx";
 
 const AppDetailHeader: React.FC<{ project: ProjectDetails }> = ({
   project,
