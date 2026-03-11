@@ -13,6 +13,9 @@ interface AppEditFilePreviewProps {
   onDeleteFile?: (filePath: string) => void;
   mainExecutable?: string;
   onSetMainExecutable?: (filePath: string) => void;
+  onPreview?: (filePath: string) => void;
+  slug: string;
+  keycloak: Keycloak;
 }
 
 /**
@@ -26,6 +29,9 @@ const AppEditFileList: React.FC<AppEditFilePreviewProps> = ({
   onDeleteFile,
   mainExecutable,
   onSetMainExecutable,
+  onPreview,
+  slug,
+  keycloak,
 }) => {
   // Use nullish coalescing for a cleaner way to handle potentially undefined files
   const files = project?.version?.files ?? [];
@@ -49,6 +55,9 @@ const AppEditFileList: React.FC<AppEditFilePreviewProps> = ({
                 iconFilePath={iconFilePath}
                 mainExecutable={mainExecutable}
                 onSetMainExecutable={onSetMainExecutable}
+                onPreview={onPreview}
+                slug={slug}
+                keycloak={keycloak}
               />
             ))}
           </ul>
