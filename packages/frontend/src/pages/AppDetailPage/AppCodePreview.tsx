@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { publicTsRestClient } from "@api/tsRestClient.ts";
+import { publicTsRestClient, getFreshAuthorizedTsRestClient } from "@api/tsRestClient.ts";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata.ts";
+import { assertDefined } from "@shared/util/assertions.ts";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
+import Keycloak from "keycloak-js";
+import { extractFilename, TEXT_FILE_EXTENSIONS, IMAGE_FILE_EXTENSIONS } from "@utils/fileUtils.ts";
 
 const DownloadIcon = () => (
   <svg
