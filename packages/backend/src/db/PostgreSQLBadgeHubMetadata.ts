@@ -285,8 +285,8 @@ export class PostgreSQLBadgeHubMetadata {
     await this.pool.query(sql`
       with inserted_version as (
         insert
-          into versions (project_slug, app_metadata, created_at, updated_at)
-            values (${project.slug}, ${appMetadata}, ${createdAt}, ${updatedAt}) returning revision)
+          into versions (project_slug, revision, app_metadata, created_at, updated_at)
+            values (${project.slug}, 1, ${appMetadata}, ${createdAt}, ${updatedAt}) returning revision)
       insert
       into projects (${keys}, draft_revision)
       values (${values}, (select revision from inserted_version))`);

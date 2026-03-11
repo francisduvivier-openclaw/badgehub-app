@@ -31,7 +31,7 @@ async function reportSomeDownloads(
     const semiRandomIndex = await stringToSemiRandomNumber("download" + i);
     await badgeHubData.reportInstall(
       projectsWithDownloads[semiRandomIndex % projectsWithDownloads.length]!,
-      0,
+      1,
       { id: BADGE_IDS[i % BADGE_IDS.length >> 2] }
     );
   }
