@@ -5,11 +5,21 @@ import { User } from "@shared/domain/readModels/project/User";
 
 export type UserDataInRequest = Pick<User, "idp_user_id">;
 
-export type RequestWithUser = {
-  user: UserDataInRequest;
-} & Request;
+export type AuthenticatedRequest = Request &
+  (
+    | {
+        user: UserDataInRequest;
+        apiToken: undefined;
+      }
+    | {
+        user: undefined;
+        apiToken: string;
+      }
+  );
 
-export function getUser(req: { user: UserDataInRequest }): UserDataInRequest {
+export function getUser(req: {
+  user?: UserDataInRequest;
+}): UserDataInRequest | undefined {
   return req.user;
 }
 
@@ -25,20 +35,36 @@ const decodeTokenWithErrorHandling = (token: string) => {
   }
 };
 
-const addUserSubMiddleware = (
-  req: { headers: { authorization?: string } },
+function stripBearerPrefix<T extends string | undefined>(apiToken: T): T {
+  return apiToken?.toLowerCase().startsWith("bearer ")
+    ? (apiToken?.slice("bearer ".length) as T)
+    : apiToken;
+}
+
+const addAuthenticationMiddleware = (
+  req: { headers: { authorization?: string; "badgehub-api-token"?: string } },
   res: Response,
   next: NextFunction
 ) => {
   try {
-    let token = req.headers.authorization;
-    if (!token) {
-      console.warn("JWT:addUserSubMiddleware: Missing authorization header");
-      throw NotAuthenticatedError("Missing authorization header");
+    const authorizationHeader = req.headers.authorization;
+    const authenticatedRequest = req as AuthenticatedRequest;
+    authenticatedRequest.apiToken = stripBearerPrefix(
+      req.headers["badgehub-api-token"]
+    );
+    if (!authorizationHeader) {
+      if (!authenticatedRequest.apiToken) {
+        console.warn(
+          "JWT:addUserSubMiddleware: Missing authorization and badgehub-api-token header"
+        );
+        throw NotAuthenticatedError(
+          "Missing authorization and badgehub-api-token header"
+        );
+      }
+      next();
+      return;
     }
-    if (token.toLowerCase().startsWith("bearer ")) {
-      token = token.substring("Bearer ".length);
-    }
+    const token = stripBearerPrefix(authorizationHeader);
     const payload = decodeTokenWithErrorHandling(token);
     if (!("sub" in payload) || !payload.sub) {
       console.warn(
@@ -46,7 +72,7 @@ const addUserSubMiddleware = (
       );
       throw NotAuthenticatedError("JWT does not contain user sub");
     }
-    (req as RequestWithUser).user = { idp_user_id: payload.sub };
+    authenticatedRequest.user = { idp_user_id: payload.sub };
     next();
   } catch (e: unknown) {
     return handleError(e, res);
@@ -68,4 +94,4 @@ const handleError = (err: unknown, res: Response) => {
   res.status(500).json({ reason: "Internal server error" });
 };
 
-export { addUserSubMiddleware };
+export { addAuthenticationMiddleware };
