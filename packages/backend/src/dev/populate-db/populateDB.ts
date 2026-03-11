@@ -32,7 +32,7 @@ async function reportSomeDownloads(
     await badgeHubData.reportInstall(
       projectsWithDownloads[semiRandomIndex % projectsWithDownloads.length]!,
       1,
-      { id: BADGE_IDS[i % BADGE_IDS.length >> 2] }
+      { id: BADGE_IDS[i % BADGE_IDS.length >> 2] + "-v1" }
     );
   }
   await badgeHubData.refreshReports();
