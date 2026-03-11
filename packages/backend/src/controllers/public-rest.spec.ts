@@ -600,15 +600,20 @@ describe(
         const getRes = await request(app).get(`/api/v3/stats`);
         expect(getRes.statusCode).toBe(200);
         const stats: BadgeHubStats = getRes.body;
-        expect(stats.projectAuthors).toBeGreaterThan(0);
+        expect(stats.authors).toBeGreaterThan(0);
         expect(stats.projects).toBeGreaterThan(0);
         expect(stats.badges).toBeGreaterThan(0);
-        expect(stats.projectAuthors).toBeGreaterThan(0);
+        expect(stats.authors).toBeGreaterThan(0);
         expect(Object.keys(stats)).toMatchInlineSnapshot(`
           [
+            "crashed_projects",
+            "crashes",
+            "installed_projects",
+            "launched_projects",
+            "launches",
             "projects",
-            "projectInstalls",
-            "projectAuthors",
+            "installs",
+            "authors",
             "badges",
           ]
         `);
