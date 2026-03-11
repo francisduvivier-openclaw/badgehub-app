@@ -1,4 +1,5 @@
 import React from "react";
+import { SortOption } from "@sharedComponents/AppsGrid/Filters.tsx";
 
 const NO_FILTER_OPTION_VALUE = "All";
 type SortByOption = string | undefined;

@@ -52,6 +52,8 @@ import { getFileDownloadUrl } from "@db/getFileDownloadUrl";
 import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
 import { DBProjectApiKey } from "@db/models/project/DBProjectApiKey";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries";
+import { OrderByOption } from "@shared/domain/readModels/project/ordering";
 
 const ONE_KILO = 1024;
 
@@ -454,7 +456,7 @@ and v.app_metadata->'badges' @>
       //@formatter:off
       query = sql`${query}
                     and (v.app_metadata->>'name' ilike ${matcher} or v.app_metadata->>'description' ilike ${matcher} or p.slug like ${matcher})
-                    or exists (select 1 from project_latest_categories plc where plc.project_slug = p.slug and plc.category_name ilike ${matcher})`;
+      or exists (select 1 from project_latest_categories plc where plc.project_slug = p.slug and plc.category_name ilike ${matcher})`;
       //@formatter:on
     }
 

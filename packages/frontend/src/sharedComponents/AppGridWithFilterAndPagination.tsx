@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AppCardProps } from "@sharedComponents/types.ts";
-import Filters from "@sharedComponents/AppsGrid/Filters.tsx";
+import Filters, { SortOption } from "@sharedComponents/AppsGrid/Filters.tsx";
 import Spinner from "@sharedComponents/Spinner.tsx";
 import AppsGrid from "@sharedComponents/AppsGrid/AppsGrid.tsx";
 import Pagination from "@sharedComponents/AppsGrid/Pagination.tsx";
-import { ProjectSummary } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { z } from "zod/v3";
 import { getProjectsQuerySchema } from "@shared/contracts/publicRestContracts.ts";
 import { BadgeSlug } from "@shared/domain/readModels/Badge.ts";
 import { CategoryName } from "@shared/domain/readModels/project/Category.ts";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries.ts";
 
 export type ProjectQueryParams = z.infer<typeof getProjectsQuerySchema>;
 export type AppFetcher = (

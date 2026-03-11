@@ -28,6 +28,8 @@ import { appMetadataJSONSchema } from "@shared/domain/readModels/project/AppMeta
 import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
 import { getImageProps } from "@util/imageProcessing";
 import { UserError } from "@domain/UserError";
+import { ProjectSummary } from "@shared/domain/readModels/project/ProjectSummaries";
+import { OrderByOption } from "@shared/domain/readModels/project/ordering";
 import { randomBytes } from "node:crypto";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
