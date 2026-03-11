@@ -17,7 +17,7 @@ const ProfileIcon: React.FC = () => {
   }
 
   async function account() {
-    await keycloak?.accountManagement()
+    await keycloak?.accountManagement();
   }
 
   // Close menu on outside click
@@ -66,18 +66,18 @@ const ProfileIcon: React.FC = () => {
           className="absolute right-0 mt-2 w-48 border border-gray-700 rounded-md shadow-lg py-2 z-50"
           style={{ backgroundColor: "#1f2937" }}
         >
+          <button
+            className="bg-gray-700 text-left px-4 py-2 text-gray-200 hover:bg-gray-600 rounded-md text-sm transition-colors mt-2"
+            style={{ width: "calc(100% - 1rem)" }}
+            onClick={account}
+            data-testid="account-button"
+          >
+            Account
+          </button>
           {user ? (
             <div className="px-4 py-2 text-gray-200 text-sm">
               <div className="font-semibold">{user.name}</div>
               <div className="text-gray-400 text-xs">{user.email}</div>
-              <button
-                className="bg-gray-700 text-left px-4 py-2 text-gray-200 hover:bg-gray-600 rounded-md text-sm transition-colors mt-2"
-                style={{ width: "calc(100% - 1rem)" }}
-                onClick={account}
-                data-testid="logout-button"
-              >
-                Account
-              </button>
               <button
                 className="bg-gray-700 text-left px-4 py-2 text-gray-200 hover:bg-gray-600 rounded-md text-sm transition-colors mt-2"
                 style={{ width: "calc(100% - 1rem)" }}
