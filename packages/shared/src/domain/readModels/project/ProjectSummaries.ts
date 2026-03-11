@@ -27,6 +27,7 @@ export interface ProjectSummary extends ProjectCore {
   badges?: Array<BadgeSlug>;
   description?: string; // description in metadata of latest version of the projectct
   revision: number; // latest revision number of the project
+  git_url?: string;
 }
 
 const fullPathAndUrlSchema = z.object({
@@ -59,6 +60,7 @@ export const projectSummarySchema = projectCoreSchema.extend({
   badges: z.array(z.string()).optional(), // Array of BadgeSlugs
   description: z.string().optional(),
   revision: z.number(),
+  git_url: z.string().optional(),
 });
 export type FullPathAndUrl = {
   full_path: string;

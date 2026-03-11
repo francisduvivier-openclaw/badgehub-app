@@ -104,6 +104,11 @@ export async function createSemiRandomAppdata(
     icon_map: iconRelativePath ? { "64x64": iconRelativePath } : undefined,
   };
   if (semiRandomNumber % 2 === 0) {
+    appMetadata.git_url = "https://github.com/badgehubcrew/badgehub-app";
+  } else if (semiRandomNumber % 3 === 0) {
+    appMetadata.git_url = "https://gitlab.com/team-badge/badgevms-badgehub";
+  }
+  if (semiRandomNumber % 2 === 0) {
     appMetadata.hidden = false;
   }
   if (semiRandomNumber % 9 === 0) {

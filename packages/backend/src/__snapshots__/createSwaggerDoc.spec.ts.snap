@@ -380,8 +380,7 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                       "description": {
                         "type": "string",
                       },
-                      "git": {
-                        "nullable": true,
+                      "git_url": {
                         "type": "string",
                       },
                       "hidden": {
@@ -603,10 +602,6 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                     "created_at": {
                       "type": "string",
                     },
-                    "git": {
-                      "nullable": true,
-                      "type": "string",
-                    },
                     "idp_user_id": {
                       "type": "string",
                     },
@@ -728,6 +723,9 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                             },
                             "description": {
                               "description": "Some more details about the app. Allows users to decide whether they want to install the app.",
+                              "type": "string",
+                            },
+                            "git_url": {
                               "type": "string",
                             },
                             "hidden": {
@@ -1105,10 +1103,6 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                     "created_at": {
                       "type": "string",
                     },
-                    "git": {
-                      "nullable": true,
-                      "type": "string",
-                    },
                     "idp_user_id": {
                       "type": "string",
                     },
@@ -1230,6 +1224,9 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                             },
                             "description": {
                               "description": "Some more details about the app. Allows users to decide whether they want to install the app.",
+                              "type": "string",
+                            },
+                            "git_url": {
                               "type": "string",
                             },
                             "hidden": {
@@ -1815,6 +1812,9 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                     "description": "Some more details about the app. Allows users to decide whether they want to install the app.",
                     "type": "string",
                   },
+                  "git_url": {
+                    "type": "string",
+                  },
                   "hidden": {
                     "description": "Whether the project should be hidden from the launcher and from discovery on BadgeHub. Note that this does not make it private, just harder to find.",
                     "type": "boolean",
@@ -2110,10 +2110,6 @@ This is actually just an alias for a post to /projects/:slug/draft/files/metadat
                     "created_at": {
                       "type": "string",
                     },
-                    "git": {
-                      "nullable": true,
-                      "type": "string",
-                    },
                     "idp_user_id": {
                       "type": "string",
                     },
@@ -2235,6 +2231,9 @@ Warning: if it is present, then badgehub clients on badges will not update the a
                             },
                             "description": {
                               "description": "Some more details about the app. Allows users to decide whether they want to install the app.",
+                              "type": "string",
+                            },
+                            "git_url": {
                               "type": "string",
                             },
                             "hidden": {
@@ -3078,8 +3077,7 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                       "description": {
                         "type": "string",
                       },
-                      "git": {
-                        "nullable": true,
+                      "git_url": {
                         "type": "string",
                       },
                       "hidden": {
