@@ -9,7 +9,7 @@ const AppEditBasicInfo: React.FC<{
     <h2 className="text-2xl font-semibold text-slate-100 mb-4">
       Basic Information
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div>
         <label className="block text-sm font-medium text-slate-300 mb-1">
           App Name
@@ -30,6 +30,17 @@ const AppEditBasicInfo: React.FC<{
           className="w-full form-input p-2"
           value={form.version}
           onChange={(e) => onChange({ version: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-1">
+          Author Name
+        </label>
+        <input
+          type="text"
+          className="w-full form-input p-2"
+          value={form.author}
+          onChange={(e) => onChange({ author: e.target.value })}
         />
       </div>
     </div>
