@@ -60,6 +60,9 @@ const AppEditPage: React.FC<{
     });
   };
   const appMetadata = project?.version.app_metadata;
+  if (appMetadata) {
+    appMetadata.author ??= user?.name;
+  }
 
   useEffect(() => {
     if (!keycloak) {
