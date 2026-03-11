@@ -6,11 +6,11 @@ import { assertDefined } from "@shared/util/assertions.ts";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import Keycloak from "keycloak-js";
-import { extractFilename } from "@utils/fileUtils.ts";
 import { getLanguageFromFile, getPreviewType } from "@utils/filePreview.ts";
 
 const DownloadIcon = () => (
   <svg
+import { downloadProjectFile } from "@utils/downloadProjectFile.ts";
     xmlns="http://www.w3.org/2000/svg"
     className="w-4 h-4 text-slate-300 hover:text-slate-100"
     fill="none"
@@ -244,10 +244,7 @@ const renderFilePreview = (
       );
     case "text":
       return fileContent ? (
-        <TextPreview
-          content={fileContent}
-          filename={currentFile.full_path}
-        />
+        <TextPreview content={fileContent} filename={currentFile.full_path} />
       ) : (
         <div className="text-slate-400">Loading text file...</div>
       );
@@ -266,10 +263,10 @@ interface AppCodePreviewProps {
   showFileList?: boolean;
 }
 
-const AppCodePreview: React.FC<AppCodePreviewProps> = ({ 
-  project, 
-  isDraft = false, 
-  keycloak, 
+const AppCodePreview: React.FC<AppCodePreviewProps> = ({
+  project,
+  isDraft = false,
+  keycloak,
   previewedFile: externalPreviewedFile,
   showFileList = true 
 }) => {
@@ -288,7 +285,7 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
       setPreviewedFile(externalPreviewedFile);
       return;
     }
-    
+
     if (!files?.length) {
       setPreviewedFile(null);
       setFileContent(null);
