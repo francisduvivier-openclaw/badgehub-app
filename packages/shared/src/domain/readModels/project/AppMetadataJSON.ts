@@ -20,6 +20,7 @@ export interface AppMetadataJSON {
   project_type?: "app" | "library" | "firmware" | "other";
   hidden?: boolean;
   description?: string;
+  git_url?: string;
   version?: string;
   categories?: CategoryName[];
   author?: string;
@@ -70,6 +71,7 @@ export const appMetadataJSONSchema = z.object({
     .enum(["app", "library", "firmware", "other"])
     .optional()
     .describe("Type of the project, eg. 'app' or 'library'"),
+  git_url: z.string().optional(),
   hidden: z
     .boolean()
     .describe(
