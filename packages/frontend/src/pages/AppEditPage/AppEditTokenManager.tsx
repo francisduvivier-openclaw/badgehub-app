@@ -8,6 +8,8 @@ import { DeleteIcon } from "@sharedComponents/icons/DeleteIcon.tsx";
 import { EyeIcon } from "@sharedComponents/icons/EyeIcon.tsx";
 import { ClipboardCopyIcon } from "@sharedComponents/icons/ClipboardCopyIcon.tsx";
 import { EyeOffIcon } from "@sharedComponents/icons/EyeOffIcon.tsx";
+import { BADGHUB_API_V3_URL } from "@config.ts";
+import { privateProjectContracts } from "@shared/contracts/privateRestContracts.ts";
 
 interface AppEditTokenManagerProps {
   slug: string;
