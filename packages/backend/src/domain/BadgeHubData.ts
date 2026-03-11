@@ -24,7 +24,7 @@ import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON
 import { LRUCache } from "lru-cache";
 import { appMetadataJSONSchema } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
-import { getImageProps } from "@util/imageProcessing";
+import { createIconBuffer, getImageProps } from "@util/imageProcessing";
 import { UserError } from "@domain/UserError";
 import { randomBytes } from "node:crypto";
 import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
@@ -33,6 +33,7 @@ import { OrderByOption } from "@shared/domain/readModels/project/ordering";
 
 type FileContext =
   | { projectSlug: string; revision: number; filePath: string }
+import { parseIconSize } from "@domain/ImageDimensions";
   | { sha256: string };
 
 export class BadgeHubData {
