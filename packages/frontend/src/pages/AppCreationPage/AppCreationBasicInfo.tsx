@@ -1,5 +1,6 @@
 import React from "react";
 import { AppCreationFormData } from "./AppCreationPage";
+import { VALID_SLUG_PATTERN } from "@shared/contracts/slug.ts";
 
 const AppCreationBasicInfo: React.FC<{
   form: AppCreationFormData;
