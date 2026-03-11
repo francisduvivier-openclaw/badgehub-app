@@ -4,6 +4,7 @@ import { GitLabIcon } from "./icons/GitLabIcon.tsx";
 
 interface GitLinkProps {
   url?: string;
+  showText?: boolean;
 }
 
 function urlHasHost(url: string, GITHUB_HOSTNAME: string) {
@@ -18,32 +19,45 @@ function urlHasHost(url: string, GITHUB_HOSTNAME: string) {
  * Renders a GitHub or GitLab icon linking to the provided source code URL.
  * It returns null if the URL is not provided or not from a supported provider.
  */
-const GitLink: React.FC<GitLinkProps> = ({ url }) => {
+const GitLink: React.FC<GitLinkProps> = ({ url, showText = false }) => {
   if (!url) {
     return null;
   }
 
-  const GITHUB_HOSTNAME = "github.com";
-  const GitIcon = urlHasHost(url, GITHUB_HOSTNAME)
-    ? GitHubIcon
-    : urlHasHost(url, "gitlab.com")
-      ? GitLabIcon
-      : null;
+  // Git provider configuration - easy to extend for more providers
+  const gitProviders = {
+    "github.com": { icon: GitHubIcon, name: "GitHub" },
+    "gitlab.com": { icon: GitLabIcon, name: "GitLab" },
+  };
 
-  if (!GitIcon) {
+  const provider = Object.entries(gitProviders).find(([hostname]) =>
+    urlHasHost(url, hostname)
+  )?.[1];
+
+  if (!provider) {
     return null; // Only render for supported Git providers
   }
+
+  const { icon: GitIcon, name: providerName } = provider;
+
+  // Style configurations for better maintainability
+  const styles = {
+    button:
+      "btn-secondary px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center",
+    icon: "text-slate-400 hover:text-white transition-colors ml-2 flex-shrink-0",
+  };
 
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-slate-400 hover:text-white transition-colors ml-2 flex-shrink-0"
-      aria-label="Source code repository"
-      title="Source Code Repository"
+      className={showText ? styles.button : styles.icon}
+      aria-label={`Source code repository on ${providerName}`}
+      title={`View source code on ${providerName}`}
     >
       <GitIcon className="h-5 w-5" />
+      {showText && <span className="ml-2">View Source</span>}
     </a>
   );
 };
