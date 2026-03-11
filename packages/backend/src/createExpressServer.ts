@@ -8,7 +8,7 @@ import { publicRestContracts } from "@shared/contracts/publicRestContracts";
 import { createPublicRestRouter } from "@controllers/ts-rest/publicRestRouter";
 import { privateRestContracts } from "@shared/contracts/privateRestContracts";
 import { createPrivateRestRouter } from "@controllers/ts-rest/privateRestRouter";
-import { addUserSubMiddleware } from "@auth/jwt-decode";
+import { addAuthenticationMiddleware } from "@auth/jwt-decode";
 import { jwtVerifyTokenMiddleware } from "@auth/jwt-verify";
 import cors from "cors";
 import * as path from "path";

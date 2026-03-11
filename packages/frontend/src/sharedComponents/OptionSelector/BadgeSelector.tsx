@@ -1,7 +1,7 @@
 import React from "react";
 import { BadgeSlug } from "@shared/domain/readModels/Badge.ts";
 import { OptionSelectorWithTitle } from "@sharedComponents/OptionSelector/OptionSelectorWithTitle.tsx";
-import { getSharedConfig } from "@shared/config/sharedConfig.ts";
+import { BADGE_SLUGS } from "@config.ts";
 
 export const BadgeSelector: React.FC<{
   badge: BadgeSlug | undefined;

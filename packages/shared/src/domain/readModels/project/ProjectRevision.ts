@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { __tsCheckSame } from "@shared/zodUtils/zodTypeComparison";
 import { ProjectSlug } from "@shared/domain/readModels/project/ProjectDetails";
 

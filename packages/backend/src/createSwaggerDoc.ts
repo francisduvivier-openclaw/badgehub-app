@@ -9,6 +9,7 @@ import {
   ReferenceObject,
 } from "openapi3-ts";
 import { initContract } from "@ts-rest/core";
+import { EXPRESS_PORT } from "@config";
 
 const c = initContract();
 export const swaggerJsonContract = c.router({

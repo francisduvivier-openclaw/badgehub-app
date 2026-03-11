@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import Keycloak from "keycloak-js";
-import { getAuthorizationHeader } from "@api/authorization.ts";
+import { assertDefined } from "@shared/util/assertions.ts";
 
 const AppEditFileUpload: React.FC<{
   slug: string;

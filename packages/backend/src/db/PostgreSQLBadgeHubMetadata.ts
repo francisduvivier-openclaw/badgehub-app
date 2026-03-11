@@ -14,7 +14,7 @@ import {
 } from "@shared/domain/readModels/project/Version";
 import { Pool } from "pg";
 import { getPool } from "@db/connectionPool";
-import { DBInsertProject, DBProject } from "@shared/dbModels/project/DBProject";
+import { DBInsertProject, DBProject } from "@db/models/project/DBProject";
 import sql, { join, raw, Sql } from "sql-template-tag";
 import { getEntriesWithDefinedValues } from "@shared/util/objectEntries";
 import {
@@ -27,7 +27,7 @@ import {
   stripDatedData,
   timestampTZToDate,
 } from "@db/sqlHelpers/dbDates";
-import { DBVersion } from "@shared/dbModels/project/DBVersion";
+import { DBVersion } from "@db/models/project/DBVersion";
 
 import {
   assertValidColumKey,
@@ -35,7 +35,7 @@ import {
 } from "@db/sqlHelpers/objectToSQL";
 import { UploadedFile } from "@shared/domain/UploadedFile";
 import path from "node:path";
-import { DBFileMetadata } from "@shared/dbModels/project/DBFileMetadata";
+import { DBFileMetadata } from "@db/models/project/DBFileMetadata";
 import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata";
 import {
   DBDatedData,
@@ -51,7 +51,9 @@ import {
 import { BadgeSlug, getBadgeSlugs } from "@shared/domain/readModels/Badge";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
 import { getFileDownloadUrl } from "@db/getFileDownloadUrl";
-import { BadgeStats } from "@shared/contracts/publicRestContracts";
+import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
+import { DBProjectApiKey } from "@db/models/project/DBProjectApiKey";
+import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
 const ONE_KILO = 1024;
 

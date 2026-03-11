@@ -9,6 +9,7 @@ import {
 import { isInDebugMode } from "@util/debug";
 import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { ProjectLatestRevisions } from "@shared/domain/readModels/project/ProjectRevision";
+import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
 describe(
   "Public API Routes",

@@ -1,7 +1,7 @@
 import Header from "@sharedComponents/Header.tsx";
 import Footer from "@sharedComponents/Footer.tsx";
 import { memo, useState } from "react";
-import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
+import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import {
   AppFetcher,
   AppGridWithFilterAndPagination,

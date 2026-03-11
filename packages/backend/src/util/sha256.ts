@@ -1,5 +1,4 @@
 import { subtle } from "node:crypto";
-import { UploadedFile } from "@shared/domain/UploadedFile";
 
 export async function calcSha256(uploadedFile: UploadedFile): Promise<string> {
   const digest = await subtle.digest("SHA-256", uploadedFile.fileContent);

@@ -1,6 +1,7 @@
 import {
   DBDatedData,
   DBSoftDeletable,
+import { ISODateString } from "@shared/domain/readModels/ISODateString";
 } from "@shared/dbModels/project/DBDatedData";
 import { DatedData } from "@shared/domain/readModels/project/DatedData";
 import moment from "moment";
