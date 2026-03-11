@@ -63,7 +63,8 @@ describe("Authenticated API Routes", () => {
             files: expect.any(Array),
             project_slug: expect.any(String),
           },
-        }, `
+        },
+        `
         {
           "created_at": Any<String>,
           "idp_user_id": "d8075337-0f10-4cdb-8b48-be1dc18747a3",
@@ -78,10 +79,11 @@ describe("Authenticated API Routes", () => {
             },
             "files": Any<Array>,
             "project_slug": Any<String>,
-            "revision": 0,
+            "revision": 1,
           },
         }
-      `);
+      `
+      );
 
       expect(versionInResponse.files.length).toEqual(1);
       expect(versionInResponse.files[0]).toMatchObject({
@@ -302,7 +304,7 @@ describe("Authenticated API Routes", () => {
             `/api/v3/project-latest-revisions/${publishTestAppId}`
           );
           expect(getLatestVersionRes.statusCode).toBe(200);
-          expect(getLatestVersionRes.body).toBe(6);
+          expect(getLatestVersionRes.body).toBe(7);
         });
       });
 
