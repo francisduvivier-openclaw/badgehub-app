@@ -5,8 +5,10 @@ import { createExpressServer } from "@createExpressServer";
 import { isInDebugMode } from "@util/debug";
 import { decodeJwt } from "jose";
 import { Version } from "@shared/domain/readModels/project/Version";
-import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails";
-import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
+import {
+  ProjectDetails,
+  ProjectSummary,
+} from "@shared/domain/readModels/project/ProjectDetails";
 import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
 
 const USER1_TOKEN =
@@ -330,6 +332,35 @@ describe("Authenticated API Routes", () => {
               (project: ProjectDetails) => project.slug === user1AppId
             )
           ).toBeDefined();
+        });
+        test("should also list hidden drafts projects", async () => {
+          // Create a new project with only a slug
+          const TEST_APP_ID = `test_app_${Date.now()}`;
+          const postRes = await request(app)
+            .post(`/api/v3/projects/${TEST_APP_ID}`)
+            .auth(USER1_TOKEN, { type: "bearer" })
+            .send();
+          expect(postRes.statusCode).toBe(204);
+          const patchMetadataRes = await request(app)
+            .patch(`/api/v3/projects/${TEST_APP_ID}/draft/metadata`)
+            .auth(USER1_TOKEN, { type: "bearer" })
+            .send({
+              name: "Test App Name",
+              description: "Test App Description",
+              hidden: true,
+            });
+          expect(patchMetadataRes.statusCode).toBe(204);
+
+          // Verify the project is returned even though it is hidden
+          const res = await request(app)
+            .get(`/api/v3/users/${USER1_ID}/drafts`)
+            .auth(USER1_TOKEN, { type: "bearer" });
+          expect(res.statusCode).toBe(200);
+          const project: ProjectSummary | undefined = res.body.find(
+            (project: ProjectDetails) => project.slug === TEST_APP_ID
+          );
+          expect(project).toBeDefined();
+          expect(project?.hidden).toBe(true);
         });
       });
     },
