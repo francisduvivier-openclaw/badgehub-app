@@ -3,12 +3,13 @@ import {
   publicFilesContracts,
   publicOtherContracts,
   publicProjectContracts,
+  publicReportContracts,
   publicRestContracts,
 } from "@shared/contracts/publicRestContracts";
 import { BadgeHubData } from "@domain/BadgeHubData";
 import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
 import { PostgreSQLBadgeHubFiles } from "@db/PostgreSQLBadgeHubFiles";
-import { nok, ok } from "@controllers/ts-rest/httpResponses";
+import { noContent, nok, ok } from "@controllers/ts-rest/httpResponses";
 import { Readable } from "node:stream";
 import { RouterImplementation } from "@ts-rest/express/src/lib/types";
 import { ProjectLatestRevisions } from "@shared/domain/readModels/project/ProjectRevision";
@@ -69,6 +70,7 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
         search,
         slugs: projectSlugsString,
         userId,
+        orderBy,
       },
     }) => {
       const projectSlugs = projectSlugsString?.split(",") || [];
@@ -81,6 +83,7 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
           category,
           search,
           userId,
+          orderBy: orderBy ?? "published_at",
         },
         "latest"
       );
@@ -89,7 +92,7 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
     getProjectLatestRevisions: async ({ query }) => {
       const slugs = (query.slugs && query.slugs?.split(",")) || undefined;
       const data = await badgeHubData.getProjectSummaries(
-        { slugs: slugs },
+        { slugs: slugs, orderBy: "published_at" },
         "latest"
       );
       // TODO optimize this
@@ -102,7 +105,7 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
     getProjectLatestRevision: async ({ params: { slug } }) => {
       // TODO optimize this
       const projectDetails = await badgeHubData.getProject(slug, "latest");
-      if (projectDetails?.latest_revision === undefined) {
+      if (projectDetails?.latest_revision == undefined) {
         return nok(404, `No published app with slug '${slug}' found`);
       }
       return ok(projectDetails?.latest_revision);
@@ -142,9 +145,27 @@ const createPublicOtherRouter = (badgeHubData: BadgeHubData) => {
     getStats: async () => {
       const data = await badgeHubData.getStats();
       return ok(data);
-    }
+    },
   };
   return otherRouter;
+};
+
+const createReportRouter = (badgeHubData: BadgeHubData) => {
+  const reportRouter: RouterImplementation<typeof publicReportContracts> = {
+    reportInstall: async ({ params, query }) => {
+      await badgeHubData.reportInstall(params.slug, params.revision, query);
+      return noContent();
+    },
+    reportLaunch: async ({ params, query }) => {
+      await badgeHubData.reportLaunch(params.slug, params.revision, query);
+      return noContent();
+    },
+    reportCrash: async ({ params, query, body }) => {
+      await badgeHubData.reportCrash(params.slug, params.revision, query, body);
+      return noContent();
+    },
+  };
+  return reportRouter;
 };
 
 export const createPublicRestRouter = (
@@ -157,5 +178,6 @@ export const createPublicRestRouter = (
     ...createProjectRouter(badgeHubData),
     ...createFilesRouter(badgeHubData),
     ...createPublicOtherRouter(badgeHubData),
+    ...createReportRouter(badgeHubData),
   } as any);
 };
