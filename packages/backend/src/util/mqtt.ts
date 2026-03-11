@@ -1,33 +1,39 @@
 import { BadgeHubData } from "@domain/BadgeHubData";
 import { getAndAssertEnv } from "@shared/config/sharedConfig";
 import mqtt from "mqtt";
+import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
+import { PostgreSQLBadgeHubFiles } from "@db/PostgreSQLBadgeHubFiles";
 
-export async function startMqtt(badgeHubData: BadgeHubData) {
-  const nodeEnv = getAndAssertEnv("NODE_ENV");
-
-  if (nodeEnv == "development") {
-    console.log("Not publishing to MQTT in development environment");
-    return;
-  }
-
-  if (process.env.NODE_APP_INSTANCE !== "0") {
-    return;
-  }
-
-  const username = getAndAssertEnv("MQTT_USER");
-  const password = getAndAssertEnv("MQTT_PASSWD");
-  const topic = getAndAssertEnv("MQTT_TOPIC");
-  const server = getAndAssertEnv("MQTT_SERVER");
-  const interval = getAndAssertEnv("MQTT_INTERVAL_SEC");
-
+export async function startMqtt(
+  badgeHubData: BadgeHubData = new BadgeHubData(
+    new PostgreSQLBadgeHubMetadata(),
+    new PostgreSQLBadgeHubFiles()
+  )
+) {
+  const server = process.env["MQTT_SERVER"];
   if (!server) {
-    console.log("MQTT_SERVER not set");
+    console.log("MQTT_SERVER not set so skipping MQTT publish.");
     return;
   }
-
-  console.log("MQTT: ready to connect");
-
   try {
+    const nodeEnv = getAndAssertEnv("NODE_ENV");
+
+    if (nodeEnv == "development") {
+      console.log("Not publishing to MQTT in development environment");
+      return;
+    }
+
+    if (process.env.NODE_APP_INSTANCE !== "0") {
+      return;
+    }
+
+    const username = getAndAssertEnv("MQTT_USER");
+    const password = getAndAssertEnv("MQTT_PASSWD");
+    const topic = getAndAssertEnv("MQTT_TOPIC");
+    const interval = getAndAssertEnv("MQTT_INTERVAL_SEC");
+
+    console.log("MQTT: ready to connect");
+
     let client = mqtt.connect(server, {
       username,
       password,
