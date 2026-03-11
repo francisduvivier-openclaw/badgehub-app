@@ -12,6 +12,7 @@ import {
   TsRestClient,
 } from "../../api/tsRestClient.ts";
 import { useNavigate } from "react-router-dom";
+import { useTitle } from "@hooks/useTitle.ts";
 import { PleaseLoginMessage } from "@sharedComponents/PleaseLoginMessage.tsx";
 import { assertDefined } from "@shared/util/assertions.ts";
 

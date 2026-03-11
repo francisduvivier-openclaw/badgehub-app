@@ -8,6 +8,7 @@ import {
 } from "@sharedComponents/AppGridWithFilterAndPagination.tsx";
 import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
 import { PleaseLoginMessage } from "@sharedComponents/PleaseLoginMessage.tsx";
+import { useTitle } from "@hooks/useTitle.ts";
 
 interface AppProps {
   tsRestClient?: typeof defaultTsRestClient;

@@ -1,6 +1,5 @@
 import React from "react";
 import { AppCreationFormData } from "./AppCreationPage";
-import { BADGEHUB_FRONTEND_BASE_URL } from "@config.ts";
 
 const AppCreationBasicInfo: React.FC<{
   form: AppCreationFormData;
