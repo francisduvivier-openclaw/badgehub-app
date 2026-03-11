@@ -139,6 +139,10 @@ const createPublicOtherRouter = (badgeHubData: BadgeHubData) => {
       }
       return ok("pong");
     },
+    getStats: async () => {
+      const data = await badgeHubData.getStats();
+      return ok(data);
+    }
   };
   return otherRouter;
 };
