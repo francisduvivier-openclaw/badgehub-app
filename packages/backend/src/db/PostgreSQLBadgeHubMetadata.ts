@@ -51,6 +51,7 @@ import {
 import { BadgeSlug, getBadgeSlugs } from "@shared/domain/readModels/Badge";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
 import { getFileDownloadUrl } from "@db/getFileDownloadUrl";
+import { BadgeStats } from "@shared/contracts/publicRestContracts";
 
 const ONE_KILO = 1024;
 
@@ -201,6 +202,21 @@ export class PostgreSQLBadgeHubMetadata {
   async getCategories(): Promise<CategoryName[]> {
     return getAllCategoryNames();
   }
+
+  async getStats(): Promise<BadgeStats> {
+    const appsP = this.pool.query(sql`SELECT COUNT(*) FROM badgehub.projects WHERE deleted_at IS NULL`);
+    const appAuthorsP = this.pool.query(sql`SELECT COUNT(DISTINCT idp_user_id) FROM badgehub.projects`);
+    const badgesP = this.pool.query(sql`SELECT COUNT(*) FROM  badgehub.registered_badges`);
+
+    const [apps, appAuthors, badges] = await Promise.all([appsP, appAuthorsP, badgesP]);
+
+    return   {
+      apps: Number(apps.rows[0].count),
+      appAuthors: Number(appAuthors.rows[0].count),
+      badges: Number(badges.rows[0].count),
+    };
+  }
+
 
   async insertProject(
     project: Omit<DBInsertProject, keyof DBDatedData>,
