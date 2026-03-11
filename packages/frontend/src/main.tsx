@@ -11,6 +11,7 @@ import { SessionProvider } from "@sharedComponents/keycloakSession/SessionProvid
 import { TodoPage } from "@pages/TodoPage.tsx";
 import MyProjectsPage from "@pages/MyProjectsPage/MyProjectsPage.tsx";
 import { IS_DEV_ENVIRONMENT } from "@config.ts";
+import { useTitle } from "@hooks/useTitle.ts";
 
 const AppDetailWrapper = () => {
   const { slug } = useParams<{ slug: string }>();

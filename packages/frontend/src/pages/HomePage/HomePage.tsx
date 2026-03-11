@@ -7,6 +7,7 @@ import {
   AppFetcher,
   AppGridWithFilterAndPagination,
 } from "@sharedComponents/AppGridWithFilterAndPagination.tsx";
+import { useTitle } from "@hooks/useTitle.ts";
 
 interface AppProps {
   tsRestClient?: typeof defaultTsRestClient;
