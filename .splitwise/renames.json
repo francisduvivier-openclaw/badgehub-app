@@ -1,15 +1,168 @@
 {
   "version": 1,
-  "commit": "dce21de3d3dadb7d9ab4cafdd7eefac54782ed5f",
-  "parent": "58e79c5815b5ab1fb5416e2b26fb23666f973286",
+  "commit": "19cd6314213408d05cb373096d3904b4ef31aa4c",
+  "parent": "dce21de3d3dadb7d9ab4cafdd7eefac54782ed5f",
   "entries": [
     {
       "lang": "ts/js",
       "kind": "variable",
-      "old": "error",
-      "new": "e",
-      "file": "packages/backend/src/controllers/ts-rest/privateRestRouter.ts",
-      "scope": "packages/backend/src/controllers/ts-rest",
+      "old": "token",
+      "new": "authorizationHeader",
+      "file": "packages/backend/src/auth/jwt-decode.ts",
+      "scope": "packages/backend/src/auth",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "POSTGRES_DB",
+      "new": "POSTGRES_USER",
+      "file": "packages/backend/src/config.ts",
+      "scope": "packages/backend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "POSTGRES_USER",
+      "new": "POSTGRES_DB",
+      "file": "packages/backend/src/config.ts",
+      "scope": "packages/backend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "POSTGRES_PASSWORD",
+      "new": "POSTGRES_DB",
+      "file": "packages/backend/src/config.ts",
+      "scope": "packages/backend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "POSTGRES_HOST",
+      "new": "POSTGRES_DB",
+      "file": "packages/backend/src/config.ts",
+      "scope": "packages/backend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "KEYCLOAK_ISSUER",
+      "new": "POSTGRES_DB",
+      "file": "packages/backend/src/config.ts",
+      "scope": "packages/backend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "user1AppId",
+      "new": "dynamicTestAppId",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "postRes",
+      "new": "postRes1",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "getRes",
+      "new": "getRes2",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "getRes2",
+      "new": "getRes",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "postRes1",
+      "new": "postRes",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "postRes2",
+      "new": "postRes",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "dynamicTestAppId",
+      "new": "TEST_APP_ID",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "TEST_APP_ID",
+      "new": "dynamicTestAppId",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "getRes1",
+      "new": "getDraftRes",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "getDraftRes",
+      "new": "getRes1",
+      "file": "packages/backend/src/controllers/private-rest.spec.ts",
+      "scope": "packages/backend/src/controllers",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "FALLBACK_ICON_URL",
+      "new": "ERROR_ICON_URL",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "ERROR_ICON_URL",
+      "new": "FALLBACK_ICON_URL",
+      "file": "packages/frontend/src/config.ts",
+      "scope": "packages/frontend/src",
       "confidence": 0.9
     }
   ]
