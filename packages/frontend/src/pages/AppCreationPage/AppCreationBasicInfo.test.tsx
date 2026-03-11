@@ -1,9 +1,6 @@
-import React, { useState } from "react";
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@__test__";
-import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@__test__";
 import AppCreationBasicInfo from "./AppCreationBasicInfo.tsx";
-import type { AppCreationFormData } from "./AppCreationPage.tsx";
 
 describe("AppCreationBasicInfo", () => {
   it("sanitizes slug input", async () => {
