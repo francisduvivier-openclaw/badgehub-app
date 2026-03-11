@@ -9,6 +9,7 @@ import {
 import { isInDebugMode } from "@util/debug";
 import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { ProjectLatestRevisions } from "@shared/domain/readModels/project/ProjectRevision";
+import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
 describe(
   "Public API Routes",
@@ -271,7 +272,7 @@ describe(
             "id": 1,
             "mimetype": "application/json",
             "name": "metadata",
-            "sha256": "8888905861998ad27ee1de337166d3d6f0c49d7154982bc8b19586b1da9c0251",
+            "sha256": "a41227adaa729b4519feffd5d05ddfbdeee99a7b2784378d1369d8d731fa0e3d",
             "size_formatted": "0.24KB",
             "size_of_content": 247,
             "updated_at": "2024-05-22T14:01:16.975Z",
@@ -312,6 +313,17 @@ describe(
       `);
 
       const { app_metadata, files, ...restVersion } = version!;
+      expect(restVersion).toMatchInlineSnapshot(`
+        {
+          "download_count": "0",
+          "git_commit_id": null,
+          "project_slug": "codecraft",
+          "published_at": "2024-05-23T14:01:16.975Z",
+          "revision": 0,
+          "size_of_zip": null,
+          "zip": null,
+        }
+      `);
       expect(app_metadata).toMatchInlineSnapshot(`
         {
           "author": "CyberSherpa",
@@ -335,7 +347,8 @@ describe(
         .map((f) => f.sha256)
         .sort()
         .map((sha) => files.find((f) => f.sha256 === sha));
-      expect(sortedFiles).toMatchInlineSnapshot(`
+      expect(sortedFiles).toMatchInlineSnapshot(
+        `
         [
           {
             "created_at": "2024-05-22T14:01:16.975Z",
@@ -375,26 +388,15 @@ describe(
             "id": 1,
             "mimetype": "application/json",
             "name": "metadata",
-            "sha256": "8888905861998ad27ee1de337166d3d6f0c49d7154982bc8b19586b1da9c0251",
+            "sha256": "a41227adaa729b4519feffd5d05ddfbdeee99a7b2784378d1369d8d731fa0e3d",
             "size_formatted": "0.24KB",
             "size_of_content": 247,
             "updated_at": "2024-05-22T14:01:16.975Z",
             "url": "http://localhost:8081/api/v3/projects/codecraft/rev0/files/metadata.json",
           },
         ]
-      `);
-
-      expect(restVersion).toMatchInlineSnapshot(`
-        {
-          "download_count": "0",
-          "git_commit_id": null,
-          "project_slug": "codecraft",
-          "published_at": "2024-05-23T14:01:16.975Z",
-          "revision": 0,
-          "size_of_zip": null,
-          "zip": null,
-        }
-      `);
+      `
+      );
     });
 
     test("GET /api/v3/projects/codecraft/rev1 (unpublished version)", async () => {
@@ -556,7 +558,29 @@ describe(
         );
         expect(getRes.statusCode).toBe(200);
         const projectRevisionMap = getRes.body as number;
-        expect(getRes.body).toBe(0);
+        expect(projectRevisionMap).toBe(0);
+      });
+
+      test("GET /api/v3/stats", async () => {
+        const getRes = await request(app).get(`/api/v3/stats`);
+        expect(getRes.statusCode).toBe(200);
+        const stats: BadgeHubStats = getRes.body;
+        expect(stats.projectAuthors).toBeGreaterThan(0);
+        expect(stats.projects).toBeGreaterThan(0);
+        expect(stats).toMatchInlineSnapshot(
+          // Prevent extra properties being added without unit test update
+          {
+            projectAuthors: expect.any(Number),
+            projects: expect.any(Number),
+          },
+          `
+          {
+            "badges": 2,
+            "projectAuthors": Any<Number>,
+            "projects": Any<Number>,
+          }
+        `
+        );
       });
     });
   },

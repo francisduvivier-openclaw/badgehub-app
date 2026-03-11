@@ -3,11 +3,9 @@ import { FileListItem } from "@pages/AppEditPage/FileListItem.tsx";
 import { IconSize } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { User } from "@sharedComponents/keycloakSession/SessionContext.tsx";
-import { tsRestClient as defaultTsRestClient } from "@api/tsRestClient.ts";
 
 interface AppEditFilePreviewProps {
   user?: User; // Optional user prop for authentication
-  tsRestClient: typeof defaultTsRestClient; // Using the mocked type
   project: ProjectDetails;
   onSetIcon?: (iconSize: IconSize, filePath: string) => void;
   iconFilePath?: string;

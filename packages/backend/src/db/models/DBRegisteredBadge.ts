@@ -1,5 +1,5 @@
-import { DBDatedData } from "@shared/dbModels/project/DBDatedData";
-import { TimestampTZ } from "@shared/dbModels/DBTypes";
+import { DBDatedData } from "@db/models/project/DBDatedData";
+import { TimestampTZ } from "@db/models/DBTypes";
 
 export interface DBRegisteredBadgeInsert {
   id: string;

@@ -14,7 +14,7 @@ import {
 } from "@shared/domain/readModels/project/Version";
 import { Pool } from "pg";
 import { getPool } from "@db/connectionPool";
-import { DBInsertProject, DBProject } from "@shared/dbModels/project/DBProject";
+import { DBInsertProject, DBProject } from "@db/models/project/DBProject";
 import sql, { join, raw, Sql } from "sql-template-tag";
 import { getEntriesWithDefinedValues } from "@shared/util/objectEntries";
 import {
@@ -26,8 +26,9 @@ import {
   convertDatedData,
   stripDatedData,
   timestampTZToDate,
+  timestampTZToISODateString,
 } from "@db/sqlHelpers/dbDates";
-import { DBVersion } from "@shared/dbModels/project/DBVersion";
+import { DBVersion } from "@db/models/project/DBVersion";
 
 import {
   assertValidColumKey,
@@ -35,13 +36,10 @@ import {
 } from "@db/sqlHelpers/objectToSQL";
 import { UploadedFile } from "@shared/domain/UploadedFile";
 import path from "node:path";
-import { DBFileMetadata } from "@shared/dbModels/project/DBFileMetadata";
+import { DBFileMetadata } from "@db/models/project/DBFileMetadata";
 import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata";
-import {
-  DBDatedData,
-  DBSoftDeletable,
-} from "@shared/dbModels/project/DBDatedData";
-import { TimestampTZ } from "@shared/dbModels/DBTypes";
+import { DBDatedData, DBSoftDeletable } from "@db/models/project/DBDatedData";
+import { TimestampTZ } from "@db/models/DBTypes";
 import { VALID_SLUG_REGEX } from "@shared/contracts/slug";
 import { ProjectAlreadyExistsError, UserError } from "@domain/UserError";
 import {
@@ -51,7 +49,9 @@ import {
 import { BadgeSlug, getBadgeSlugs } from "@shared/domain/readModels/Badge";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
 import { getFileDownloadUrl } from "@db/getFileDownloadUrl";
-import { BadgeStats } from "@shared/contracts/publicRestContracts";
+import { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
+import { DBProjectApiKey } from "@db/models/project/DBProjectApiKey";
+import { BadgeHubStats } from "@shared/domain/readModels/BadgeHubStats";
 
 const ONE_KILO = 1024;
 
@@ -203,20 +203,33 @@ export class PostgreSQLBadgeHubMetadata {
     return getAllCategoryNames();
   }
 
-  async getStats(): Promise<BadgeStats> {
-    const appsP = this.pool.query(sql`SELECT COUNT(*) FROM badgehub.projects WHERE deleted_at IS NULL`);
-    const appAuthorsP = this.pool.query(sql`SELECT COUNT(DISTINCT idp_user_id) FROM badgehub.projects`);
-    const badgesP = this.pool.query(sql`SELECT COUNT(*) FROM  badgehub.registered_badges`);
+  async getStats(): Promise<BadgeHubStats> {
+    const projectsP = this.pool.query(
+      sql`SELECT COUNT(*)
+          FROM projects
+          WHERE deleted_at IS NULL`
+    );
+    const projectAuthorsP = this.pool.query(
+      sql`SELECT COUNT(DISTINCT idp_user_id)
+          FROM projects WHERE deleted_at IS NULL`
+    );
+    const badgesP = this.pool.query(
+      sql`SELECT COUNT(*)
+          FROM registered_badges`
+    );
 
-    const [apps, appAuthors, badges] = await Promise.all([appsP, appAuthorsP, badgesP]);
+    const [projects, projectAuthors, badges] = await Promise.all([
+      projectsP,
+      projectAuthorsP,
+      badgesP,
+    ]);
 
-    return   {
-      apps: Number(apps.rows[0].count),
-      appAuthors: Number(appAuthors.rows[0].count),
+    return {
+      projects: Number(projects.rows[0].count),
+      projectAuthors: Number(projectAuthors.rows[0].count),
       badges: Number(badges.rows[0].count),
     };
   }
-
 
   async insertProject(
     project: Omit<DBInsertProject, keyof DBDatedData>,
@@ -426,7 +439,9 @@ and v.app_metadata->'badges' @>
         ${filter.slugs[0]}`;
       } else {
         query = sql`${query}
-      and p.slug = any(${filter.slugs})`;
+      and p.slug = any(
+        ${filter.slugs}
+        )`;
       }
     }
 
@@ -499,9 +514,49 @@ and v.app_metadata->'badges' @>
       sql`insert into registered_badges (id, mac)
           values (${id}, ${mac || null})
           on conflict (id)
-            do update set
-                        mac = coalesce(registered_badges.mac, excluded.mac),
-                        last_seen_at = now();`
+            do update set mac          = coalesce(registered_badges.mac, excluded.mac),
+                          last_seen_at = now();`
+    );
+  }
+
+  async getProjectApiTokenMetadata(
+    slug: ProjectSlug
+  ): Promise<
+    Pick<ProjectApiTokenMetadata, "last_used_at" | "created_at"> | undefined
+  > {
+    const { rows } = await this.pool.query<DBProjectApiKey>(
+      sql`select created_at, last_used_at from project_api_token where project_slug = ${slug}`
+    );
+    return (
+      rows[0] && {
+        created_at: timestampTZToISODateString(rows[0].created_at),
+        last_used_at: timestampTZToISODateString(rows[0].last_used_at),
+      }
+    );
+  }
+
+  async getProjectApiTokenHash(slug: ProjectSlug): Promise<string | undefined> {
+    const { rows } = await this.pool.query<{ key_hash: string }>(
+      sql`select key_hash from project_api_token where project_slug = ${slug}`
+    );
+    return rows[0]?.key_hash;
+  }
+
+  async createProjectApiToken(
+    slug: ProjectSlug,
+    keyHash: string
+  ): Promise<void> {
+    await this.pool.query<DBProjectApiKey>(
+      sql`insert into project_api_token (project_slug, key_hash)
+          values (${slug}, ${keyHash}) on conflict (project_slug) do update set key_hash = ${keyHash}, last_used_at = now(), created_at = now()`
+    );
+  }
+
+  async revokeProjectApiToken(slug: string) {
+    await this.pool.query(
+      sql`delete
+          from project_api_token
+          where project_slug = ${slug}`
     );
   }
 }

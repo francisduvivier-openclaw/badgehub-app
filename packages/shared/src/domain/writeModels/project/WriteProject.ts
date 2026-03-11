@@ -1,9 +1,12 @@
-import { DBInsertProject } from "@shared/dbModels/project/DBProject";
 import { z } from "zod/v3";
 import { __tsCheckSame } from "@shared/zodUtils/zodTypeComparison";
+import { ProjectSlug } from "@shared/domain/readModels/project/ProjectDetails";
 
-export interface CreateProjectProps
-  extends Pick<DBInsertProject, "git" | "slug" | "idp_user_id"> {}
+export interface CreateProjectProps {
+  slug: ProjectSlug; // The directory name of this project
+  git?: string; // repository url
+  idp_user_id: string;
+}
 
 export const createProjectPropsSchema = z.object({
   git: z.string().optional(),

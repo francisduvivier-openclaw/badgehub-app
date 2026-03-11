@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { tsRestClient } from "@api/tsRestClient.ts";
+import { publicTsRestClient } from "@api/tsRestClient.ts";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 
 const DownloadIcon = () => (
@@ -53,7 +53,7 @@ const AppCodePreview: React.FC<{ project: ProjectDetails }> = ({ project }) => {
       return;
     }
     setLoading(true);
-    tsRestClient
+    publicTsRestClient
       .getLatestPublishedFile({
         params: {
           slug: project.slug,

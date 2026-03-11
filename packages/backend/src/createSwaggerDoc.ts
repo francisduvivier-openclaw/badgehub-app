@@ -9,6 +9,7 @@ import {
   ReferenceObject,
 } from "openapi3-ts";
 import { initContract } from "@ts-rest/core";
+import { EXPRESS_PORT } from "@config";
 
 const c = initContract();
 export const swaggerJsonContract = c.router({
@@ -33,20 +34,24 @@ const withTag = (operation: OperationObject, tag: string) => ({
   ...operation,
   tags: [...(operation.tags ?? []), tag],
 });
-const isAuthorizationHeader = (p: ParameterObject | ReferenceObject) => {
-  return (
-    "in" in p &&
-    p.in === "header" &&
-    "name" in p &&
-    p.name?.toLowerCase() === "authorization"
-  );
-};
-const withSecurity = (operation: OperationObject) => ({
+
+// Helper functions to identify authentication headers
+const isAuthorizationHeader = (p: ParameterObject | ReferenceObject) =>
+  "in" in p && p.in === "header" && p.name?.toLowerCase() === "authorization";
+
+const isApiTokenHeader = (p: ParameterObject | ReferenceObject) =>
+  "in" in p &&
+  p.in === "header" &&
+  p.name?.toLowerCase() === "badgehub-api-token";
+
+const withSecurity = (operation: OperationObject): OperationObject => ({
   ...operation,
-  // Remove authorization headers from parameters because they are handled by the security scheme and need to be filled in at the top
-  parameters: operation.parameters?.filter((p) => !isAuthorizationHeader(p)),
-  security: [{ bearer: ["private"] }],
+  parameters: operation.parameters?.filter(
+    (p) => !isAuthorizationHeader(p) && !isApiTokenHeader(p)
+  ),
+  security: [{ bearerAuth: [] }, { apiTokenAuth: [] }],
 });
+
 export const createSwaggerDoc = () => {
   const apiDoc = { info: { title: "BadgeHub API", version: "1.0.0" } };
   const jsonSwagger = generateOpenApi(swaggerJsonContract, apiDoc, {
@@ -80,21 +85,30 @@ export const createSwaggerDoc = () => {
       },
       {
         name: "Private",
-        description: "Operations available to authenticated users.",
+        description:
+          "Operations available to authenticated users via JWT Bearer token OR API token.",
       },
     ],
     servers: [
       { url: "/" },
       { url: "https://badgehub-api.p1m.nl/" },
-      { url: "https://localhost:8081/" },
+      { url: `http://localhost:${EXPRESS_PORT}/` },
     ],
+    // Define the security schemes
     components: {
       ...jsonSwagger.components,
       securitySchemes: {
-        bearer: {
+        bearerAuth: {
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
+          description: "JWT Bearer token (for user sessions)",
+        },
+        apiTokenAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "badgehub-api-token",
+          description: "Project-specific API token (for automation)",
         },
       },
     },

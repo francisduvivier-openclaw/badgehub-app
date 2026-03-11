@@ -81,24 +81,6 @@ These sql commands should take care of changing the database schema as well as m
 npm run db-migrate:up
 ```
 
-#### Create updated mockup-data.sql
-
-For the mock data, we always want up to date tables.
-So if you change something to the database, you should also update the population script and then you should run it from the server:
-
-```bash
-curl -X POST http://localhost:8081/dev/populate
-```
-
-This script will also automatically update the `mockup-data.sql` file after completion.
-Note that this `mockup-data.sql` is not completely deterministic, so it might not be the same every time you run it.
-The actual table data should be deterministic though, it's just that the dumping can decide to dump the data in a slightly different order.
-To keep the determinism of the actual table content after repopulation, we do the following:
-
-- we reset the primary key sequence for each table after clearing the table at the start of the script
-- we use mock dates for the `created_at` and `updated_at` fields, so that the dates don't change when running the population script twice.
--
-
 #### Run the down migration to test it.
 
 ```bash
@@ -119,12 +101,17 @@ docker compose restart node
 
 will restart the node container only.
 
-## Database schema
+### Testing
+The unit test require the test database to be up and filled in.
+So first do:
+`npm run test-db:up`
 
-At the moment, this is the database schema:
+And if this is the very first time, or the populate db script was updated, you should also do:
+`npm run --workspace=packages/backend repopulate-db`
 
-[BadgeHub Schema](https://drawsql.app/teams/badge-team/diagrams/simplified-database)
-
+Then to run the tests, do:
+`npm run test`
+ 
 ## - Production -
 
 In production, use the production docker compose file `docker-compose.production.yml`.

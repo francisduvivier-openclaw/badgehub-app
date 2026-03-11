@@ -16,7 +16,11 @@ import {
   privateRestContracts,
 } from "@shared/contracts/privateRestContracts";
 import { RouterImplementation } from "@ts-rest/express/src/lib/types";
-import { getUser, RequestWithUser, UserDataInRequest } from "@auth/jwt-decode";
+import {
+  getUser,
+  AuthenticatedRequest,
+  UserDataInRequest,
+} from "@auth/jwt-decode";
 import {
   ProjectDetails,
   ProjectSlug,
@@ -24,8 +28,6 @@ import {
 import { Readable } from "node:stream";
 import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@config";
 import { ProjectAlreadyExistsError, UserError } from "@domain/UserError";
-import { getImageProps } from "@util/imageProcessing";
-import { startMqtt } from "@util/mqtt";
 
 const upload = multer({
   limits: { fileSize: MAX_UPLOAD_FILE_SIZE_BYTES },
@@ -37,7 +39,10 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
   > = {
     createProject: async ({ params: { slug }, req, body: props }) => {
       // Create a new draft project using the user from the token.
-      const user = getUser(req as unknown as RequestWithUser);
+      const user = getUser(req as unknown as AuthenticatedRequest);
+      if (!user) {
+        throw nok(403, "No user in request");
+      }
       try {
         await badgeHubData.insertProject({
           ...props,
@@ -179,6 +184,45 @@ const createProjectRouter = (badgeHubData: BadgeHubData) => {
       }
       return ok(Readable.from(fileContents));
     },
+
+    createProjectAPIToken: async ({ params: { slug }, req }) => {
+      const authorizationFailureResponse = await checkProjectAuthorization(
+        badgeHubData,
+        slug,
+        req
+      );
+      if (authorizationFailureResponse) return authorizationFailureResponse;
+      const token = await badgeHubData.createProjectApiToken(slug);
+      return ok({ token });
+    },
+
+    getProjectApiTokenMetadata: async ({ params: { slug }, req }) => {
+      const authorizationFailureResponse = await checkProjectAuthorization(
+        badgeHubData,
+        slug,
+        req
+      );
+      if (authorizationFailureResponse) return authorizationFailureResponse;
+      const metadata = await badgeHubData.getProjectApiTokenMetadata(slug);
+      if (!metadata) {
+        return nok(404, "No Project API");
+      }
+      return ok({
+        last_used_at: metadata.last_used_at,
+        created_at: metadata.created_at,
+      });
+    },
+
+    revokeProjectAPIToken: async ({ params: { slug }, req }) => {
+      const authorizationFailureResponse = await checkProjectAuthorization(
+        badgeHubData,
+        slug,
+        req
+      );
+      if (authorizationFailureResponse) return authorizationFailureResponse;
+      await badgeHubData.revokeProjectAPIToken(slug);
+      return noContent();
+    },
   };
   return privateProjectRouter;
 };
@@ -216,7 +260,8 @@ const requestIsFromAllowedUser = (
   },
   { allowedUsers }: { allowedUsers: string[] }
 ) => {
-  return allowedUsers.includes(getUser(request).idp_user_id);
+  const user = getUser(request);
+  return user && allowedUsers.includes(user.idp_user_id);
 };
 
 const checkUserAuthorization = (userId: string, request: any) => {
@@ -242,8 +287,21 @@ const checkProjectAuthorization = async (
   if (!project) {
     return nok(HTTP_NOT_FOUND, `No project with slug '${slug}' found`);
   }
+  const authenticatedRequest = request as AuthenticatedRequest;
+  if (!authenticatedRequest.user || authenticatedRequest.apiToken) {
+    const tokenIsValidForProject = await badgeHubData.checkApiToken(
+      slug,
+      authenticatedRequest.apiToken
+    );
+    return tokenIsValidForProject
+      ? undefined
+      : nok(
+          HTTP_FORBIDDEN,
+          `The given badgehub-api-token not authorized for project with slug '${slug}'`
+        );
+  }
   if (
-    !requestIsFromAllowedUser(request as RequestWithUser, {
+    !requestIsFromAllowedUser(authenticatedRequest, {
       allowedUsers: [project?.idp_user_id],
     })
   ) {

@@ -6,9 +6,14 @@ import AppCreationBasicInfo from "./AppCreationBasicInfo.tsx";
 import AppCreationActions from "./AppCreationActions.tsx";
 import { VALID_SLUG_REGEX } from "@shared/contracts/slug.ts";
 import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
-import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
+import {
+  getFreshAuthorizedTsRestClient,
+  publicTsRestClient as defaultTsRestClient,
+  TsRestClient,
+} from "../../api/tsRestClient.ts";
 import { useNavigate } from "react-router-dom";
 import { PleaseLoginMessage } from "@sharedComponents/PleaseLoginMessage.tsx";
+import { assertDefined } from "@shared/util/assertions.ts";
 
 export interface AppCreationFormData {
   slug: string;
@@ -20,9 +25,7 @@ const initialForm: AppCreationFormData = {
   slug: "",
 };
 
-const AppCreationPage: React.FC<{
-  tsRestClient?: typeof defaultTsRestClient;
-}> = ({ tsRestClient = defaultTsRestClient }) => {
+const AppCreationPage: React.FC = () => {
   const [form, setForm] = useState<AppCreationFormData>(initialForm);
   const [error, setError] = useState<string | null>(null);
   const { user, keycloak } = useSession();
@@ -35,13 +38,13 @@ const AppCreationPage: React.FC<{
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    assertDefined(keycloak);
     e.preventDefault();
     setError(null);
     try {
-      const response = await tsRestClient.createProject({
-        headers: {
-          authorization: `Bearer ${keycloak?.token}`,
-        },
+      const response = await (
+        await getFreshAuthorizedTsRestClient(keycloak)
+      ).createProject({
         params: { slug: form.slug },
       });
       if (response.status === 204) {

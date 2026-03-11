@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
+import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import AppDetailHeader from "./AppDetailHeader.tsx";
 import AppDescription from "./AppDescription.tsx";
 import AppCodePreview from "./AppCodePreview.tsx";

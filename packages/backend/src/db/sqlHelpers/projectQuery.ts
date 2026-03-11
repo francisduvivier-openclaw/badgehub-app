@@ -3,8 +3,8 @@ import {
   ProjectSummary,
 } from "@shared/domain/readModels/project/ProjectDetails";
 import moment from "moment";
-import { DBProject } from "@shared/dbModels/project/DBProject";
-import { DBVersion } from "@shared/dbModels/project/DBVersion";
+import { DBProject } from "@db/models/project/DBProject";
+import { DBVersion } from "@db/models/project/DBVersion";
 import sql, { raw } from "sql-template-tag";
 import { LatestOrDraftAlias } from "@shared/domain/readModels/project/Version";
 import { getFileDownloadUrl } from "@db/getFileDownloadUrl";

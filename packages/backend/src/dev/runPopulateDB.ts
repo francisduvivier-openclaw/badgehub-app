@@ -14,7 +14,6 @@ async function runWithMigrationFirst() {
   await runMigrations();
   console.log("Running repopulateDB...");
   await repopulateDB();
-  await overwriteMockupData();
 }
 
 runWithMigrationFirst().catch((e) => {
