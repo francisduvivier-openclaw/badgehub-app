@@ -244,10 +244,7 @@ const renderFilePreview = (
       );
     case "text":
       return fileContent ? (
-        <TextPreview
-          content={fileContent}
-          filename={currentFile.full_path}
-        />
+        <TextPreview content={fileContent} filename={currentFile.full_path} />
       ) : (
         <div className="text-slate-400">Loading text file...</div>
       );
@@ -266,10 +263,10 @@ interface AppCodePreviewProps {
   showFileList?: boolean;
 }
 
-const AppCodePreview: React.FC<AppCodePreviewProps> = ({ 
-  project, 
-  isDraft = false, 
-  keycloak, 
+const AppCodePreview: React.FC<AppCodePreviewProps> = ({
+  project,
+  isDraft = false,
+  keycloak,
   previewedFile: externalPreviewedFile,
   showFileList = true 
 }) => {
@@ -288,7 +285,7 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
       setPreviewedFile(externalPreviewedFile);
       return;
     }
-    
+
     if (!files?.length) {
       setPreviewedFile(null);
       setFileContent(null);
