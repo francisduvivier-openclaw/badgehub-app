@@ -3,7 +3,7 @@ import {
   ProjectDetails,
   ProjectSummary,
 } from "@shared/domain/readModels/project/ProjectDetails.ts";
-import { tsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
+import { publicTsRestClient as defaultTsRestClient } from "../../api/tsRestClient.ts";
 import { ERROR_ICON_URL } from "@config.ts";
 
 /**

@@ -1,6 +1,6 @@
 import React from "react";
 import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata.ts";
-import { DeleteIcon } from "@pages/AppEditPage/DeleteIcon.tsx";
+import { DeleteIcon } from "@sharedComponents/icons/DeleteIcon.tsx";
 import { IconSize } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 
 /**
