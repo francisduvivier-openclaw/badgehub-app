@@ -7,12 +7,14 @@ import {
   AppFetcher,
   AppGridWithFilterAndPagination,
 } from "@sharedComponents/AppGridWithFilterAndPagination.tsx";
+import { useTitle } from "@hooks/useTitle.ts";
 
 interface AppProps {
   tsRestClient?: typeof defaultTsRestClient;
 }
 
 const HomePage = memo(({ tsRestClient = defaultTsRestClient }: AppProps) => {
+  useTitle('');
   const appFetcher: AppFetcher = async (filters) => {
     const result = await tsRestClient?.getProjectSummaries({
       query: {

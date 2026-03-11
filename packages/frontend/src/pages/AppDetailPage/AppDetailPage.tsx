@@ -11,11 +11,13 @@ import AppBreadcrumb from "./AppBreadcrumb.tsx";
 import { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import Header from "@sharedComponents/Header.tsx";
 import Footer from "@sharedComponents/Footer.tsx";
+import { useTitle } from "@hooks/useTitle.ts";
 
 const AppDetailPage: React.FunctionComponent<{
   tsRestClient?: typeof defaultTsRestClient;
   slug: string;
 }> = ({ tsRestClient = defaultTsRestClient, slug }) => {
+  useTitle(slug);
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {

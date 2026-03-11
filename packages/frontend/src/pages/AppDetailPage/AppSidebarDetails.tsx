@@ -8,7 +8,7 @@ const AppSidebarDetails: React.FC<{ project: ProjectDetails }> = ({
     <h2 className="text-xl font-semibold text-slate-100 mb-4 border-b border-gray-700 pb-2">
       App Details
     </h2>
-    <ul className="text-sm text-slate-300 space-y-3 font-roboto-mono">
+    <ul className="text-sm text-slate-300 space-y-3 font-mono">
       <li>
         <strong>Version:</strong> {project.version?.revision ?? "—"}
       </li>

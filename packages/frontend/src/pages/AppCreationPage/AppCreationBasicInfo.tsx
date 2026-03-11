@@ -1,6 +1,5 @@
 import React from "react";
 import { AppCreationFormData } from "./AppCreationPage";
-import { BADGEHUB_FRONTEND_BASE_URL } from "@config.ts";
 
 const AppCreationBasicInfo: React.FC<{
   form: AppCreationFormData;
@@ -18,7 +17,7 @@ const AppCreationBasicInfo: React.FC<{
           </label>
           <input
             type="text"
-            className="w-full form-input p-2 font-roboto-mono"
+            className="w-full form-input p-2 font-mono"
             placeholder="e.g., my_weather_station"
             value={slug}
             onChange={(e) => {
@@ -36,12 +35,13 @@ const AppCreationBasicInfo: React.FC<{
             a letter and contain at least 3 characters.
           </p>
         </div>
+        {/*
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1">
             URL Preview
           </label>
           <div
-            className="slug-preview font-roboto-mono text-sm"
+            className="slug-preview font-mono text-sm"
             data-testid="app-creation-slug-preview"
           >
             <span className="text-slate-500">
@@ -53,6 +53,7 @@ const AppCreationBasicInfo: React.FC<{
             This will be the unique URL for your app.
           </p>
         </div>
+        */}
       </div>
     </section>
   );
