@@ -7,7 +7,7 @@ import Keycloak from "keycloak-js";
 interface AppEditFilePreviewProps {
   user?: User; // Optional user prop for authentication
   project: ProjectDetails;
-  onSetIcon?: (iconSize: IconSize, filePath: string) => void;
+  onSetIcon?: (filePath: string) => void;
   iconFilePath?: string;
   onDeleteFile?: (filePath: string) => void;
   mainExecutable?: string;

@@ -21,7 +21,7 @@ const AppEditForm: React.FC<{
   previewedFile: string | null;
   mainExecutable?: string;
   onPreviewFile: (filePath: string) => void;
-  onSetIcon: (size: IconSize, filePath: string) => void;
+  onSetIcon: (filePath: string) => void;
   onDeleteFile: (filePath: string) => void;
   onSetMainExecutable: (filePath: string) => void;
   onUploadSuccess: (result: {
