@@ -2969,16 +2969,30 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
               "application/json": {
                 "schema": {
                   "properties": {
+                    "authors": {
+                      "description": "number of project authors",
+                      "type": "number",
+                    },
                     "badges": {
                       "description": "Number of registered badges",
                       "type": "number",
                     },
-                    "projectAuthors": {
-                      "description": "number of project authors",
+                    "crashed_projects": {
                       "type": "number",
                     },
-                    "projectInstalls": {
-                      "description": "Total number of project installations reported.",
+                    "crashes": {
+                      "type": "number",
+                    },
+                    "installed_projects": {
+                      "type": "number",
+                    },
+                    "installs": {
+                      "type": "number",
+                    },
+                    "launched_projects": {
+                      "type": "number",
+                    },
+                    "launches": {
                       "type": "number",
                     },
                     "projects": {
@@ -2988,8 +3002,13 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                   },
                   "required": [
                     "projects",
-                    "projectInstalls",
-                    "projectAuthors",
+                    "installs",
+                    "crashes",
+                    "launches",
+                    "installed_projects",
+                    "launched_projects",
+                    "crashed_projects",
+                    "authors",
                     "badges",
                   ],
                   "type": "object",

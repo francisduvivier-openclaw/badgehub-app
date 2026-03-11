@@ -241,9 +241,14 @@ export class PostgreSQLBadgeHubMetadata {
       ]);
 
     return {
+      crashed_projects: 0,
+      crashes: 0,
+      installed_projects: 0,
+      launched_projects: 0,
+      launches: 0,
       projects: Number(projects.rows[0].count),
-      projectInstalls: Number(projectInstalls.rows[0].count),
-      projectAuthors: Number(projectAuthors.rows[0].count),
+      installs: Number(projectInstalls.rows[0].count),
+      authors: Number(projectAuthors.rows[0].count),
       badges: Number(badges.rows[0].count),
     };
   }
