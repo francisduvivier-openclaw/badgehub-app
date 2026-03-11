@@ -211,7 +211,8 @@ export class PostgreSQLBadgeHubMetadata {
     );
     const projectAuthorsP = this.pool.query(
       sql`SELECT COUNT(DISTINCT idp_user_id)
-          FROM projects WHERE deleted_at IS NULL`
+          FROM projects
+          WHERE deleted_at IS NULL`
     );
     const badgesP = this.pool.query(
       sql`SELECT COUNT(*)
@@ -443,13 +444,18 @@ and v.app_metadata->'badges' @>
         ${filter.slugs}
         )`;
       }
+    } else if (revision === "latest") {
+      query = sql`${query}
+                  and (v.app_metadata->>'hidden')::boolean is not true`;
     }
 
     if (filter.search) {
       const matcher = `%${filter.search.toLowerCase()}%`;
+      //@formatter:off
       query = sql`${query}
                     and (v.app_metadata->>'name' ilike ${matcher} or v.app_metadata->>'description' ilike ${matcher} or p.slug like ${matcher})
                     or exists (select 1 from project_latest_categories plc where plc.project_slug = p.slug and plc.category_name ilike ${matcher})`;
+      //@formatter:on
     }
 
     if (filter.userId !== undefined) {
@@ -525,7 +531,9 @@ and v.app_metadata->'badges' @>
     Pick<ProjectApiTokenMetadata, "last_used_at" | "created_at"> | undefined
   > {
     const { rows } = await this.pool.query<DBProjectApiKey>(
-      sql`select created_at, last_used_at from project_api_token where project_slug = ${slug}`
+      sql`select created_at, last_used_at
+          from project_api_token
+          where project_slug = ${slug}`
     );
     return (
       rows[0] && {
@@ -537,7 +545,9 @@ and v.app_metadata->'badges' @>
 
   async getProjectApiTokenHash(slug: ProjectSlug): Promise<string | undefined> {
     const { rows } = await this.pool.query<{ key_hash: string }>(
-      sql`select key_hash from project_api_token where project_slug = ${slug}`
+      sql`select key_hash
+          from project_api_token
+          where project_slug = ${slug}`
     );
     return rows[0]?.key_hash;
   }
@@ -548,7 +558,10 @@ and v.app_metadata->'badges' @>
   ): Promise<void> {
     await this.pool.query<DBProjectApiKey>(
       sql`insert into project_api_token (project_slug, key_hash)
-          values (${slug}, ${keyHash}) on conflict (project_slug) do update set key_hash = ${keyHash}, last_used_at = now(), created_at = now()`
+          values (${slug}, ${keyHash})
+          on conflict (project_slug) do update set key_hash     = ${keyHash},
+                                                   last_used_at = now(),
+                                                   created_at   = now()`
     );
   }
 

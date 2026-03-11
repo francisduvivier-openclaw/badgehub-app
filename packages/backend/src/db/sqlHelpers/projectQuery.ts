@@ -32,12 +32,11 @@ export const projectQueryResponseToReadModel = (
   enrichedDBProject: ProjectQueryResponse
 ): ProjectSummary => {
   const appMetadata = enrichedDBProject.app_metadata;
-  return {
+  const projectSummary: ProjectSummary = {
     idp_user_id: enrichedDBProject.idp_user_id,
     categories: appMetadata.categories,
     description: appMetadata.description,
     // download_counter: undefined, // TODO
-    git: enrichedDBProject.git,
     license_type: appMetadata.license_type,
     name: appMetadata.name ?? enrichedDBProject.slug,
     published_at:
@@ -70,6 +69,13 @@ export const projectQueryResponseToReadModel = (
       ) as IconMapWithUrls),
     badges: appMetadata.badges,
   };
+  if (appMetadata.hidden) {
+    projectSummary.hidden = appMetadata.hidden;
+  }
+  if (enrichedDBProject.git) {
+    projectSummary.git = enrichedDBProject.git;
+  }
+  return projectSummary;
 };
 
 export type ProjectQueryResponse = DBProject & DBVersion;
