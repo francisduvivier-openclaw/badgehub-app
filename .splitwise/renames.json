@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "313db4c8ca84650a3e574a04bb968e14d70b0724",
-  "parent": "4d2db2af4b1cee9fec72b0782c432c4a31e8b5da",
+  "commit": "92f3c61f3241c6d8656bef16b01a55cc97c4baf0",
+  "parent": "313db4c8ca84650a3e574a04bb968e14d70b0724",
   "entries": [
     {
       "lang": "ts/js",
@@ -25,6 +25,15 @@
       "lang": "ts/js",
       "kind": "variable",
       "old": "onSetIcon",
+      "new": "onDeleteFile",
+      "file": "packages/frontend/src/pages/AppEditPage/FileListItem.test.tsx",
+      "scope": "packages/frontend/src/pages/AppEditPage",
+      "confidence": 0.9
+    },
+    {
+      "lang": "ts/js",
+      "kind": "variable",
+      "old": "revokeObjectURLMock",
       "new": "onDeleteFile",
       "file": "packages/frontend/src/pages/AppEditPage/FileListItem.test.tsx",
       "scope": "packages/frontend/src/pages/AppEditPage",
