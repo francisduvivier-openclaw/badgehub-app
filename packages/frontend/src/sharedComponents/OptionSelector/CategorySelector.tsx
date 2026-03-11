@@ -2,7 +2,7 @@ import React from "react";
 import { OptionSelectorWithTitle } from "@sharedComponents/OptionSelector/OptionSelectorWithTitle.tsx";
 import {
   CategoryName,
-  getCategoryNames,
+  getAllCategoryNames,
 } from "@shared/domain/readModels/project/Category.ts";
 
 export const CategorySelector: React.FC<{
@@ -11,7 +11,7 @@ export const CategorySelector: React.FC<{
   onCategoryChange: (selectedCategory: CategoryName | undefined) => void;
 }> = ({ category, onCategoryChange, noValueSetName }) => {
   const valueMap: Record<string, string> = Object.fromEntries(
-    getCategoryNames().map((c) => [c, c])
+    getAllCategoryNames().map((c) => [c, c])
   );
   return (
     <OptionSelectorWithTitle
