@@ -1,71 +1,8 @@
 {
   "version": 1,
-  "commit": "9eccd7edbd2f8e7b239f629d6c74cc5ca70a9281",
-  "parent": "f10ca1eae40875bcf834df2aa02170552bd78cb8",
+  "commit": "8cc66c462ac20c0428306729d2900fcfd8d0b6ed",
+  "parent": "865a205323f40ef2ed45d704bcb7e106d42d8123",
   "entries": [
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_DB",
-      "new": "POSTGRES_USER",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_USER",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_PASSWORD",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "POSTGRES_HOST",
-      "new": "POSTGRES_DB",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "KEYCLOAK_CLIENT_ID",
-      "new": "KEYCLOAK_BASE_URL",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "KEYCLOAK_BASE_URL",
-      "new": "KEYCLOAK_CLIENT_ID",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "KEYCLOAK_REALM",
-      "new": "KEYCLOAK_CLIENT_ID",
-      "file": "packages/backend/src/config.ts",
-      "scope": "packages/backend/src",
-      "confidence": 0.9
-    },
     {
       "lang": "ts/js",
       "kind": "variable",
@@ -145,33 +82,6 @@
       "new": "getRes1",
       "file": "packages/backend/src/controllers/private-rest.spec.ts",
       "scope": "packages/backend/src/controllers",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "details",
-      "new": "projectDetails",
-      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
-      "scope": "packages/backend/src/controllers/ts-rest",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "projectDetails",
-      "new": "details",
-      "file": "packages/backend/src/controllers/ts-rest/publicRestRouter.ts",
-      "scope": "packages/backend/src/controllers/ts-rest",
-      "confidence": 0.9
-    },
-    {
-      "lang": "ts/js",
-      "kind": "variable",
-      "old": "pingQuerySchema",
-      "new": "badgeIdentifiersSchema",
-      "file": "packages/shared/src/contracts/publicRestContracts.ts",
-      "scope": "packages/shared/src/contracts",
       "confidence": 0.9
     }
   ]
