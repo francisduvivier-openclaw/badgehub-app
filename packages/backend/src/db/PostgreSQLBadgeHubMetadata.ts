@@ -229,7 +229,7 @@ export class PostgreSQLBadgeHubMetadata {
     );
     const badgesP = this.pool.query(
       sql`SELECT COUNT(*)
-          FROM registered_badges`
+          FROM registered_badges where id like '%-v1'`
     );
 
     const [projectInstalls, projects, projectAuthors, badges] =
