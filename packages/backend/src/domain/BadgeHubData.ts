@@ -10,7 +10,11 @@ import {
 import { User } from "@shared/domain/readModels/project/User";
 import { FileMetadata } from "@shared/domain/readModels/project/FileMetadata";
 import { BadgeSlug } from "@shared/domain/readModels/Badge";
-import { CategoryName } from "@shared/domain/readModels/project/Category";
+import {
+  CategoryName,
+  getAdminOnlyCategoryNames,
+  isAdminCategory,
+} from "@shared/domain/readModels/project/Category";
 import { DBProject } from "@shared/dbModels/project/DBProject";
 import { BadgeHubFiles } from "@shared/domain/BadgeHubFiles";
 import { UploadedFile } from "@shared/domain/UploadedFile";
@@ -23,6 +27,7 @@ import { LRUCache } from "lru-cache";
 import { appMetadataJSONSchema } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { PostgreSQLBadgeHubMetadata } from "@db/PostgreSQLBadgeHubMetadata";
 import { getImageProps } from "@util/imageProcessing";
+import { UserError } from "@domain/UserError";
 
 type FileContext =
   | { projectSlug: string; revision: number; filePath: string }
@@ -246,6 +251,12 @@ export class BadgeHubData {
     uploadedFile: UploadedFile,
     mockDates?: DBDatedData
   ): Promise<void> {
+    if (filePath === "metadata.json") {
+      const appMetadata: WriteAppMetadataJSON = appMetadataJSONSchema.parse(
+        JSON.parse(new TextDecoder().decode(uploadedFile.fileContent))
+      );
+      return this.updateDraftMetadata(projectSlug, appMetadata, mockDates);
+    }
     Object.assign(uploadedFile, await getImageProps(uploadedFile));
     await this._writeDraftFile(
       projectSlug,
@@ -253,16 +264,6 @@ export class BadgeHubData {
       uploadedFile,
       mockDates
     );
-    if (filePath === "metadata.json") {
-      const appMetadata: WriteAppMetadataJSON = appMetadataJSONSchema.parse(
-        JSON.parse(new TextDecoder().decode(uploadedFile.fileContent))
-      );
-      await this.badgeHubMetadata.updateDraftMetadata(
-        projectSlug,
-        appMetadata,
-        mockDates
-      );
-    }
   }
 
   async writeDraftProjectZip(projectSlug: string, zipContent: Uint8Array) {
@@ -276,6 +277,23 @@ export class BadgeHubData {
     newAppMetadata: WriteAppMetadataJSON,
     mockDates?: DBDatedData
   ): Promise<void> {
+    const oldProject = await this.badgeHubMetadata.getProject(slug, "draft");
+
+    const newAdminCategories = newAppMetadata.categories
+      ?.filter(isAdminCategory)
+      .filter((cat) => {
+        return !oldProject?.version.app_metadata.categories?.includes(cat);
+      });
+    const removedAdminCategories = oldProject?.version.app_metadata.categories
+      ?.filter(isAdminCategory)
+      .filter((cat) => {
+        return !newAppMetadata.categories?.includes(cat);
+      });
+    if (newAdminCategories?.length) {
+      throw new UserError(
+        `Change of admin category [${[...newAdminCategories, removedAdminCategories].join(",")}] detected, this is only allowed for admins.`
+      );
+    }
     await this.badgeHubMetadata.updateDraftMetadata(
       slug,
       newAppMetadata,

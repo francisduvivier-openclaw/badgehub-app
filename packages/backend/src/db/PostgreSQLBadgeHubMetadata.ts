@@ -46,7 +46,7 @@ import { VALID_SLUG_REGEX } from "@shared/contracts/slug";
 import { ProjectAlreadyExistsError, UserError } from "@domain/UserError";
 import {
   CategoryName,
-  getCategoryNames,
+  getAllCategoryNames,
 } from "@shared/domain/readModels/project/Category";
 import { BadgeSlug, getBadgeSlugs } from "@shared/domain/readModels/Badge";
 import { WriteAppMetadataJSON } from "@shared/domain/writeModels/AppMetadataJSON";
@@ -199,7 +199,7 @@ export class PostgreSQLBadgeHubMetadata {
   }
 
   async getCategories(): Promise<CategoryName[]> {
-    return getCategoryNames();
+    return getAllCategoryNames();
   }
 
   async insertProject(
