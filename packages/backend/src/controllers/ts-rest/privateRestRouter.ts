@@ -25,6 +25,7 @@ import { Readable } from "node:stream";
 import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@config";
 import { ProjectAlreadyExistsError, UserError } from "@domain/UserError";
 import { getImageProps } from "@util/imageProcessing";
+import { startMqtt } from "@util/mqtt";
 
 const upload = multer({
   limits: { fileSize: MAX_UPLOAD_FILE_SIZE_BYTES },
