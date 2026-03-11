@@ -12,5 +12,5 @@ export function getFileDownloadUrl(
     typeof versionRevision === "number"
       ? `rev${versionRevision}`
       : versionRevision;
-  return `${sharedConfig.badgeHubBaseUrl}/api/v3/projects/${project}/${revisionPathPart}/files/${encodeURIComponent(full_path)}`;
+  return `${BADGEHUB_API_BASE_URL}/api/v3/projects/${project}/${revisionPathPart}/files/${encodeURIComponent(full_path)}`;
 }

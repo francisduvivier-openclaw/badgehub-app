@@ -6,7 +6,6 @@ import { User } from "@sharedComponents/keycloakSession/SessionContext.tsx";
 
 interface AppEditFilePreviewProps {
   user?: User; // Optional user prop for authentication
-  tsRestClient: typeof defaultTsRestClient; // Using the mocked type
   project: ProjectDetails;
   onSetIcon?: (iconSize: IconSize, filePath: string) => void;
   iconFilePath?: string;

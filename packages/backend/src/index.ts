@@ -9,7 +9,7 @@ async function startServer() {
   await runMigrations();
   app.listen(EXPRESS_PORT, () => {
     console.info(
-      `Node.js server started with settings port [${EXPRESS_PORT}], IS_DEV_ENV [${sharedConfig.isDevEnvironment}].\nApp available at http://localhost:${EXPRESS_PORT}/`
+      `Node.js server started with settings port [${EXPRESS_PORT}], IS_DEV_ENV [${IS_DEV_ENVIRONMENT}].\nApp available at http://localhost:${EXPRESS_PORT}/`
     );
     startMqtt();
   });

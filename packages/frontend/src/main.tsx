@@ -77,6 +77,6 @@ function setupTodoToggleButton() {
   updateRootClass();
 }
 
-if (getSharedConfig().isDevEnvironment) {
+if (IS_DEV_ENVIRONMENT) {
   setupTodoToggleButton();
 }

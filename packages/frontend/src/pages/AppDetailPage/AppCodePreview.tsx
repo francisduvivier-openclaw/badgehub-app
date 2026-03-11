@@ -53,7 +53,7 @@ const AppCodePreview: React.FC<{ project: ProjectDetails }> = ({ project }) => {
       return;
     }
     setLoading(true);
-    tsRestClient
+    publicTsRestClient
       .getLatestPublishedFile({
         params: {
           slug: project.slug,

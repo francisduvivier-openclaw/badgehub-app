@@ -1,7 +1,11 @@
 import express from "express";
 import { pinoHttp } from "pino-http";
 import serveApiDocs from "@serveApiDocs";
-import { FRONTEND_DIST_DIR, FRONTEND_PUBLIC_DIR, sharedConfig } from "@config";
+import {
+  FRONTEND_DIST_DIR,
+  FRONTEND_PUBLIC_DIR,
+  IS_DEV_ENVIRONMENT,
+} from "@config";
 import rateLimit from "express-rate-limit";
 import { createExpressEndpoints } from "@ts-rest/express";
 import { publicRestContracts } from "@shared/contracts/publicRestContracts";
@@ -30,7 +34,7 @@ function getIndexHtmlContents() {
 
 export const createExpressServer = () => {
   const app = express();
-  if (sharedConfig.isDevEnvironment) {
+  if (IS_DEV_ENVIRONMENT) {
     app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
       next(); // for inspection during development
@@ -74,9 +78,9 @@ export const createExpressServer = () => {
     apiV3Router,
     {
       globalMiddleware: [
-        jwtVerifyTokenMiddleware,
-        addUserSubMiddleware,
         rateLimiter,
+        jwtVerifyTokenMiddleware,
+        addAuthenticationMiddleware,
       ],
     }
   );
