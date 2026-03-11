@@ -372,6 +372,9 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
                       "git": {
                         "type": "string",
                       },
+                      "hidden": {
+                        "type": "boolean",
+                      },
                       "icon_map": {
                         "description": "Icon Map of the project that maps from accepted sizes to a file path and url.",
                         "properties": {
@@ -2873,6 +2876,9 @@ This is an api key that can be used in the 'badgehub-api-token' header. Eg. set 
                       },
                       "git": {
                         "type": "string",
+                      },
+                      "hidden": {
+                        "type": "boolean",
                       },
                       "icon_map": {
                         "description": "Icon Map of the project that maps from accepted sizes to a file path and url.",
