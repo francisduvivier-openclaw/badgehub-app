@@ -10,7 +10,7 @@ export async function startMqtt(badgeHubData: BadgeHubData) {
     return;
   }
 
-  if (process.env.NODE_APP_INSTANCE !== '0') {
+  if (process.env.NODE_APP_INSTANCE !== "0") {
     return;
   }
 
@@ -25,25 +25,37 @@ export async function startMqtt(badgeHubData: BadgeHubData) {
     return;
   }
 
-  let client = mqtt.connect(server, {
-    username,
-    password,
-    clean: true,
-  });
+  console.log("MQTT: ready to connect");
 
-  client.on("connect", () => {
-    console.log("Connected to MQTT server");
-    setInterval(async () => {
+  try {
+    let client = mqtt.connect(server, {
+      username,
+      password,
+      clean: true,
+    });
 
-      console.log('MQTT: send message');
-
+    async function sendMqttMessage() {
       const stats = await badgeHubData.getStats();
 
-      client.publish(
-        topic,
-        JSON.stringify({ ...stats, timestamp: new Date().toISOString() }),
-        { qos: 1, retain: true }
-      );
-    }, Number(interval) * 1000);
-  });
+      console.log("MQTT: send message");
+      try {
+        client.publish(
+          topic,
+          JSON.stringify({ ...stats, timestamp: new Date().toISOString() }),
+          { qos: 1, retain: true }
+        );
+      } catch (error) {
+        console.error(`MQTT: error publishing message`, error);
+      }
+    }
+
+    client.on("connect", async () => {
+      console.log("MQTT: connected to server");
+
+      sendMqttMessage();
+      setInterval(sendMqttMessage, Number(interval) * 1000);
+    });
+  } catch (error) {
+    console.error(`MQTT: error connecting to server ${server}`, error);
+  }
 }
