@@ -1,5 +1,6 @@
 import React from "react";
 import { ProjectEditFormData } from "@pages/AppEditPage/ProjectEditFormData.ts";
+import GitLink from "@sharedComponents/GitLink.tsx";
 
 /**
  * A component for editing the basic information of an application.
@@ -54,9 +55,10 @@ const AppEditBasicInfo: React.FC<{
         <div>
           <label
             htmlFor="gitUrl"
-            className="block text-sm font-medium text-slate-300 mb-1"
+            className="block text-sm font-medium text-slate-300 mb-1 flex items-center"
           >
             Git URL
+            <GitLink url={form.git_url} />
           </label>
           <input
             type="url"

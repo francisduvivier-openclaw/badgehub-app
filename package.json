@@ -26,7 +26,7 @@
     "prepare": "husky",
     "lint-staged": "pretty-quick --staged",
     "lint": "pretty-quick --check",
-    "lint:fix": "pretty-quick --check",
+    "lint:fix": "pretty-quick",
     "validate": "npm run lint && npm run check:ts && npm run build && npm run test"
   },
   "dependencies": {
