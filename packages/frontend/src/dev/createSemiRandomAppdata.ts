@@ -1,14 +1,13 @@
 import { stringToSemiRandomNumber } from "@dev/stringToSemiRandomNumber";
 import {
-  CATEGORY_NAMES,
   ICON_COUNT,
   ICON_FILENAMES,
   SIX_HUNDRED_DAYS_IN_MS,
   TWENTY_FOUR_HOURS_IN_MS,
   USERS,
+  CATEGORY_NAMES,
 } from "@dev/fixtures";
-import { getBadgeSlugs } from "@shared/domain/readModels/Badge";
-import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
+import { createSemiRandomAppMetadata } from "@shared/dev/createSemiRandomAppMetadata";
 import { ISODateString } from "@shared/domain/readModels/ISODateString";
 
 export const getSemiRandomDates = async (stringToDigest: string) => {
@@ -38,19 +37,6 @@ function date(millisBackFrom2025: number) {
   return new Date(MAX_DATE_MILLIS - millisBackFrom2025).toISOString();
 }
 
-function getSemiRandomElementSelection<T>(
-  semiRandomNumber: number,
-  items: T[],
-  max_items: number
-): T[] {
-  const nbItems = Math.max(semiRandomNumber % max_items, 1);
-  const selection = new Set<T>();
-  for (let i = 0; i < nbItems; i++) {
-    selection.add(items[(i + semiRandomNumber) % items.length]!);
-  }
-  return [...selection];
-}
-
 export async function createSemiRandomAppdata(
   projectName: string,
   semanticVersion: string,
@@ -58,8 +44,6 @@ export async function createSemiRandomAppdata(
 ) {
   const semiRandomNumber = await stringToSemiRandomNumber(projectName);
   const projectSlug = projectName.toLowerCase();
-  const description = await getDescription(projectName);
-  const userId = semiRandomNumber % USERS.length;
 
   const { created_at, updated_at } = await getSemiRandomDates(projectName);
 
@@ -73,40 +57,16 @@ export async function createSemiRandomAppdata(
     iconBytes = await loadIcon(iconFilename);
   }
 
-  const categories = getSemiRandomElementSelection(
+  const appMetadata = createSemiRandomAppMetadata({
+    projectName,
+    semanticVersion,
     semiRandomNumber,
-    CATEGORY_NAMES,
-    3
-  );
-  const allBadges = getBadgeSlugs();
-  const badges = getSemiRandomElementSelection(
-    semiRandomNumber,
-    allBadges,
-    allBadges.length
-  );
-  const appMetadata: AppMetadataJSON = {
-    name: projectName,
-    description,
-    author: USERS[userId]!,
-    license_type: "MIT",
-    badges,
-    categories,
-    icon_map: iconRelativePath ? { "64x64": iconRelativePath } : undefined,
-  };
-  if (semiRandomNumber % 2 === 0) {
-    appMetadata.git_url = "https://github.com/badgehubcrew/badgehub-app";
-  } else if (semiRandomNumber % 3 === 0) {
-    appMetadata.git_url = "https://gitlab.com/team-badge/badgevms-badgehub";
-  }
-  if (semiRandomNumber % 2 === 0) {
-    appMetadata.hidden = false;
-  }
-  if (semiRandomNumber % 9 === 0) {
-    appMetadata.hidden = true;
-  }
-  if (semanticVersion !== "") {
-    appMetadata.version = semanticVersion;
-  }
+    users: USERS,
+    categoryNames: CATEGORY_NAMES,
+  });
+
+  appMetadata.icon_map = iconRelativePath ? { "64x64": iconRelativePath } : undefined;
+
   return {
     projectSlug,
     created_at,
@@ -115,17 +75,4 @@ export async function createSemiRandomAppdata(
     iconRelativePath,
     appMetadata,
   };
-}
-
-async function getDescription(appName: string) {
-  switch ((await stringToSemiRandomNumber(appName)) % 4) {
-    case 0:
-      return `Use ${appName} for some cool graphical effects.`;
-    case 1:
-      return `With ${appName}, you can do interesting things with the sensors.`;
-    case 2:
-      return `Make some magic happen with ${appName}.`;
-    case 3:
-      return `${appName} is just some silly test app.`;
-  }
 }
