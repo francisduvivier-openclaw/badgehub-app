@@ -8993,7 +8993,7 @@ async function populatePreviewDb(metadata, loadIcon) {
   console.log("[populatePreviewDb] Done.");
 }
 const API_PREFIX = "/api/v3";
-const PREVIEW_DATA_VERSION = 4;
+const PREVIEW_DATA_VERSION = 5;
 const IDB_NAME = "badgehub-preview";
 const IDB_STORE = "sqlite-cache";
 const IDB_KEY = "preview-data";
