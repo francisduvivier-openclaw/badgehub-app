@@ -10,10 +10,9 @@ import {
   USERS,
 } from "@dev/populate-db/fixtures";
 import sharp from "sharp";
-import { getBadgeSlugs } from "@shared/domain/readModels/Badge";
-import { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON";
 import { TimestampTZ } from "@db/models/DBTypes";
 import { ISODateString } from "@shared/domain/readModels/ISODateString";
+import { createSemiRandomAppMetadata } from "@shared/dev/createSemiRandomAppMetadata";
 
 export const getSemiRandomDates = async (stringToDigest: string) => {
   const semiRandomNumber = await stringToSemiRandomNumber(stringToDigest);
@@ -42,28 +41,12 @@ function date(millisBackFrom2025: number) {
   return new Date(MAX_DATE_MILLIS - millisBackFrom2025).toISOString();
 }
 
-function getSemiRandomElementSelection<T>(
-  semiRandomNumber: number,
-  items: T[],
-  max_items: number
-): T[] {
-  const nbItems = Math.max(semiRandomNumber % max_items, 1);
-  const selection = new Set<T>();
-  for (let i = 0; i < nbItems; i++) {
-    selection.add(items[(i + semiRandomNumber) % items.length]!);
-  }
-  return [...selection];
-}
-
 export async function createSemiRandomAppdata(
   projectName: string,
   semanticVersion: string
 ) {
   const semiRandomNumber = await stringToSemiRandomNumber(projectName);
   const projectSlug = projectName.toLowerCase();
-  const description = await getDescription(projectName);
-  const longDescription = getLongDescription(projectName, semiRandomNumber);
-  const userId = semiRandomNumber % USERS.length;
 
   const { created_at, updated_at } = await getSemiRandomDates(projectName);
 
@@ -79,47 +62,21 @@ export async function createSemiRandomAppdata(
     // Read icon file from disk
     try {
       iconBuffer = await sharp(iconFullPath).resize(64, 64).toBuffer();
-    } catch (e) {
+    } catch {
       console.warn(`Could not read icon file: ${iconFullPath}`);
     }
   }
 
-  const categories = getSemiRandomElementSelection(
+  const appMetadata = createSemiRandomAppMetadata({
+    projectName,
+    semanticVersion,
     semiRandomNumber,
-    CATEGORY_NAMES,
-    3
-  );
-  const allBadges = getBadgeSlugs();
-  const badges = getSemiRandomElementSelection(
-    semiRandomNumber,
-    allBadges,
-    allBadges.length
-  );
-  const appMetadata: AppMetadataJSON = {
-    name: projectName,
-    description,
-    long_description: longDescription,
-    author: USERS[userId]!,
+    users: USERS,
+    categoryNames: CATEGORY_NAMES,
+  });
 
-    license_type: "MIT",
-    badges,
-    categories,
-    icon_map: iconRelativePath ? { "64x64": iconRelativePath } : undefined,
-  };
-  if (semiRandomNumber % 2 === 0) {
-    appMetadata.git_url = "https://github.com/badgehubcrew/badgehub-app";
-  } else if (semiRandomNumber % 3 === 0) {
-    appMetadata.git_url = "https://gitlab.com/team-badge/badgevms-badgehub";
-  }
-  if (semiRandomNumber % 2 === 0) {
-    appMetadata.hidden = false;
-  }
-  if (semiRandomNumber % 9 === 0) {
-    appMetadata.hidden = true;
-  }
-  if (semanticVersion !== "") {
-    appMetadata.version = semanticVersion;
-  }
+  appMetadata.icon_map = iconRelativePath ? { "64x64": iconRelativePath } : undefined;
+
   return {
     projectSlug,
     created_at,
@@ -128,30 +85,4 @@ export async function createSemiRandomAppdata(
     iconRelativePath,
     appMetadata,
   };
-}
-
-async function getDescription(appName: string) {
-  switch ((await stringToSemiRandomNumber(appName)) % 4) {
-    case 0:
-      return `Use ${appName} for some cool graphical effects.`;
-    case 1:
-      return `With ${appName}, you can do interesting things with the sensors.`;
-    case 2:
-      return `Make some magic happen with ${appName}.`;
-    case 3:
-      return `${appName} is just some silly test app.`;
-  }
-}
-
-function getLongDescription(appName: string, semiRandomNumber: number) {
-  // Deterministic 50% coverage, similar to the rest of the semirandom fixtures.
-  if (semiRandomNumber % 2 !== 0) {
-    return undefined;
-  }
-
-  return `Lorem ipsum dolor sit amet, consectetur adipiscing elit. ${appName} posuere orci sed odio faucibus, vitae varius velit faucibus. Integer tempus, nisl eu porttitor fermentum, purus nibh hendrerit velit, quis volutpat dolor felis eu sem.
-
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ${appName} facilisis nunc id lorem bibendum, non congue neque elementum.
-
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`;
 }
