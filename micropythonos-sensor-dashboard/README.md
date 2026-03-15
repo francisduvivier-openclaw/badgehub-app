@@ -10,6 +10,7 @@ MVP app scaffold for a `fri3d_2024` board.
   - Light (lux)
   - Battery (%)
   - Motion state
+  - SD card status (plugged in + used/total)
   - Last update time
 - Auto-refreshes every second
 - Uses a board adapter (`board_fri3d_2024.py`) so hardware specifics stay isolated

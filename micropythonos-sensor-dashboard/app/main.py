@@ -32,13 +32,29 @@ def now_label():
         return "n/a"
 
 
+def fmt_bytes(n):
+    if n is None:
+        return "--"
+    units = ("B", "KB", "MB", "GB")
+    i = 0
+    x = float(n)
+    while x >= 1024 and i < len(units) - 1:
+        x /= 1024.0
+        i += 1
+    return "{:.1f} {}".format(x, units[i]) if i > 0 else "{} {}".format(int(x), units[i])
+
+
 def collect(board):
+    sd = board.read_sd_status()
     return {
         "temp": board.read_temperature_c(),
         "hum": board.read_humidity_pct(),
         "lux": board.read_light_lux(),
         "bat": board.read_battery_pct(),
         "motion": board.read_motion(),
+        "sd_present": sd.get("present", False),
+        "sd_used": sd.get("used_bytes"),
+        "sd_total": sd.get("total_bytes"),
         "updated": now_label(),
     }
 
@@ -51,6 +67,13 @@ def render_console(data):
     print("Light:   ", fmt(data["lux"], " lx", digits=0))
     print("Battery: ", fmt(data["bat"], " %", digits=0))
     print("Motion:  ", "YES" if data["motion"] else "no")
+
+    if data["sd_present"]:
+        print("SD card: ", "plugged in")
+        print("SD used: ", "{} / {}".format(fmt_bytes(data["sd_used"]), fmt_bytes(data["sd_total"])))
+    else:
+        print("SD card: ", "not detected")
+
     print("Updated: ", data["updated"])
 
 

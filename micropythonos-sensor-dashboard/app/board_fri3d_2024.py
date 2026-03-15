@@ -75,6 +75,42 @@ class Fri3d2024Board:
             return time.ticks_diff(time.ticks_ms(), self._boot_ms) // 1000
         return int(time.time())
 
+    def read_sd_status(self):
+        """Return SD card status dict.
+
+        Format:
+            {
+                "present": bool,
+                "used_bytes": int|None,
+                "total_bytes": int|None,
+            }
+        """
+        # Generic MicroPython check: statvfs on common SD mount points.
+        # Adjust/extend mount points if your firmware mounts elsewhere.
+        mount_points = ("/sd", "/sdcard", "/mnt/sd")
+        for mp in mount_points:
+            try:
+                st = __import__("os").statvfs(mp)
+                block_size = st[0]
+                total_blocks = st[2]
+                free_blocks = st[3]
+                total = block_size * total_blocks
+                free = block_size * free_blocks
+                used = total - free
+                return {
+                    "present": True,
+                    "used_bytes": used,
+                    "total_bytes": total,
+                }
+            except Exception:
+                pass
+
+        return {
+            "present": False,
+            "used_bytes": None,
+            "total_bytes": None,
+        }
+
     def health(self):
         """Optional diagnostic data for debug screen."""
         out = {"i2c": "uninitialized"}
