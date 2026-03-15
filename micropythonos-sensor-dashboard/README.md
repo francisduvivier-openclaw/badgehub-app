@@ -1,37 +1,47 @@
 # Sensor Dashboard (fri3d_2024) for MicroPythonOS
 
-MVP app scaffold for a `fri3d_2024` board.
+Real sensor dashboard app for Fri3d Badge 2024.
 
-## What this does
+## Features
 
-- Displays a live dashboard with:
-  - Temperature (°C)
-  - Humidity (%)
-  - Light (lux)
-  - Battery (%)
-  - Motion state
-  - SD card status (plugged in + used/total)
-  - Last update time
-- Auto-refreshes every second
-- Uses a board adapter (`board_fri3d_2024.py`) so hardware specifics stay isolated
+- Live dashboard (1s refresh)
+- WSEN-ISDS IMU
+  - Accelerometer `x/y/z` (mg)
+  - Gyroscope `x/y/z` (dps)
+  - IMU temperature (°C)
+- Battery level (%)
+- Motion indicator
+- Joystick x/y values
+- Onboard button states (A/B/X/Y/MENU/START)
+- SD card status
+  - plugged in / not detected
+  - used / total storage
 
 ## Files
 
-- `app/main.py` – app entry point + dashboard loop
-- `app/board_fri3d_2024.py` – sensor wiring layer (currently safe defaults + examples)
+- `app/main.py` – app entry + dashboard loop
+- `app/board_fri3d_2024.py` – Fri3d 2024 hardware adapter
 
-## Integrate on real hardware
+## Hardware assumptions (Fri3d 2024)
 
-1. Copy the `app/` files into your MicroPythonOS app folder.
-2. Open `app/board_fri3d_2024.py`.
-3. Replace stub methods with your board-specific sensor drivers:
-   - temperature/humidity sensor (e.g. SHT3x, BME280, AHT20)
-   - light sensor (e.g. BH1750)
-   - accelerometer/IMU (for motion)
-   - battery ADC read
-4. Keep method signatures the same so UI code remains unchanged.
+- I2C: SDA=9, SCL=18
+- IMU: WSEN-ISDS on I2C `0x6B` (fallback `0x6A`)
+- Battery ADC pin: 13
+- SD mounts on `/sd`, `/sdcard`, or `/mnt/sd`
+
+## Run
+
+Copy `app/` to your badge filesystem and run:
+
+```python
+import main
+main.run()
+```
+
+or set it as your app entrypoint.
 
 ## Notes
 
-- The app is intentionally framework-light so it works even if your exact MicroPythonOS UI API differs.
-- If you share your exact `fri3d_2024` pinout + onboard sensors, I can wire the full driver implementation next.
+- If Fri3d MicroPython helpers are available (`fri3d.badge.*`), this app uses them.
+- Otherwise it falls back to `machine.I2C` / `machine.ADC`.
+- If IMU values stay `--`, check I2C scan output from `Board health` and verify firmware/build includes I2C support.
