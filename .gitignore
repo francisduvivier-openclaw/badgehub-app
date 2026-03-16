@@ -142,3 +142,31 @@ data
 
 # Claude local documentation
 CLAUDE.local.md
+
+# OpenClaw local/runtime artifacts
+.local/
+.openclaw/
+.tmp-gh/
+.tmp-pw/
+artifacts/
+test-results/
+session-handoffs/
+worktrees/
+openclaw-session-*.html
+
+# Local workspace persona/bootstrap files
+BOOTSTRAP.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+
+# Local project sandboxes
+badge-games/
+badgehub-app/
+badgehub-app-simplified/
+commit-splitter/
+tools/
+
+# Local memory scratch notes
+memory/2026-*.md
