@@ -24,6 +24,9 @@ export default defineConfig({
         chunkFileNames: `${publicStaticFileDir}/chunks/[name]-[hash].js`,
         assetFileNames: `${publicStaticFileDir}/assets/[name]-[hash].[ext]`,
         manualChunks: (id) => {
+          if (id.includes("node_modules/@zip.js")) {
+            return "zip";
+          }
           if (id.includes("node_modules")) {
             return "vendor";
           }

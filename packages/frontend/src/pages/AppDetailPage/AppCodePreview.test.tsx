@@ -1,5 +1,6 @@
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { strToU8, zipSync } from "fflate";
 import { describe, expect, it, vi } from "vitest";
 import AppCodePreview from "./AppCodePreview";
 
@@ -43,6 +44,16 @@ vi.mock("@api/apiClient.ts", () => ({
           body: null,
         });
       }
+      if (params.filePath === "sample.mpk") {
+        const archive = zipSync({
+          "metadata.json": strToU8('{"name":"MPK sample"}'),
+          "src/generated/models/main.py": strToU8('print("from MPK")'),
+        });
+        return Promise.resolve({
+          status: 200,
+          body: new Blob([archive.buffer as ArrayBuffer]),
+        });
+      }
       return Promise.resolve({
         status: 404,
         body: "File not found",
@@ -58,6 +69,19 @@ const mockProject: ProjectDetails = {
   version: {
     revision: 1,
     files: [
+      {
+        dir: "",
+        name: "sample",
+        ext: "mpk",
+        mimetype: "application/octet-stream",
+        size_of_content: 256,
+        sha256: "i".repeat(64),
+        size_formatted: "256 B",
+        full_path: "sample.mpk",
+        url: "http://example.com/sample.mpk",
+        created_at: "2023-01-01T00:00:00.000Z",
+        updated_at: "2023-01-01T00:00:00.000Z",
+      },
       {
         dir: "",
         name: "test",
@@ -330,5 +354,48 @@ describe("AppCodePreview", () => {
       await screen.findByText(/This is a simple text file/)
     ).toBeInTheDocument();
     expect(screen.getByText(/It contains multiple lines/)).toBeInTheDocument();
+  });
+
+  it("shows a spinner while downloading an MPK and explores its contents", async () => {
+    render(<AppCodePreview project={mockProject} />);
+
+    fireEvent.click(screen.getByText("sample.mpk"));
+
+    expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
+    expect(await screen.findByTestId("mpk-explorer")).toBeInTheDocument();
+    expect(screen.getByText("metadata.json")).toBeInTheDocument();
+    const directory = screen.getByRole("button", {
+      name: "Collapse folder src/generated/models",
+    });
+    expect(directory).toHaveTextContent("src/generated/models/");
+
+    fireEvent.click(directory);
+    expect(screen.queryByText("main.py")).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Expand folder src/generated/models",
+      })
+    );
+
+    fireEvent.click(await screen.findByText("main.py"));
+
+    expect(await screen.findByText('"from MPK"')).toBeInTheDocument();
+  });
+
+  it("previews an archive entry selected by an external file list", async () => {
+    render(
+      <AppCodePreview
+        project={mockProject}
+        previewedArchiveFile={{
+          path: "package/main.py",
+          size: 17,
+          load: async () => new Blob(['print("draft MPK")']),
+        }}
+        previewedFile={null}
+        showFileList={false}
+      />
+    );
+
+    expect(await screen.findByText('"draft MPK"')).toBeInTheDocument();
   });
 });

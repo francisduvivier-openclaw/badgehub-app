@@ -6,11 +6,28 @@ import type { FileMetadata } from "@shared/domain/readModels/project/FileMetadat
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import { assertDefined } from "@shared/util/assertions.ts";
 import CodeBlock from "@sharedComponents/CodeBlock.tsx";
+import type { MpkArchiveFile } from "@sharedComponents/MpkExplorer.tsx";
+import Spinner from "@sharedComponents/Spinner.tsx";
 import { downloadProjectFile } from "@utils/downloadProjectFile.ts";
 import { getLanguageFromFile, getPreviewType } from "@utils/filePreview.ts";
 import type Keycloak from "keycloak-js";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+const MpkExplorer = lazy(() => import("@sharedComponents/MpkExplorer.tsx"));
+
+type PreviewFile = Pick<
+  FileMetadata,
+  "full_path" | "image_height" | "image_width" | "mimetype" | "url"
+>;
 
 const DownloadIcon = () => (
   <svg
@@ -109,7 +126,7 @@ const TextPreview: React.FC<{ content: string; filename: string }> = ({
 };
 
 // Image Preview Component
-const ImagePreview: React.FC<{ file: FileMetadata; imageBlob?: Blob }> = ({
+const ImagePreview: React.FC<{ file: PreviewFile; imageBlob?: Blob }> = ({
   file,
   imageBlob,
 }) => {
@@ -149,7 +166,7 @@ const ImagePreview: React.FC<{ file: FileMetadata; imageBlob?: Blob }> = ({
   );
 };
 
-const AudioPreview: React.FC<{ file: FileMetadata; audioBlob?: Blob }> = ({
+const AudioPreview: React.FC<{ file: PreviewFile; audioBlob?: Blob }> = ({
   file,
   audioBlob,
 }) => {
@@ -193,21 +210,22 @@ const NoPreview: React.FC<{ mimetype: string }> = ({ mimetype }) => {
 // Helper function to render file preview content
 const renderFilePreview = (
   loading: boolean,
-  previewedFile: string | null,
-  currentFile: FileMetadata | null,
+  currentFile: PreviewFile | null,
   fileContent: string | null,
-  previewBlob?: Blob
+  previewBlob?: Blob,
+  loadingLabel = "Downloading file..."
 ): React.ReactElement => {
   if (loading) {
-    return <div className="opacity-60">Loading file...</div>;
-  }
-
-  if (!previewedFile) {
-    return <div className="opacity-60">No file selected</div>;
+    return (
+      <div role="status" aria-label="Downloading file">
+        <Spinner />
+        <p className="text-center opacity-60">{loadingLabel}</p>
+      </div>
+    );
   }
 
   if (!currentFile) {
-    return <div className="opacity-60">File not found</div>;
+    return <div className="opacity-60">No file selected</div>;
   }
 
   const previewType = getPreviewType(
@@ -220,6 +238,10 @@ const renderFilePreview = (
       return <ImagePreview file={currentFile} imageBlob={previewBlob} />;
     case "audio":
       return <AudioPreview file={currentFile} audioBlob={previewBlob} />;
+    case "mpk":
+      return (
+        <div className="opacity-60">Select a file inside the archive.</div>
+      );
     case "json":
       return fileContent ? (
         <JsonPreview content={fileContent} />
@@ -249,6 +271,7 @@ interface AppCodePreviewProps {
   project: ProjectDetails;
   isDraft?: boolean;
   keycloak?: Keycloak;
+  previewedArchiveFile?: MpkArchiveFile | null;
   previewedFile?: string | null;
   showFileList?: boolean;
 }
@@ -257,6 +280,7 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
   project,
   isDraft = false,
   keycloak,
+  previewedArchiveFile: externalArchiveFile,
   previewedFile: externalPreviewedFile,
   showFileList = true,
 }) => {
@@ -268,14 +292,20 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(false);
+  const [expandedMpk, setExpandedMpk] = useState<string | null>(null);
+  const [archiveFile, setArchiveFile] = useState<PreviewFile | null>(null);
+  const [archiveFileLoading, setArchiveFileLoading] = useState(false);
+  const archiveFileRequestId = useRef(0);
 
   // Get the currently previewed file metadata
-  const currentFile = files.find((f) => f.full_path === previewedFile) || null;
+  const projectFile = files.find((f) => f.full_path === previewedFile) || null;
+  const currentFile = archiveFile ?? projectFile;
 
   // Use external previewedFile if provided, otherwise find __init__.py by default
   useEffect(() => {
     if (externalPreviewedFile !== undefined) {
       setPreviewedFile(externalPreviewedFile);
+      setArchiveFile(null);
       return;
     }
 
@@ -301,7 +331,9 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
 
   // Fetch file content when previewedFile changes
   useEffect(() => {
-    if (!previewedFile || !currentFile) {
+    if (archiveFile) return;
+
+    if (!previewedFile || !projectFile) {
       setFileContent(null);
       setPreviewBlob(null);
       return;
@@ -309,7 +341,7 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
 
     // For unsupported types, don't fetch content
     if (
-      getPreviewType(currentFile.mimetype, currentFile.full_path) ===
+      getPreviewType(projectFile.mimetype, projectFile.full_path) ===
       "unsupported"
     ) {
       setFileContent(null);
@@ -333,10 +365,14 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
           if (response.status === 200 && response.body !== undefined) {
             // Binary previews need an object URL for authenticated draft files.
             const previewType = getPreviewType(
-              currentFile.mimetype,
-              currentFile.full_path
+              projectFile.mimetype,
+              projectFile.full_path
             );
-            if (previewType === "image" || previewType === "audio") {
+            if (
+              previewType === "image" ||
+              previewType === "audio" ||
+              previewType === "mpk"
+            ) {
               if (response.body instanceof Blob) {
                 setPreviewBlob(response.body);
                 setFileContent(null);
@@ -371,11 +407,18 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
           if (res.status === 200) {
             if (
               ["image", "audio"].includes(
-                getPreviewType(currentFile.mimetype, currentFile.full_path)
+                getPreviewType(projectFile.mimetype, projectFile.full_path)
               )
             ) {
               // Published binary previews can use the file URL directly.
               setPreviewBlob(null);
+              setFileContent(null);
+            } else if (
+              getPreviewType(projectFile.mimetype, projectFile.full_path) ===
+                "mpk" &&
+              res.body instanceof Blob
+            ) {
+              setPreviewBlob(res.body);
               setFileContent(null);
             } else if (typeof res.body === "string") {
               setFileContent(res.body);
@@ -413,11 +456,104 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
     };
 
     fetchContent();
-  }, [previewedFile, project.slug, currentFile, isDraft, keycloak]);
+  }, [
+    previewedFile,
+    project.slug,
+    projectFile,
+    archiveFile,
+    isDraft,
+    keycloak,
+  ]);
 
   const handlePreview = (fullPath: string) => {
+    archiveFileRequestId.current += 1;
+    setArchiveFile(null);
+    setExpandedMpk(null);
     setPreviewedFile(fullPath);
   };
+
+  const fetchMpkBlob = async (file: FileMetadata): Promise<Blob> => {
+    const response = isDraft
+      ? await (async () => {
+          assertDefined(keycloak);
+          const client = await getFreshAuthorizedApiClient(keycloak);
+          return client.getDraftFile({
+            params: { slug: project.slug, filePath: file.full_path },
+          });
+        })()
+      : await publicApiClient.getLatestPublishedFile({
+          params: { slug: project.slug, filePath: file.full_path },
+        });
+
+    if (response.status !== 200 || !(response.body instanceof Blob)) {
+      throw new Error("MPK download did not return a file");
+    }
+    return response.body;
+  };
+
+  const handleToggleMpk = (file: FileMetadata) => {
+    if (expandedMpk === file.full_path) {
+      setExpandedMpk(null);
+      setArchiveFile(null);
+      setFileContent(null);
+      setPreviewBlob(null);
+      return;
+    }
+
+    setExpandedMpk(file.full_path);
+    setPreviewedFile(null);
+    setArchiveFile(null);
+    setFileContent(null);
+    setPreviewBlob(null);
+  };
+
+  const handleArchivePreview = useCallback(async (file: MpkArchiveFile) => {
+    const requestId = ++archiveFileRequestId.current;
+    const archivePreviewFile: PreviewFile = {
+      full_path: file.path,
+      mimetype: "application/octet-stream",
+      url: "",
+    };
+    setArchiveFile(archivePreviewFile);
+    setPreviewedFile(null);
+    setFileContent(null);
+    setPreviewBlob(null);
+
+    const previewType = getPreviewType(
+      archivePreviewFile.mimetype,
+      archivePreviewFile.full_path
+    );
+    if (previewType === "unsupported") {
+      setArchiveFileLoading(false);
+      return;
+    }
+
+    setArchiveFileLoading(true);
+    try {
+      const blob = await file.load();
+      if (requestId !== archiveFileRequestId.current) return;
+      if (previewType === "image" || previewType === "audio") {
+        setPreviewBlob(blob);
+      } else {
+        setFileContent(await blob.text());
+      }
+    } catch (error) {
+      if (requestId === archiveFileRequestId.current) {
+        console.error("Failed to extract MPK entry:", error);
+        setFileContent("// Unable to extract this archive entry");
+      }
+    } finally {
+      if (requestId === archiveFileRequestId.current) {
+        setArchiveFileLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (externalArchiveFile === undefined) return;
+    if (externalArchiveFile) void handleArchivePreview(externalArchiveFile);
+    else setArchiveFile(null);
+  }, [externalArchiveFile, handleArchivePreview]);
 
   const handleDownload = async (file: FileMetadata) => {
     if (isDraft) {
@@ -441,61 +577,94 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
         <h2 className="card-title text-2xl mb-4">Code Preview / Files</h2>
         {showFileList && (
           <div className="flex flex-col md:flex-row gap-8">
-            <div className="md:w-1/3 w-full">
+            <div className="w-full">
               <h3 className="text-lg font-medium text-base-content mb-2">
                 Project Files:
               </h3>
               <ul className="list-none text-sm space-y-1">
-                {files.map((f) => (
-                  <li key={f.full_path} className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-xs btn-ghost"
-                      onClick={() => handleDownload(f)}
-                      title="Download file"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <DownloadIcon />
-                    </button>
-                    <button
-                      type="button"
-                      className={`text-left hover:underline font-mono ${
-                        previewedFile === f.full_path
-                          ? "text-base-content font-bold"
-                          : "opacity-60"
-                      }`}
-                      onClick={() => handlePreview(f.full_path)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handlePreview(f.full_path);
-                        }
-                      }}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        padding: 0,
-                        cursor: "pointer",
-                      }}
-                      title="Preview file"
-                      aria-label={`Preview ${f.full_path}`}
-                    >
-                      {f.full_path}
-                    </button>
-                    {f.size_formatted ? (
-                      <span className="ml-2 opacity-60">
-                        {f.size_formatted}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
+                {files.map((f) => {
+                  const isMpk =
+                    getPreviewType(f.mimetype, f.full_path) === "mpk";
+                  const isExpanded = expandedMpk === f.full_path;
+                  return (
+                    <li key={f.full_path}>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-ghost"
+                          onClick={() => handleDownload(f)}
+                          title="Download file"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <DownloadIcon />
+                        </button>
+                        {isMpk && (
+                          <span aria-hidden="true" className="w-3 opacity-60">
+                            {isExpanded ? "v" : ">"}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className={`text-left hover:underline font-mono ${
+                            previewedFile === f.full_path || isExpanded
+                              ? "text-base-content font-bold"
+                              : "opacity-60"
+                          }`}
+                          onClick={() =>
+                            isMpk
+                              ? handleToggleMpk(f)
+                              : handlePreview(f.full_path)
+                          }
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                          }}
+                          title={isMpk ? "Explore archive" : "Preview file"}
+                          aria-label={
+                            isMpk
+                              ? `${isExpanded ? "Collapse" : "Expand"} ${f.full_path}`
+                              : `Preview ${f.full_path}`
+                          }
+                        >
+                          {f.full_path}
+                        </button>
+                        {f.size_formatted ? (
+                          <span className="ml-2 opacity-60">
+                            {f.size_formatted}
+                          </span>
+                        ) : null}
+                      </div>
+                      {isExpanded && (
+                        <Suspense
+                          fallback={
+                            <div
+                              role="status"
+                              aria-label="Loading archive explorer"
+                            >
+                              <Spinner />
+                            </div>
+                          }
+                        >
+                          <MpkExplorer
+                            filename={f.full_path}
+                            loadArchive={() => fetchMpkBlob(f)}
+                            onSelect={(file) => void handleArchivePreview(file)}
+                            selectedPath={archiveFile?.full_path ?? null}
+                          />
+                        </Suspense>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
@@ -503,11 +672,13 @@ const AppCodePreview: React.FC<AppCodePreviewProps> = ({
         <div className={showFileList ? "mt-6 md:ml-0" : "mt-4"}>
           <div className="code-block font-mono text-sm bg-base-300 rounded p-4 overflow-x-auto min-h-[200px]">
             {renderFilePreview(
-              loading,
-              previewedFile,
+              loading || archiveFileLoading,
               currentFile,
               fileContent,
-              previewBlob || undefined
+              previewBlob || undefined,
+              archiveFileLoading
+                ? "Extracting archive entry..."
+                : "Downloading file..."
             )}
           </div>
         </div>

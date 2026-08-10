@@ -2,6 +2,12 @@ import { getLanguageFromFile, getPreviewType } from "@utils/filePreview.ts";
 import { describe, expect, it } from "vitest";
 
 describe("getPreviewType", () => {
+  it("recognizes MPK archives by extension", () => {
+    expect(getPreviewType("application/octet-stream", "package.mpk")).toBe(
+      "mpk"
+    );
+  });
+
   it("detects image types by mimetype", () => {
     expect(getPreviewType("image/png", "icon.png")).toBe("image");
   });

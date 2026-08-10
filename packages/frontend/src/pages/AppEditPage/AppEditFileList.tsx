@@ -1,8 +1,14 @@
+import { getFreshAuthorizedApiClient } from "@api/apiClient.ts";
 import { FileListItem } from "@pages/AppEditPage/FileListItem.tsx";
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
+import type { MpkArchiveFile } from "@sharedComponents/MpkExplorer.tsx";
+import Spinner from "@sharedComponents/Spinner.tsx";
+import { getPreviewType } from "@utils/filePreview.ts";
 import type Keycloak from "keycloak-js";
 import type React from "react";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+
+const MpkExplorer = lazy(() => import("@sharedComponents/MpkExplorer.tsx"));
 
 interface AppEditFileListProps {
   project: ProjectDetails;
@@ -12,6 +18,7 @@ interface AppEditFileListProps {
   mainExecutable?: string;
   onSetMainExecutable?: (filePath: string) => void;
   onPreview?: (filePath: string) => void;
+  onPreviewArchive?: (file: MpkArchiveFile) => void;
   slug: string;
   keycloak: Keycloak;
   recentPaths?: ReadonlySet<string>;
@@ -29,10 +36,15 @@ const AppEditFileList: React.FC<AppEditFileListProps> = ({
   mainExecutable,
   onSetMainExecutable,
   onPreview,
+  onPreviewArchive,
   slug,
   keycloak,
   recentPaths,
 }) => {
+  const [expandedMpk, setExpandedMpk] = useState<string | null>(null);
+  const [selectedArchivePath, setSelectedArchivePath] = useState<string | null>(
+    null
+  );
   const files = useMemo(() => {
     const list = project?.version?.files ?? [];
     return [...list].sort(
@@ -56,21 +68,72 @@ const AppEditFileList: React.FC<AppEditFileListProps> = ({
       className="list-none text-sm space-y-1"
       data-testid="app-edit-file-list"
     >
-      {files.map((file) => (
-        <FileListItem
-          key={file.full_path}
-          file={file}
-          onDeleteFile={onDeleteFile}
-          onSetIcon={onSetIcon}
-          iconFilePath={iconFilePath}
-          mainExecutable={mainExecutable}
-          onSetMainExecutable={onSetMainExecutable}
-          onPreview={onPreview}
-          slug={slug}
-          keycloak={keycloak}
-          isRecent={recentPaths?.has(file.full_path) ?? false}
-        />
-      ))}
+      {files.map((file) => {
+        const isMpk = getPreviewType(file.mimetype, file.full_path) === "mpk";
+        const isExpanded = expandedMpk === file.full_path;
+        const loadArchive = async () => {
+          const client = await getFreshAuthorizedApiClient(keycloak);
+          const response = await client.getDraftFile({
+            params: { slug, filePath: file.full_path },
+          });
+          if (response.status !== 200 || !(response.body instanceof Blob)) {
+            throw new Error("MPK download did not return a file");
+          }
+          return response.body;
+        };
+
+        return (
+          <FileListItem
+            key={file.full_path}
+            file={file}
+            onDeleteFile={onDeleteFile}
+            onSetIcon={onSetIcon}
+            iconFilePath={iconFilePath}
+            mainExecutable={mainExecutable}
+            onSetMainExecutable={onSetMainExecutable}
+            onPreview={
+              onPreview
+                ? (filePath) => {
+                    setSelectedArchivePath(null);
+                    onPreview(filePath);
+                  }
+                : undefined
+            }
+            onToggleArchive={
+              isMpk
+                ? () => {
+                    setSelectedArchivePath(null);
+                    setExpandedMpk(isExpanded ? null : file.full_path);
+                  }
+                : undefined
+            }
+            archiveExpanded={isExpanded}
+            slug={slug}
+            keycloak={keycloak}
+            isRecent={recentPaths?.has(file.full_path) ?? false}
+          >
+            {isExpanded && (
+              <Suspense
+                fallback={
+                  <div role="status" aria-label="Loading archive explorer">
+                    <Spinner />
+                  </div>
+                }
+              >
+                <MpkExplorer
+                  filename={file.full_path}
+                  loadArchive={loadArchive}
+                  onSelect={(archiveFile) => {
+                    setSelectedArchivePath(archiveFile.path);
+                    onPreviewArchive?.(archiveFile);
+                  }}
+                  selectedPath={selectedArchivePath}
+                />
+              </Suspense>
+            )}
+          </FileListItem>
+        );
+      })}
     </ul>
   );
 };

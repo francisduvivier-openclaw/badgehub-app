@@ -8,6 +8,7 @@ export type PreviewType =
   | "audio"
   | "image"
   | "json"
+  | "mpk"
   | "python"
   | "text"
   | "unsupported";
@@ -16,6 +17,9 @@ export const getPreviewType = (
   mimetype: string,
   filename?: string
 ): PreviewType => {
+  if (filename?.toLowerCase().endsWith(".mpk")) {
+    return "mpk";
+  }
   if (mimetype.startsWith("image/")) {
     return "image";
   }

@@ -10,6 +10,7 @@ import type { VariantJSON } from "@shared/domain/readModels/project/VariantJSON.
 import { assertDefined } from "@shared/util/assertions.ts";
 import { AuthGate } from "@sharedComponents/keycloakSession/AuthGate.tsx";
 import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
+import type { MpkArchiveFile } from "@sharedComponents/MpkExplorer.tsx";
 import PageLayout from "@sharedComponents/PageLayout.tsx";
 import type React from "react";
 import { useState } from "react";
@@ -30,6 +31,8 @@ const AppEditPage: React.FC<{
   slug: string;
 }> = ({ slug }) => {
   const [previewedFile, setPreviewedFile] = useState<string | null>(null);
+  const [previewedArchiveFile, setPreviewedArchiveFile] =
+    useState<MpkArchiveFile | null>(null);
   const { user, keycloak, status } = useSession();
   const navigate = useNavigate();
   const { project, setProject, loading, error } = useDraftProject(
@@ -234,7 +237,13 @@ const AppEditPage: React.FC<{
   const onSetMainExecutable = (filePath: string) => setMainExecutable(filePath);
 
   const handlePreviewFile = (filePath: string) => {
+    setPreviewedArchiveFile(null);
     setPreviewedFile(filePath);
+  };
+
+  const handlePreviewArchive = (file: MpkArchiveFile) => {
+    setPreviewedFile(null);
+    setPreviewedArchiveFile(file);
   };
 
   return (
@@ -252,8 +261,10 @@ const AppEditPage: React.FC<{
               slug={slug}
               keycloak={keycloak}
               previewedFile={previewedFile}
+              previewedArchiveFile={previewedArchiveFile}
               mainExecutable={mainExecutable}
               onPreviewFile={handlePreviewFile}
+              onPreviewArchive={handlePreviewArchive}
               onSetIcon={handleSetIcon}
               onDeleteFile={handleDeleteFile}
               onSetMainExecutable={onSetMainExecutable}

@@ -1,6 +1,7 @@
 import AppCodePreview from "@pages/AppDetailPage/AppCodePreview.tsx";
 import type { ProjectEditFormData } from "@pages/AppEditPage/ProjectEditFormData.ts";
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
+import type { MpkArchiveFile } from "@sharedComponents/MpkExplorer.tsx";
 import type Keycloak from "keycloak-js";
 import type React from "react";
 import AppEditActions from "./AppEditActions.tsx";
@@ -17,8 +18,10 @@ const AppEditForm: React.FC<{
   slug: string;
   keycloak: Keycloak;
   previewedFile: string | null;
+  previewedArchiveFile: MpkArchiveFile | null;
   mainExecutable?: string;
   onPreviewFile: (filePath: string) => void;
+  onPreviewArchive: (file: MpkArchiveFile) => void;
   onSetIcon: (filePath: string) => void;
   onDeleteFile: (filePath: string) => void;
   onSetMainExecutable: (filePath: string) => void;
@@ -32,8 +35,10 @@ const AppEditForm: React.FC<{
   slug,
   keycloak,
   previewedFile,
+  previewedArchiveFile,
   mainExecutable,
   onPreviewFile,
+  onPreviewArchive,
   onSetIcon,
   onDeleteFile,
   onSetMainExecutable,
@@ -72,6 +77,7 @@ const AppEditForm: React.FC<{
             keycloak={keycloak}
             mainExecutable={mainExecutable}
             onPreviewFile={onPreviewFile}
+            onPreviewArchive={onPreviewArchive}
             onSetIcon={onSetIcon}
             onDeleteFile={onDeleteFile}
             onSetMainExecutable={onSetMainExecutable}
@@ -82,6 +88,7 @@ const AppEditForm: React.FC<{
             isDraft={true}
             keycloak={keycloak}
             previewedFile={previewedFile}
+            previewedArchiveFile={previewedArchiveFile}
             showFileList={false}
           />
         </form>
