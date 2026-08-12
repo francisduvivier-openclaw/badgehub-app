@@ -2711,6 +2711,53 @@ Warning: if it is present, then badgehub clients on badges will not update the a
         ],
       },
     },
+    "/api/v3/projects/{slug}/latest/files/metadata.json": {
+      "get": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "getLatestPublishedMetadataFile",
+        "parameters": [
+          {
+            "allowEmptyValue": undefined,
+            "allowReserved": undefined,
+            "explode": undefined,
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+            "style": undefined,
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppMetadataJSON",
+                },
+              },
+            },
+            "description": "OK",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http404Error",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Get the metadata for the latest published project revision",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
     "/api/v3/projects/{slug}/latest/files/{filePath}": {
       "get": {
         "deprecated": undefined,
@@ -2935,6 +2982,65 @@ Warning: if it is present, then badgehub clients on badges will not update the a
           },
         },
         "summary": "Get project details for a specific published revision of the project",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
+    "/api/v3/projects/{slug}/rev{revision}/files/metadata.json": {
+      "get": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "getMetadataFileForRevision",
+        "parameters": [
+          {
+            "allowEmptyValue": undefined,
+            "allowReserved": undefined,
+            "explode": undefined,
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+            "style": undefined,
+          },
+          {
+            "allowEmptyValue": undefined,
+            "allowReserved": undefined,
+            "explode": undefined,
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "type": "number",
+            },
+            "style": undefined,
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppMetadataJSON",
+                },
+              },
+            },
+            "description": "OK",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http404Error",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Get the metadata for a specific published project revision",
         "tags": [
           "Public",
         ],

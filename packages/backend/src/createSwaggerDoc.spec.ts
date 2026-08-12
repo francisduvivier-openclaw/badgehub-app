@@ -89,6 +89,20 @@ describe("createSwaggerDoc", () => {
     expect(listSchema).toEqual({
       $ref: "#/components/schemas/ProjectSummaries",
     });
+
+    for (const path of [
+      "/api/v3/projects/{slug}/latest/files/metadata.json",
+      "/api/v3/projects/{slug}/rev{revision}/files/metadata.json",
+    ]) {
+      const metadataSchema = (
+        swaggerDoc.paths?.[path]?.get?.responses?.["200"] as {
+          content?: { "application/json"?: { schema?: { $ref?: string } } };
+        }
+      )?.content?.["application/json"]?.schema;
+      expect(metadataSchema).toEqual({
+        $ref: "#/components/schemas/AppMetadataJSON",
+      });
+    }
   });
 
   it("deduplicates 4xx oRPC error bodies via Http*Error schema $refs", async () => {

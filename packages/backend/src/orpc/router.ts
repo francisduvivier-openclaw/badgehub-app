@@ -133,6 +133,15 @@ export function createApiRouter(
     }
   );
 
+  const getLatestPublishedMetadataFile =
+    publicOs.getLatestPublishedMetadataFile.handler(async ({ input }) => {
+      const details = await badgeHubData.getProject(input.slug, "latest");
+      if (!details) {
+        notFound(`No app with slug '${input.slug}' found`);
+      }
+      return { body: details.version.app_metadata };
+    });
+
   const getFileForRevision = publicOs.getFileForRevision.handler(
     async ({ input }) => {
       const [file, fileMetadata] = await Promise.all([
@@ -161,6 +170,20 @@ export function createApiRouter(
       };
     }
   );
+
+  const getMetadataFileForRevision =
+    publicOs.getMetadataFileForRevision.handler(async ({ input }) => {
+      const details = await badgeHubData.getProject(input.slug, input.revision);
+      if (!details) {
+        notFound(
+          `No app with slug '${input.slug}' and revision '${input.revision}' found`
+        );
+      }
+      return {
+        headers: { "cache-control": "public, max-age=31536000, immutable" },
+        body: details.version.app_metadata,
+      };
+    });
 
   const getCategories = publicOs.getCategories.handler(async () =>
     badgeHubData.getCategories()
@@ -450,7 +473,9 @@ export function createApiRouter(
       getProjectForRevision,
       getProjectVersions,
       getLatestPublishedFile,
+      getLatestPublishedMetadataFile,
       getFileForRevision,
+      getMetadataFileForRevision,
       getCategories,
       getBadges,
       ping,

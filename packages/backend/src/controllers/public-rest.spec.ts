@@ -718,7 +718,8 @@ describe("Public API Routes", {
         `/api/v3/projects/codecraft/${revision}/files/metadata.json`
       );
       expect(getRes.statusCode).toBe(200);
-      const metadata = JSON.parse(getRes.text) as AppMetadataJSON; // TODO, seems like we are returning the wrong content-type since we need to use .text here.
+      expect(getRes.headers["content-type"]).toMatch(/^application\/json/);
+      const metadata = getRes.body as AppMetadataJSON;
       expect(metadata.name).toEqual("CodeCraft");
     }
   );

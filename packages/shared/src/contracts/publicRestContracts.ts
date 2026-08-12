@@ -2,7 +2,10 @@ import { oc } from "@orpc/contract";
 import { errorResponseSchema } from "@shared/contracts/errorSchemas";
 import { badgeSlugSchema } from "@shared/domain/readModels/Badge";
 import { badgeHubStatsSchema } from "@shared/domain/readModels/BadgeHubStats";
-import { developmentStatusSchema } from "@shared/domain/readModels/project/AppMetadataJSON";
+import {
+  appMetadataJSONSchema,
+  developmentStatusSchema,
+} from "@shared/domain/readModels/project/AppMetadataJSON";
 import { categoryNameSchema } from "@shared/domain/readModels/project/Category";
 import type { OrderByOption } from "@shared/domain/readModels/project/ordering";
 import { detailedProjectSchema } from "@shared/domain/readModels/project/ProjectDetails";
@@ -163,6 +166,22 @@ export const publicRestContracts = {
     .input(z.object({ slug: z.string() }))
     .output(projectVersionsSchema),
 
+  getLatestPublishedMetadataFile: publicBase
+    .route({
+      method: "GET",
+      path: "/projects/{slug}/latest/files/metadata.json",
+      summary: "Get the metadata for the latest published project revision",
+      tags: ["Public"],
+      outputStructure: "detailed",
+    })
+    .input(z.object({ slug: z.string() }))
+    .output(
+      z.object({
+        headers: z.record(z.string(), z.string()).optional(),
+        body: appMetadataJSONSchema,
+      })
+    ),
+
   getLatestPublishedFile: publicBase
     .route({
       method: "GET",
@@ -176,6 +195,27 @@ export const publicRestContracts = {
       z.object({
         headers: z.record(z.string(), z.string()).optional(),
         body: z.unknown().describe("File content"),
+      })
+    ),
+
+  getMetadataFileForRevision: publicBase
+    .route({
+      method: "GET",
+      path: "/projects/{slug}/revisions/{revision}/files/metadata.json",
+      summary: "Get the metadata for a specific published project revision",
+      tags: ["Public"],
+      outputStructure: "detailed",
+    })
+    .input(
+      z.object({
+        slug: z.string(),
+        revision: z.coerce.number(),
+      })
+    )
+    .output(
+      z.object({
+        headers: z.record(z.string(), z.string()).optional(),
+        body: appMetadataJSONSchema,
       })
     ),
 
