@@ -1,3 +1,5 @@
+declare const process: { env: Record<string, string> };
+
 export type SharedConfig = {
   BADGE_SLUGS: [string, ...string[]];
   CATEGORY_NAMES: [string, ...string[]];
@@ -24,7 +26,6 @@ export function getAndAssertEnv(envVarName: string) {
 }
 
 function readBFFEnv(): SharedConfig {
-  declare const process: { env: Record<string, string> };
   const KEYCLOAK_BASE_URL = getAndAssertEnv("KEYCLOAK_BASE_URL");
   const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM ?? "master";
   return {
