@@ -1201,6 +1201,40 @@ Warning: if it is present, then badgehub clients on badges will not update the a
         ],
       },
     },
+    "/api/v3/metrics": {
+      "get": {
+        "deprecated": undefined,
+        "description": "Exposes the same hub stats as GET /stats in Prometheus text exposition format (version 0.0.4).",
+        "operationId": "getPrometheusStats",
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain; version=0.0.4; charset=utf-8": {
+                "schema": {
+                  "description": "Prometheus text exposition format (version 0.0.4) of the same hub stats as GET /stats.",
+                  "type": "string",
+                },
+              },
+            },
+            "description": "OK",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http404Error",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Prometheus-compatible stats",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
     "/api/v3/ping": {
       "get": {
         "deprecated": undefined,
@@ -4344,7 +4378,7 @@ Warning: if it is present, then badgehub clients on badges will not update the a
       "url": "/",
     },
     {
-      "url": "https://badgehub-api.p1m.nl/",
+      "url": "https://badgehub.eu/",
     },
     {
       "url": "http://localhost:8081/",

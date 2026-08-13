@@ -899,5 +899,26 @@ describe("Public API Routes", {
         ]
       `);
     });
+
+    test("GET /api/v3/metrics", async () => {
+      const [jsonRes, metricsRes] = await Promise.all([
+        request(app).get(`/api/v3/stats`),
+        request(app).get(`/api/v3/metrics`),
+      ]);
+      expect(metricsRes.statusCode).toBe(200);
+      expect(metricsRes.headers["content-type"]).toMatch(
+        /^text\/plain; version=0\.0\.4; charset=utf-8/
+      );
+
+      const stats: BadgeHubStats = jsonRes.body;
+      const text = metricsRes.text;
+      expect(text).toContain("# TYPE badgehub_projects gauge");
+      expect(text).toContain("# TYPE badgehub_installs counter");
+      expect(text).toContain(`badgehub_projects ${stats.projects}`);
+      expect(text).toContain(`badgehub_installs ${stats.installs}`);
+      expect(text).toContain(`badgehub_authors ${stats.authors}`);
+      expect(text).toContain(`badgehub_badges ${stats.badges}`);
+      expect(text.endsWith("\n")).toBe(true);
+    });
   });
 });

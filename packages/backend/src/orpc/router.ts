@@ -7,6 +7,10 @@ import {
   UserError,
 } from "@domain/UserError";
 import { implement } from "@orpc/server";
+import {
+  formatBadgeHubStatsAsPrometheus,
+  PROMETHEUS_CONTENT_TYPE,
+} from "@reporting/prometheus";
 import { privateRestContracts } from "@shared/contracts/privateRestContracts";
 import { publicRestContracts } from "@shared/contracts/publicRestContracts";
 import { getAllCategoryNames } from "@shared/domain/readModels/project/Category";
@@ -203,6 +207,21 @@ export function createApiRouter(
   const getStats = publicOs.getStats.handler(async () =>
     badgeHubData.getStats()
   );
+
+  const getPrometheusStats = publicOs.getPrometheusStats.handler(async () => {
+    const stats = await badgeHubData.getStats();
+    const body = formatBadgeHubStatsAsPrometheus(stats);
+    return {
+      headers: {
+        "content-type": PROMETHEUS_CONTENT_TYPE,
+      },
+      body: toFileBody(
+        Buffer.from(body, "utf8"),
+        "metrics.txt",
+        PROMETHEUS_CONTENT_TYPE
+      ),
+    };
+  });
 
   const reportInstall = publicOs.reportInstall.handler(async ({ input }) => {
     await badgeHubData.reportInstall(
@@ -480,6 +499,7 @@ export function createApiRouter(
       getBadges,
       ping,
       getStats,
+      getPrometheusStats,
       reportInstall,
       reportLaunch,
       reportCrash,

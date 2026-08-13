@@ -175,7 +175,7 @@ export async function createSwaggerDoc(): Promise<OpenAPI.Document> {
     },
     servers: [
       { url: "/" },
-      { url: "https://badgehub-api.p1m.nl/" },
+      { url: "https://badgehub.eu/" },
       { url: `http://localhost:${EXPRESS_PORT}/` },
     ],
     tags: [

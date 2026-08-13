@@ -1,4 +1,4 @@
-import { oc } from "@orpc/contract";
+import { type OpenAPI, oc } from "@orpc/contract";
 import { errorResponseSchema } from "@shared/contracts/errorSchemas";
 import { badgeSlugSchema } from "@shared/domain/readModels/Badge";
 import { badgeHubStatsSchema } from "@shared/domain/readModels/BadgeHubStats";
@@ -90,6 +90,38 @@ const publicBase = oc.errors({
     data: errorResponseSchema,
   },
 });
+
+export const PROMETHEUS_CONTENT_TYPE =
+  "text/plain; version=0.0.4; charset=utf-8";
+
+/**
+ * Advertise the Prometheus exposition format instead of application/json.
+ * The handler returns a File body so oRPC does not JSON-encode the text.
+ */
+const prometheusTextSpec = (
+  operation: OpenAPI.OperationObject
+): OpenAPI.OperationObject => {
+  const response = operation.responses?.["200"];
+  if (!response || "$ref" in response) return operation;
+  return {
+    ...operation,
+    responses: {
+      ...operation.responses,
+      "200": {
+        ...response,
+        content: {
+          [PROMETHEUS_CONTENT_TYPE]: {
+            schema: {
+              type: "string" as const,
+              description:
+                "Prometheus text exposition format (version 0.0.4) of the same hub stats as GET /stats.",
+            },
+          },
+        },
+      },
+    },
+  };
+};
 
 export const publicRestContracts = {
   getProject: publicBase
@@ -273,6 +305,24 @@ export const publicRestContracts = {
       tags: ["Public"],
     })
     .output(badgeHubStatsSchema),
+
+  getPrometheusStats: publicBase
+    .route({
+      method: "GET",
+      path: "/metrics",
+      summary: "Prometheus-compatible stats",
+      description:
+        "Exposes the same hub stats as GET /stats in Prometheus text exposition format (version 0.0.4).",
+      tags: ["Public"],
+      outputStructure: "detailed",
+      spec: prometheusTextSpec,
+    })
+    .output(
+      z.object({
+        headers: z.record(z.string(), z.string()).optional(),
+        body: z.unknown().describe("Prometheus text exposition format"),
+      })
+    ),
 
   reportInstall: publicBase
     .route({

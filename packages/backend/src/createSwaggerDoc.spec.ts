@@ -105,6 +105,23 @@ describe("createSwaggerDoc", () => {
     }
   });
 
+  it("documents Prometheus stats as text/plain exposition format", async () => {
+    const swaggerDoc = await createSwaggerDoc();
+    const getMetrics = swaggerDoc.paths?.["/api/v3/metrics"]?.get as
+      | OperationObject
+      | undefined;
+    expect(getMetrics).toBeDefined();
+    const metricsContent = (
+      getMetrics?.responses?.["200"] as {
+        content?: Record<string, { schema?: { type?: string } }>;
+      }
+    )?.content;
+    expect(
+      metricsContent?.["text/plain; version=0.0.4; charset=utf-8"]
+    ).toBeDefined();
+    expect(metricsContent?.["application/json"]).toBeUndefined();
+  });
+
   it("deduplicates 4xx oRPC error bodies via Http*Error schema $refs", async () => {
     const swaggerDoc = await createSwaggerDoc();
     const schemas = swaggerDoc.components?.schemas;
