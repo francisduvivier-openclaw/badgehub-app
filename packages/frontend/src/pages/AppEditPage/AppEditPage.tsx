@@ -13,10 +13,17 @@ import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx
 import type { MpkArchiveFile } from "@sharedComponents/MpkExplorer.tsx";
 import PageLayout from "@sharedComponents/PageLayout.tsx";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppEditForm from "./AppEditForm.tsx";
 import AppEditStateView from "./AppEditStateView.tsx";
+import {
+  PUBLISH_MIN_SPINNER_MS,
+  PUBLISH_SUCCESS_MESSAGE_MS,
+  publishedVersionMessage,
+  waitAtLeast,
+} from "./editPageFeedback.ts";
+import { useDraftMetadataAutosave } from "./useDraftMetadataAutosave.ts";
 
 function getAndEnsureApplication(newProjectData: ProjectDetails): VariantJSON {
   const application: VariantJSON =
@@ -40,6 +47,29 @@ const AppEditPage: React.FC<{
     keycloak,
     status
   );
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishedMessage, setPublishedMessage] = useState<string | null>(null);
+  const isPublishingRef = useRef(false);
+  const publishedMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const appMetadata = project?.version.app_metadata;
+  if (appMetadata) {
+    appMetadata.author ??= user?.name;
+  }
+  const { saveNow, isSaving, saveError } = useDraftMetadataAutosave({
+    slug,
+    appMetadata,
+    keycloak,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (publishedMessageTimerRef.current) {
+        clearTimeout(publishedMessageTimerRef.current);
+      }
+    };
+  }, []);
 
   const setAppMetadata = (
     appMetadataOrFn:
@@ -61,11 +91,6 @@ const AppEditPage: React.FC<{
       };
     });
   };
-  const appMetadata = project?.version.app_metadata;
-  if (appMetadata) {
-    appMetadata.author ??= user?.name;
-  }
-
   const handleFormChange = (changes: Partial<ProjectEditFormData>) => {
     setAppMetadata((prev) => ({ ...prev, ...changes }) as ProjectEditFormData);
   };
@@ -138,25 +163,40 @@ const AppEditPage: React.FC<{
       if (!prev) {
         return prev;
       }
-      const application = getAndEnsureApplication(prev);
-      application.executable = newMainExecutable;
-      return { ...prev };
+      const prevMetadata = prev.version.app_metadata;
+      const [firstApp = {}, ...restApps] = prevMetadata.application ?? [];
+      return {
+        ...prev,
+        version: {
+          ...prev.version,
+          app_metadata: {
+            ...prevMetadata,
+            application: [
+              { ...firstApp, executable: newMainExecutable },
+              ...restApps,
+            ],
+          },
+        },
+      };
     });
   };
   const handleSubmit = async (e: React.FormEvent) => {
     assertDefined(keycloak);
     e.preventDefault();
-    if (!appMetadata) return;
+    if (!appMetadata || isPublishingRef.current) return;
+
+    isPublishingRef.current = true;
+    setIsPublishing(true);
+    setPublishedMessage(null);
+    if (publishedMessageTimerRef.current) {
+      clearTimeout(publishedMessageTimerRef.current);
+      publishedMessageTimerRef.current = null;
+    }
+    const startedAt = Date.now();
 
     try {
-      const changeAppMetdataResult = await (
-        await getFreshAuthorizedApiClient(keycloak)
-      ).changeDraftAppMetadata({
-        params: { slug },
-        body: appMetadata,
-      });
-      if (changeAppMetdataResult.status !== 204) {
-        console.error("changeDraftAppMetadata failed", changeAppMetdataResult);
+      const saved = await saveNow({ force: true });
+      if (!saved) {
         window.alert("Save failed");
         return;
       }
@@ -167,10 +207,20 @@ const AppEditPage: React.FC<{
         body: undefined,
       });
       if (publishResult.status !== 204) {
-        console.error("publish failed", changeAppMetdataResult);
+        console.error("publish failed", publishResult);
         window.alert("Publish failed");
         return;
       }
+      await waitAtLeast(startedAt, PUBLISH_MIN_SPINNER_MS);
+      const message = publishedVersionMessage(
+        appMetadata.version,
+        project?.version.revision ?? 0
+      );
+      setPublishedMessage(message);
+      publishedMessageTimerRef.current = setTimeout(() => {
+        setPublishedMessage(null);
+        publishedMessageTimerRef.current = null;
+      }, PUBLISH_SUCCESS_MESSAGE_MS);
       if (project) {
         setProject({
           ...project,
@@ -180,7 +230,10 @@ const AppEditPage: React.FC<{
       }
     } catch (e) {
       console.error(e);
-      window.alert("Something went wrong during Save & Publish.");
+      window.alert("Something went wrong during publish.");
+    } finally {
+      isPublishingRef.current = false;
+      setIsPublishing(false);
     }
   };
 
@@ -271,7 +324,14 @@ const AppEditPage: React.FC<{
               onUploadSuccess={updateDraftFiles}
               onFormChange={handleFormChange}
               onSubmit={handleSubmit}
+              onFlushSave={() => {
+                void saveNow();
+              }}
               onDeleteApplication={handleDeleteApplication}
+              isPublishing={isPublishing}
+              publishedMessage={publishedMessage}
+              isSaving={isSaving}
+              saveError={saveError}
             />
           )}
         </AppEditStateView>

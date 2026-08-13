@@ -1,8 +1,13 @@
-import { render, screen } from "@__test__";
+import { render, screen, waitFor } from "@__test__";
 import { dummyApps } from "@__test__/fixtures";
 import { getFreshAuthorizedApiClient } from "@api/apiClient.ts";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppEditPage from "./AppEditPage.tsx";
+import {
+  PUBLISH_MIN_SPINNER_MS,
+  PUBLISH_SUCCESS_MESSAGE_MS,
+} from "./editPageFeedback.ts";
 
 vi.mock("@api/apiClient.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@api/apiClient.ts")>();
@@ -72,5 +77,132 @@ describe("AppEditPage", () => {
 
     expect(await screen.findByText(/app not found/i)).toBeInTheDocument();
     consoleErrorSpy.mockRestore();
+  });
+
+  it("saves draft metadata when a field loses focus", async () => {
+    const user = userEvent.setup();
+    const changeDraftAppMetadata = vi.fn().mockResolvedValue({
+      status: 204,
+      body: undefined,
+      headers: new Headers(),
+    });
+    vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
+      getDraftProject: vi.fn().mockResolvedValue({
+        status: 200,
+        body: dummyApps[0]?.details,
+      }),
+      changeDraftAppMetadata,
+    } as unknown as Awaited<ReturnType<typeof getFreshAuthorizedApiClient>>);
+
+    render(<AppEditPage slug="dummy-app-1" />);
+
+    const nameInput = await screen.findByLabelText(/app name/i);
+    await user.clear(nameInput);
+    await user.type(nameInput, "Renamed App");
+    await user.tab();
+
+    await waitFor(() => {
+      expect(changeDraftAppMetadata).toHaveBeenCalled();
+    });
+    expect(changeDraftAppMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        params: { slug: "dummy-app-1" },
+        body: expect.objectContaining({ name: "Renamed App" }),
+      })
+    );
+  });
+
+  it("saves first when publishing and shows version feedback", async () => {
+    const user = userEvent.setup();
+    const callOrder: string[] = [];
+    const details = dummyApps[0]?.details;
+    const projectWithVersion = {
+      ...details,
+      version: {
+        ...details?.version,
+        app_metadata: {
+          ...details?.version.app_metadata,
+          version: "1.2.3",
+        },
+      },
+    };
+    const changeDraftAppMetadata = vi.fn().mockImplementation(async () => {
+      callOrder.push("save");
+      return { status: 204, body: undefined, headers: new Headers() };
+    });
+    const publishVersion = vi.fn().mockImplementation(async () => {
+      callOrder.push("publish");
+      return { status: 204, body: undefined, headers: new Headers() };
+    });
+    vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
+      getDraftProject: vi.fn().mockResolvedValue({
+        status: 200,
+        body: projectWithVersion,
+      }),
+      changeDraftAppMetadata,
+      publishVersion,
+    } as unknown as Awaited<ReturnType<typeof getFreshAuthorizedApiClient>>);
+
+    render(<AppEditPage slug="dummy-app-1" />);
+
+    const nameInput = await screen.findByLabelText(/app name/i);
+    await user.type(nameInput, "!");
+
+    const publishButton = screen.getByRole("button", { name: /^publish$/i });
+    await user.click(publishButton);
+
+    expect(screen.getByTestId("publish-spinner")).toBeInTheDocument();
+    expect(publishButton).toBeDisabled();
+
+    expect(
+      await screen.findByText("Published version 1.2.3")
+    ).toBeInTheDocument();
+    expect(callOrder).toEqual(["save", "publish"]);
+    expect(screen.queryByTestId("publish-spinner")).not.toBeInTheDocument();
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("publish-success-message")).toHaveTextContent(
+          ""
+        );
+      },
+      { timeout: PUBLISH_MIN_SPINNER_MS + PUBLISH_SUCCESS_MESSAGE_MS + 500 }
+    );
+  });
+
+  it("forces a save before publishing when no field was manually edited", async () => {
+    const user = userEvent.setup();
+    const callOrder: string[] = [];
+    const detailsWithoutAuthor = structuredClone(dummyApps[0]!.details);
+    delete detailsWithoutAuthor.version.app_metadata.author;
+    const changeDraftAppMetadata = vi.fn().mockImplementation(async () => {
+      callOrder.push("save");
+      return { status: 204, body: undefined, headers: new Headers() };
+    });
+    const publishVersion = vi.fn().mockImplementation(async () => {
+      callOrder.push("publish");
+      return { status: 204, body: undefined, headers: new Headers() };
+    });
+    vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
+      getDraftProject: vi.fn().mockResolvedValue({
+        status: 200,
+        body: detailsWithoutAuthor,
+      }),
+      changeDraftAppMetadata,
+      publishVersion,
+    } as unknown as Awaited<ReturnType<typeof getFreshAuthorizedApiClient>>);
+
+    render(<AppEditPage slug="dummy-app-1" />);
+
+    await user.click(await screen.findByRole("button", { name: /^publish$/i }));
+
+    await waitFor(() => expect(publishVersion).toHaveBeenCalledTimes(1));
+    expect(callOrder).toEqual(["save", "publish"]);
+    expect(changeDraftAppMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { slug: "dummy-app-1" },
+        body: expect.objectContaining({ author: "Test User" }),
+      })
+    );
   });
 });

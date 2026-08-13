@@ -28,7 +28,12 @@ const AppEditForm: React.FC<{
   onUploadSuccess: (result: UploadSuccessResult) => void;
   onFormChange: (changes: Partial<ProjectEditFormData>) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onFlushSave: () => void;
   onDeleteApplication: () => void;
+  isPublishing: boolean;
+  publishedMessage: string | null;
+  isSaving: boolean;
+  saveError: string | null;
 }> = ({
   project,
   appMetadata,
@@ -45,16 +50,33 @@ const AppEditForm: React.FC<{
   onUploadSuccess,
   onFormChange,
   onSubmit,
+  onFlushSave,
   onDeleteApplication,
+  isPublishing,
+  publishedMessage,
+  isSaving,
+  saveError,
 }) => {
   return (
     <>
       <AppEditBreadcrumb project={project} />
-      <h1 className="text-3xl font-bold mb-6">
-        Editing {project.slug}/rev{project.version.revision}
-      </h1>
+      <div className="flex flex-wrap items-baseline gap-3 mb-6">
+        <h1 className="text-3xl font-bold">
+          Editing {project.slug}/rev{project.version.revision}
+        </h1>
+        {isSaving && !isPublishing && (
+          <span className="text-sm opacity-60" aria-live="polite">
+            Saving draft…
+          </span>
+        )}
+        {saveError && (
+          <span className="text-sm text-error" role="alert">
+            {saveError}
+          </span>
+        )}
+      </div>
       <div className="space-y-8">
-        <form className="space-y-8" onSubmit={onSubmit}>
+        <form className="space-y-8" onSubmit={onSubmit} onBlur={onFlushSave}>
           <AppEditActions
             onClickDeleteApplication={onDeleteApplication}
             workInProgress={
@@ -67,6 +89,8 @@ const AppEditForm: React.FC<{
                   : "stable",
               })
             }
+            isPublishing={isPublishing}
+            publishedMessage={publishedMessage}
           />
           <AppEditBasicInfo form={appMetadata} onChange={onFormChange} />
           <AppEditCategorization form={appMetadata} onChange={onFormChange} />
