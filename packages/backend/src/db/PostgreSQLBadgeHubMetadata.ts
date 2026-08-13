@@ -223,9 +223,18 @@ export class PostgreSQLBadgeHubMetadata {
   }
 
   async getStats(): Promise<BadgeHubStats> {
-    const projectInstallsP = this.pool.query(
-      sql`select COUNT(*)
-          from project_install_reports`
+    const eventStatsP = this.pool.query(
+      sql`SELECT COALESCE(SUM(r.install_count), 0) AS installs,
+                 COALESCE(SUM(r.launch_count), 0)  AS launches,
+                 COALESCE(SUM(r.crash_count), 0)   AS crashes,
+                 COUNT(DISTINCT v.project_slug)
+                   FILTER (WHERE r.install_count > 0) AS installed_projects,
+                 COUNT(DISTINCT v.project_slug)
+                   FILTER (WHERE r.launch_count > 0)  AS launched_projects,
+                 COUNT(DISTINCT v.project_slug)
+                   FILTER (WHERE r.crash_count > 0)   AS crashed_projects
+          FROM registered_badges_version_reports r
+                   JOIN versions v ON v.id = r.version_id`
     );
     const projectsP = this.pool.query(
       sql`SELECT COUNT(*)
@@ -242,22 +251,22 @@ export class PostgreSQLBadgeHubMetadata {
           FROM registered_badges`
     );
 
-    const [projectInstalls, projects, projectAuthors, badges] =
-      await Promise.all([
-        projectInstallsP,
-        projectsP,
-        projectAuthorsP,
-        badgesP,
-      ]);
+    const [eventStats, projects, projectAuthors, badges] = await Promise.all([
+      eventStatsP,
+      projectsP,
+      projectAuthorsP,
+      badgesP,
+    ]);
+    const reports = eventStats.rows[0];
 
     return {
-      crashed_projects: 0,
-      crashes: 0,
-      installed_projects: 0,
-      launched_projects: 0,
-      launches: 0,
+      crashed_projects: Number(reports.crashed_projects),
+      crashes: Number(reports.crashes),
+      installed_projects: Number(reports.installed_projects),
+      launched_projects: Number(reports.launched_projects),
+      launches: Number(reports.launches),
       projects: Number(projects.rows[0].count),
-      installs: Number(projectInstalls.rows[0].count),
+      installs: Number(reports.installs),
       authors: Number(projectAuthors.rows[0].count),
       badges: Number(badges.rows[0].count),
     };

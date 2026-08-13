@@ -900,6 +900,39 @@ describe("Public API Routes", {
       `);
     });
 
+    test("GET /api/v3/stats reflects install, launch, and crash reports", async () => {
+      const projectSlug = "electraplay";
+      const baselineRes = await request(app).get("/api/v3/stats");
+      expect(baselineRes.statusCode).toBe(200);
+      const baseline = baselineRes.body as BadgeHubStats;
+      const badgeId = `stats-test-${randomUUID()}`;
+
+      const installRes = await request(app)
+        .post(`/api/v3/projects/${projectSlug}/rev1/report/install`)
+        .query({ id: badgeId });
+      const launchRes = await request(app)
+        .post(`/api/v3/projects/${projectSlug}/rev1/report/launch`)
+        .query({ id: badgeId });
+      const crashRes = await request(app)
+        .post(`/api/v3/projects/${projectSlug}/rev1/report/crash`)
+        .query({ id: badgeId })
+        .send({ reason: "Stats test" });
+      expect(installRes.statusCode).toBe(204);
+      expect(launchRes.statusCode).toBe(204);
+      expect(crashRes.statusCode).toBe(204);
+
+      const updatedRes = await request(app).get("/api/v3/stats");
+      expect(updatedRes.statusCode).toBe(200);
+      const updated = updatedRes.body as BadgeHubStats;
+
+      expect(updated.installs).toBeGreaterThanOrEqual(baseline.installs + 1);
+      expect(updated.launches).toBeGreaterThanOrEqual(baseline.launches + 1);
+      expect(updated.crashes).toBeGreaterThanOrEqual(baseline.crashes + 1);
+      expect(updated.installed_projects).toBeGreaterThan(0);
+      expect(updated.launched_projects).toBeGreaterThan(0);
+      expect(updated.crashed_projects).toBeGreaterThan(0);
+    });
+
     test("GET /api/v3/metrics", async () => {
       const [jsonRes, metricsRes] = await Promise.all([
         request(app).get(`/api/v3/stats`),

@@ -312,7 +312,8 @@ export class BadgeHubData {
   }
 
   async refreshReports(): Promise<void> {
-    return await this.badgeHubMetadata.refreshReports();
+    await this.badgeHubMetadata.refreshReports();
+    this.statsCache.delete("stats");
   }
 
   async getStats(): Promise<BadgeHubStats> {
@@ -574,6 +575,7 @@ export class BadgeHubData {
         badge.id,
         "install_count"
       );
+      this.statsCache.delete("stats");
     }
   }
 
@@ -590,6 +592,7 @@ export class BadgeHubData {
         badge.id,
         "launch_count"
       );
+      this.statsCache.delete("stats");
     }
   }
 
@@ -607,6 +610,7 @@ export class BadgeHubData {
         badge.id,
         "crash_count"
       );
+      this.statsCache.delete("stats");
     }
   }
 
