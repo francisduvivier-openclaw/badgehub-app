@@ -921,6 +921,11 @@ describe("Public API Routes", {
       expect(launchRes.statusCode).toBe(204);
       expect(crashRes.statusCode).toBe(204);
 
+      const cachedRes = await request(app).get("/api/v3/stats");
+      expect(cachedRes.statusCode).toBe(200);
+      expect(cachedRes.body).toStrictEqual(baseline);
+
+      await new Promise((resolve) => setTimeout(resolve, 1_100));
       const updatedRes = await request(app).get("/api/v3/stats");
       expect(updatedRes.statusCode).toBe(200);
       const updated = updatedRes.body as BadgeHubStats;

@@ -120,6 +120,7 @@ export class BadgeHubData {
   >;
 
   private statsCache: LRUCache<string, BadgeHubStats, void>;
+  private statsCacheInvalidationTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private badgeHubMetadata: PostgreSQLBadgeHubMetadata,
@@ -313,7 +314,26 @@ export class BadgeHubData {
 
   async refreshReports(): Promise<void> {
     await this.badgeHubMetadata.refreshReports();
+    this.invalidateStatsCache();
+  }
+
+  private invalidateStatsCache(): void {
+    if (this.statsCacheInvalidationTimer) {
+      clearTimeout(this.statsCacheInvalidationTimer);
+      this.statsCacheInvalidationTimer = undefined;
+    }
     this.statsCache.delete("stats");
+  }
+
+  private debounceStatsCacheInvalidation(): void {
+    if (this.statsCacheInvalidationTimer) {
+      clearTimeout(this.statsCacheInvalidationTimer);
+    }
+    this.statsCacheInvalidationTimer = setTimeout(() => {
+      this.statsCache.delete("stats");
+      this.statsCacheInvalidationTimer = undefined;
+    }, 1_000);
+    this.statsCacheInvalidationTimer.unref();
   }
 
   async getStats(): Promise<BadgeHubStats> {
@@ -575,7 +595,7 @@ export class BadgeHubData {
         badge.id,
         "install_count"
       );
-      this.statsCache.delete("stats");
+      this.debounceStatsCacheInvalidation();
     }
   }
 
@@ -592,7 +612,7 @@ export class BadgeHubData {
         badge.id,
         "launch_count"
       );
-      this.statsCache.delete("stats");
+      this.debounceStatsCacheInvalidation();
     }
   }
 
@@ -610,7 +630,7 @@ export class BadgeHubData {
         badge.id,
         "crash_count"
       );
-      this.statsCache.delete("stats");
+      this.debounceStatsCacheInvalidation();
     }
   }
 
