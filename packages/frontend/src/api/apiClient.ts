@@ -58,6 +58,26 @@ function flattenArgs(args?: CallArgs): unknown {
   return { ...params, ...query, ...(body !== undefined ? { body } : {}) };
 }
 
+function usesDetailedInput(contract: unknown): boolean {
+  if (!contract || typeof contract !== "object" || !("~orpc" in contract)) {
+    return false;
+  }
+  const definition = (
+    contract as {
+      "~orpc"?: { route?: { inputStructure?: unknown } };
+    }
+  )["~orpc"];
+  return definition?.route?.inputStructure === "detailed";
+}
+
+function detailedArgs(args?: CallArgs): unknown {
+  return {
+    params: args?.params,
+    query: args?.query,
+    body: args?.body,
+  };
+}
+
 function isOrpcError(
   error: unknown
 ): error is { status: number; message: string; data?: { reason?: string } } {
@@ -146,13 +166,16 @@ function wrapClient(client: OrpcClient): ApiClient {
       return async (args?: CallArgs): Promise<ApiResult> => {
         try {
           const requestHeaders = args?.headers;
+          const contract = apiContracts[prop as keyof typeof apiContracts];
           const output = await (
             value as (
               input: unknown,
               options?: { context?: ApiClientContext }
             ) => Promise<unknown>
           )(
-            flattenArgs(args),
+            usesDetailedInput(contract)
+              ? detailedArgs(args)
+              : flattenArgs(args),
             requestHeaders
               ? { context: { headers: requestHeaders } }
               : undefined

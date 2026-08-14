@@ -149,4 +149,36 @@ describe("AppInstallButton", () => {
       location: "/apps/be.example.app",
     });
   });
+
+  it("keeps the installation success message when reporting fails", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    installMpkWebSerial.mockResolvedValue({
+      installed: true,
+      overwritten: false,
+      appId: "be.example.app",
+      location: "/apps/be.example.app",
+    });
+    const reportInstall = vi.fn().mockResolvedValue({ status: 500 });
+    const apiClient = { reportInstall } as unknown as ApiClient;
+    const user = userEvent.setup();
+
+    render(
+      <AppInstallButton
+        apiClient={apiClient}
+        mpkUrl="https://example.com/app.mpk"
+        revision={3}
+        slug="example-app"
+      />
+    );
+    await user.click(screen.getByRole("button", { name: "Install on badge" }));
+
+    expect(await screen.findByText("Installed be.example.app.")).toBeVisible();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to report app installation",
+      expect.any(Error)
+    );
+    consoleErrorSpy.mockRestore();
+  });
 });

@@ -129,3 +129,25 @@ describe("API client thenable / createProject", () => {
     expect(await (result.body as Blob).text()).toBe(fileText);
   });
 });
+
+describe("API client reports", () => {
+  it("sends install report path and query parameters", async () => {
+    const fetchMock = jsonFetchMock(undefined, 204);
+    const client = createApiClientForTests({
+      url: "http://api.test/api/v3",
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    const result = await client.reportInstall({
+      params: { slug: "example-app", revision: 3 },
+      query: { id: "web-installer-123" },
+    });
+
+    expect(result.status).toBe(204);
+    const request = requestFromFetchCall(fetchMock.mock.calls[0] ?? []);
+    expect(request.method).toBe("POST");
+    expect(request.url).toBe(
+      "http://api.test/api/v3/projects/example-app/revisions/3/report/install?id=web-installer-123"
+    );
+  });
+});

@@ -129,10 +129,6 @@ const AppInstallButton: React.FC<{
         }
       } catch (reportError) {
         console.error("Failed to report app installation", reportError);
-        setMessage({
-          kind: "success",
-          text: `Installed ${result.appId}, but BadgeHub could not record the installation.`,
-        });
       }
     } catch (error) {
       const text =
