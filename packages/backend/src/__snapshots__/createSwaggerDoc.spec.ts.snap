@@ -665,6 +665,41 @@ exports[`createSwaggerDoc > swagger doc should match snapshot 1`] = `
           },
         ],
       },
+      "Http500Error": {
+        "oneOf": [
+          {
+            "properties": {
+              "code": {
+                "const": "INTERNAL_SERVER_ERROR",
+              },
+              "data": {
+                "$ref": "#/components/schemas/ErrorResponse",
+              },
+              "defined": {
+                "const": true,
+              },
+              "message": {
+                "default": "Internal Server Error",
+                "type": "string",
+              },
+              "status": {
+                "const": 500,
+              },
+            },
+            "required": [
+              "defined",
+              "code",
+              "status",
+              "message",
+              "data",
+            ],
+            "type": "object",
+          },
+          {
+            "$ref": "#/components/schemas/UndefinedError",
+          },
+        ],
+      },
       "IconMap": {
         "description": "Icon Map of the project that maps from accepted sizes to a file path. Icon format is quite strict because BadgeHub is the first user of these icons.
     Badge implementations can use these icons but they are not required to. For example if a badge's launcher an icon as an icon.py file, this file can still just be uploaded and the path could be indicated as custom property in the variant json.".",
@@ -1201,6 +1236,52 @@ Warning: if it is present, then badgehub clients on badges will not update the a
         ],
       },
     },
+    "/api/v3/health": {
+      "get": {
+        "deprecated": undefined,
+        "description": "Liveness probe that also checks the database. Does not register badges.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Health status",
+                  "examples": undefined,
+                  "title": undefined,
+                  "type": "string",
+                },
+              },
+            },
+            "description": "OK",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http404Error",
+                },
+              },
+            },
+            "description": "404",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http500Error",
+                },
+              },
+            },
+            "description": "500",
+          },
+        },
+        "summary": "Health check",
+        "tags": [
+          "Public",
+        ],
+      },
+    },
     "/api/v3/metrics": {
       "get": {
         "deprecated": undefined,
@@ -1237,9 +1318,9 @@ Warning: if it is present, then badgehub clients on badges will not update the a
     },
     "/api/v3/ping": {
       "get": {
-        "deprecated": undefined,
-        "description": undefined,
-        "operationId": "ping",
+        "deprecated": true,
+        "description": "Deprecated. Use POST /ping instead.",
+        "operationId": "getPing",
         "parameters": [
           {
             "allowEmptyValue": true,
@@ -1297,7 +1378,51 @@ Warning: if it is present, then badgehub clients on badges will not update the a
             "description": "404",
           },
         },
-        "summary": undefined,
+        "summary": "Ping the server and optionally register a badge",
+        "tags": [
+          "Public",
+        ],
+      },
+      "post": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "ping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BadgeIdentifiers",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Ping the server to check if it's alive",
+                  "examples": undefined,
+                  "title": undefined,
+                  "type": "string",
+                },
+              },
+            },
+            "description": "OK",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http404Error",
+                },
+              },
+            },
+            "description": "404",
+          },
+        },
+        "summary": "Ping the server and optionally register a badge",
         "tags": [
           "Public",
         ],

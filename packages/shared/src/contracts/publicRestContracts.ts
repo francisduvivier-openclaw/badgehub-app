@@ -289,10 +289,40 @@ export const publicRestContracts = {
     })
     .output(badgeSlugsSchema),
 
-  ping: publicBase
+  getHealth: publicBase
+    .errors({
+      INTERNAL_SERVER_ERROR: {
+        status: 500,
+        data: errorResponseSchema,
+      },
+    })
+    .route({
+      method: "GET",
+      path: "/health",
+      summary: "Health check",
+      description:
+        "Liveness probe that also checks the database. Does not register badges.",
+      tags: ["Public"],
+    })
+    .output(z.string().describe("Health status")),
+
+  getPing: publicBase
     .route({
       method: "GET",
       path: "/ping",
+      summary: "Ping the server and optionally register a badge",
+      description: "Deprecated. Use POST /ping instead.",
+      tags: ["Public"],
+      deprecated: true,
+    })
+    .input(badgeIdentifiersSchema)
+    .output(z.string().describe("Ping the server to check if it's alive")),
+
+  ping: publicBase
+    .route({
+      method: "POST",
+      path: "/ping",
+      summary: "Ping the server and optionally register a badge",
       tags: ["Public"],
     })
     .input(badgeIdentifiersSchema)

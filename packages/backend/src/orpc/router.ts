@@ -19,7 +19,13 @@ import { detectMimeType } from "@util/mimeTypeDetection";
 import { parseAuth, requireAuth } from "./auth";
 import { assertProjectAccess, assertUserAccess } from "./authorization";
 import type { AppContext } from "./context";
-import { badRequest, conflict, forbidden, notFound } from "./errors";
+import {
+  badRequest,
+  conflict,
+  forbidden,
+  internalServerError,
+  notFound,
+} from "./errors";
 import { fileResponseHeaders, toFileBody } from "./fileResponse";
 
 const publicOs = implement(publicRestContracts).$context<AppContext>();
@@ -197,12 +203,27 @@ export function createApiRouter(
     badgeHubData.getBadges()
   );
 
-  const ping = publicOs.ping.handler(async ({ input }) => {
+  const handlePing = async (input: { id?: string; mac?: string }) => {
     if (input.id) {
       await badgeHubData.registerBadge(input.id, input.mac);
     }
     return "pong";
+  };
+
+  const getHealth = publicOs.getHealth.handler(async () => {
+    try {
+      await badgeHubData.checkDatabase();
+    } catch {
+      internalServerError("Database is unavailable");
+    }
+    return "ok";
   });
+
+  const getPing = publicOs.getPing.handler(async ({ input }) =>
+    handlePing(input)
+  );
+
+  const ping = publicOs.ping.handler(async ({ input }) => handlePing(input));
 
   const getStats = publicOs.getStats.handler(async () =>
     badgeHubData.getStats()
@@ -497,6 +518,8 @@ export function createApiRouter(
       getMetadataFileForRevision,
       getCategories,
       getBadges,
+      getHealth,
+      getPing,
       ping,
       getStats,
       getPrometheusStats,

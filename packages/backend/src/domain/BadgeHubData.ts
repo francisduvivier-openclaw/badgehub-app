@@ -578,6 +578,10 @@ export class BadgeHubData {
     await this.badgeHubMetadata.deleteDraftFile(slug, filePath);
   }
 
+  async checkDatabase(): Promise<void> {
+    await this.badgeHubMetadata.checkDatabase();
+  }
+
   async registerBadge(flashId: string, mac: string | undefined) {
     await this.badgeHubMetadata.registerBadge(flashId, mac);
   }

@@ -105,6 +105,29 @@ describe("createSwaggerDoc", () => {
     }
   });
 
+  it("documents GET /health, POST /ping, and deprecated GET /ping", async () => {
+    const swaggerDoc = await createSwaggerDoc();
+
+    const getHealth = swaggerDoc.paths?.["/api/v3/health"]?.get as
+      | OperationObject
+      | undefined;
+    expect(getHealth).toBeDefined();
+    expect(getHealth?.deprecated).toBeFalsy();
+    expect(getHealth?.responses?.["500"]).toBeDefined();
+
+    const postPing = swaggerDoc.paths?.["/api/v3/ping"]?.post as
+      | OperationObject
+      | undefined;
+    expect(postPing).toBeDefined();
+    expect(postPing?.deprecated).toBeFalsy();
+
+    const getPing = swaggerDoc.paths?.["/api/v3/ping"]?.get as
+      | OperationObject
+      | undefined;
+    expect(getPing).toBeDefined();
+    expect(getPing?.deprecated).toBe(true);
+  });
+
   it("documents Prometheus stats as text/plain exposition format", async () => {
     const swaggerDoc = await createSwaggerDoc();
     const getMetrics = swaggerDoc.paths?.["/api/v3/metrics"]?.get as

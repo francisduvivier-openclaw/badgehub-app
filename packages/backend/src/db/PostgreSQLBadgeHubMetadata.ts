@@ -648,6 +648,10 @@ and coalesce(v.app_metadata->>'development_status', 'stable') =
     );
   }
 
+  async checkDatabase(): Promise<void> {
+    await this.pool.query(sql`select 1`);
+  }
+
   async registerBadge(id: string, mac: string | undefined) {
     return this.pool.query(
       sql`insert into registered_badges (id, mac)

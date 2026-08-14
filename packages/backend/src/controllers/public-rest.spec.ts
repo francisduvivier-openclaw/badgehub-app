@@ -11,7 +11,7 @@ import type { ProjectSummary } from "@shared/domain/readModels/project/ProjectSu
 import { isInDebugMode } from "@util/debug";
 import type express from "express";
 import request from "supertest";
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 function expectRatingsAggregate(
   ratings: ProjectDetails["ratings"] | ProjectSummary["ratings"]
@@ -773,6 +773,31 @@ describe("Public API Routes", {
     }
   );
 
+  describe("health should return ok", () => {
+    test("GET /api/v3/health", async () => {
+      const getRes = await request(app).get("/api/v3/health");
+      expect(getRes.statusCode).toBe(200);
+      expect(getRes.text).toBe('"ok"');
+    });
+
+    test("GET /api/v3/health returns 500 when the database is unavailable", async () => {
+      const checkSpy = vi
+        .spyOn(BadgeHubData.prototype, "checkDatabase")
+        .mockRejectedValue(new Error("connection refused"));
+      try {
+        const getRes = await request(app).get("/api/v3/health");
+        expect(getRes.statusCode).toBe(500);
+        expect(getRes.body).toMatchObject({
+          defined: true,
+          code: "INTERNAL_SERVER_ERROR",
+          data: { reason: "Database is unavailable" },
+        });
+      } finally {
+        checkSpy.mockRestore();
+      }
+    });
+  });
+
   describe("ping should return pong", () => {
     test.each([
       { id: "testid", mac: "testmac" },
@@ -790,6 +815,18 @@ describe("Public API Routes", {
       const getRes = await request(app).get(url);
       expect(getRes.statusCode).toBe(200);
       expect(getRes.text).toBe('"pong"');
+    });
+
+    test.each([
+      { id: "testid", mac: "testmac" },
+      { id: "testid", mac: "" },
+      { id: "testid2", mac: undefined },
+    ])("POST /api/v3/ping id=$id, mac=$mac", async ({ id, mac }) => {
+      const postRes = await request(app)
+        .post("/api/v3/ping")
+        .send({ id, ...(mac !== undefined ? { mac } : {}) });
+      expect(postRes.statusCode).toBe(200);
+      expect(postRes.text).toBe('"pong"');
     });
   });
 

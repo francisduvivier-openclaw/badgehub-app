@@ -31,3 +31,11 @@ export function badRequest(reason: string): never {
     data: { reason },
   });
 }
+
+export function internalServerError(reason: string): never {
+  throw new ORPCError("INTERNAL_SERVER_ERROR", {
+    status: 500,
+    message: reason,
+    data: { reason },
+  });
+}
