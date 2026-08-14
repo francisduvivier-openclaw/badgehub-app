@@ -2,6 +2,10 @@ import type { ApiClient } from "@api/apiClient.ts";
 import { getDevelopmentStatus } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import GitLink from "@sharedComponents/GitLink.tsx";
+import { EditIcon } from "@sharedComponents/icons/EditIcon.tsx";
+import { useSession } from "@sharedComponents/keycloakSession/SessionContext.tsx";
+import { MLink } from "@sharedComponents/MLink.tsx";
+import { canEditProject } from "@utils/canEditProject.ts";
 import type React from "react";
 import AppInstallButton from "./AppInstallButton.tsx";
 
@@ -9,10 +13,12 @@ const AppDetailHeader: React.FC<{
   apiClient: ApiClient;
   project: ProjectDetails;
 }> = ({ apiClient, project }) => {
+  const { user } = useSession();
   const appMetadata = project.version.app_metadata;
   const mpkFile = project.version.files.find((file) =>
     file.full_path.toLowerCase().endsWith(".mpk")
   );
+  const showEdit = canEditProject(user, project.idp_user_id);
   return (
     <section className="card bg-base-200 shadow-lg">
       <div className="card-body p-6">
@@ -38,6 +44,16 @@ const AppDetailHeader: React.FC<{
             </p>
           </div>
           <div className="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-wrap items-start gap-3">
+            {showEdit && (
+              <MLink
+                to={`/page/project/${project.slug}/edit`}
+                className="btn btn-primary"
+                data-testid="app-detail-edit-button"
+              >
+                <EditIcon className="h-4 w-4" />
+                Edit
+              </MLink>
+            )}
             {mpkFile && (
               <AppInstallButton
                 apiClient={apiClient}

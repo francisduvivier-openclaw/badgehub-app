@@ -4,6 +4,7 @@ import {
   KEYCLOAK_CLIENT_ID,
   KEYCLOAK_REALM,
 } from "@config.ts";
+import { rolesFromJwtPayload } from "@shared/domain/readModels/project/rolesFromJwt.ts";
 import {
   SessionContext,
   type SessionStatus,
@@ -20,6 +21,7 @@ function userFromToken(kc: Keycloak): User | undefined {
     name: kc.tokenParsed.name || kc.tokenParsed.preferred_username || "User",
     email: kc.tokenParsed.email || "",
     id: kc.tokenParsed.sub || "",
+    roles: rolesFromJwtPayload(kc.tokenParsed, KEYCLOAK_CLIENT_ID),
   };
 }
 

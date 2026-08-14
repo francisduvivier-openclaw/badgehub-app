@@ -15,6 +15,7 @@ const TestSessionProvider: React.FC<{ children: React.ReactNode }> = ({
       name: "Test User",
       email: "",
       id: "test-user-id",
+      roles: [],
       token: "test-token",
     },
     keycloak: {

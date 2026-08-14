@@ -4,6 +4,7 @@ import type {
   ProjectDetails,
   ProjectSlug,
 } from "@shared/domain/readModels/project/ProjectDetails";
+import { isAdminUser } from "@shared/domain/readModels/project/User";
 import type { AuthContext } from "./context";
 import { forbidden, notFound } from "./errors";
 
@@ -32,7 +33,10 @@ export async function assertProjectAccess(
     forbidden("No authentication provided");
   }
 
-  if (auth.user.idp_user_id !== resolved.idp_user_id) {
+  if (
+    !isAdminUser(auth.user) &&
+    auth.user.idp_user_id !== resolved.idp_user_id
+  ) {
     forbidden(
       `The user in the JWT token is not authorized for project with slug '${slug}'`
     );

@@ -46,7 +46,7 @@ describe("AuthGate", () => {
       <SessionContext
         value={{
           status: "authenticated",
-          user: { id: "u1", name: "Ada", email: "ada@example.com" },
+          user: { id: "u1", name: "Ada", email: "ada@example.com", roles: [] },
           keycloak: { authenticated: true } as Keycloak,
         }}
       >

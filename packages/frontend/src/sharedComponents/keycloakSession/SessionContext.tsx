@@ -1,3 +1,4 @@
+import type { Role } from "@shared/domain/readModels/project/User.ts";
 import type Keycloak from "keycloak-js";
 import React, { use } from "react";
 
@@ -5,6 +6,7 @@ export interface User {
   name: string;
   email: string;
   id: string;
+  roles: Role[];
 }
 
 /** Session lifecycle for distinguishing SSO check vs logged-out. */

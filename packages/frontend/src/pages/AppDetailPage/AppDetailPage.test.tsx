@@ -274,6 +274,98 @@ describe("AppDetailPage", { timeout: 1000_000 }, () => {
     ).not.toBeInTheDocument();
   });
 
+  it("does not show an edit button when the logged-in user cannot edit the app", async () => {
+    render(
+      <AppDetailPage
+        apiClient={apiClientWithApps(dummyApps)}
+        slug="dummy-app-1"
+      />
+    );
+
+    await screen.findByTestId("app-detail-page");
+
+    expect(
+      screen.queryByTestId("app-detail-edit-button")
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not show an edit button when logged out", async () => {
+    renderWithoutProviders(
+      <MemoryRouter>
+        <SessionContext value={{ status: "anonymous" }}>
+          <AppDetailPage
+            apiClient={apiClientWithApps(dummyApps)}
+            slug="dummy-app-1"
+          />
+        </SessionContext>
+      </MemoryRouter>
+    );
+
+    await screen.findByTestId("app-detail-page");
+
+    expect(
+      screen.queryByTestId("app-detail-edit-button")
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an edit button for the project owner", async () => {
+    renderWithoutProviders(
+      <MemoryRouter>
+        <SessionContext
+          value={{
+            status: "authenticated",
+            user: {
+              id: "dummy-user-id",
+              name: "Owner",
+              email: "",
+              roles: [],
+            },
+          }}
+        >
+          <AppDetailPage
+            apiClient={apiClientWithApps(dummyApps)}
+            slug="dummy-app-1"
+          />
+        </SessionContext>
+      </MemoryRouter>
+    );
+
+    const editButton = await screen.findByTestId("app-detail-edit-button");
+    expect(editButton).toHaveAttribute(
+      "href",
+      "/page/project/dummy-app-1/edit"
+    );
+  });
+
+  it("shows an edit button for an admin on an app they do not own", async () => {
+    renderWithoutProviders(
+      <MemoryRouter>
+        <SessionContext
+          value={{
+            status: "authenticated",
+            user: {
+              id: "admin-id",
+              name: "Admin",
+              email: "",
+              roles: ["admin"],
+            },
+          }}
+        >
+          <AppDetailPage
+            apiClient={apiClientWithApps(dummyApps)}
+            slug="dummy-app-1"
+          />
+        </SessionContext>
+      </MemoryRouter>
+    );
+
+    const editButton = await screen.findByTestId("app-detail-edit-button");
+    expect(editButton).toHaveAttribute(
+      "href",
+      "/page/project/dummy-app-1/edit"
+    );
+  });
+
   it("does not re-fetch the project in a render loop", async () => {
     const base = apiClientWithApps(dummyApps);
     const getProject = vi.fn(base.getProject);

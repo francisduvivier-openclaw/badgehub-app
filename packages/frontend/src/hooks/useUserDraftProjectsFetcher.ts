@@ -23,6 +23,8 @@ export const useUserDraftProjectsFetcher = ({
       throw new Error("Authentication required");
     }
 
+    // My Projects is always the signed-in user's own drafts.
+    // Admins can edit any app, but that does not expand this list.
     const result = await apiClient
       ?.getUserDraftProjects({
         params: {
