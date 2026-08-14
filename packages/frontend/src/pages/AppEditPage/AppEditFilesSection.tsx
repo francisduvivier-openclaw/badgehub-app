@@ -1,6 +1,7 @@
 import type { ProjectEditFormData } from "@pages/AppEditPage/ProjectEditFormData.ts";
 import type { ProjectDetails } from "@shared/domain/readModels/project/ProjectDetails.ts";
 import type { MpkArchiveFile } from "@sharedComponents/MpkExplorer.tsx";
+import { shouldWarnMposNeedsMpk } from "@utils/mposMpkWarning.ts";
 import type Keycloak from "keycloak-js";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -68,10 +69,34 @@ const AppEditFilesSection: React.FC<{
     [onUploadSuccess]
   );
 
+  const showMposMpkWarning = shouldWarnMposNeedsMpk({
+    badges: appMetadata.badges,
+    filePaths: project.version.files.map((file) => file.full_path),
+  });
+
   return (
     <section className="card bg-base-200 shadow-lg text-left">
       <div className="card-body gap-4">
         <h2 className="card-title text-2xl">Project files</h2>
+        {showMposMpkWarning && (
+          <div className="alert alert-warning items-start" role="alert">
+            <div>
+              <p>
+                MicroPythonOS apps must include an MPK file. Upload the exported{" "}
+                <code>.mpk</code> package instead of individual application
+                files.
+              </p>
+              <a
+                className="link"
+                href="https://docs.micropythonos.com/apps/badgehub/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Learn more about publishing MicroPythonOS apps on BadgeHub
+              </a>
+            </div>
+          </div>
+        )}
         <AppEditFileUpload
           slug={slug}
           keycloak={keycloak}
