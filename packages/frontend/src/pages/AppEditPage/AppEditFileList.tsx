@@ -121,6 +121,7 @@ const AppEditFileList: React.FC<AppEditFileListProps> = ({
                 }
               >
                 <MpkExplorer
+                  expectedAppSlug={slug}
                   filename={file.full_path}
                   loadArchive={loadArchive}
                   onSelect={(archiveFile) => {

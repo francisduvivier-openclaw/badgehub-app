@@ -180,4 +180,48 @@ describe("AppEditFileList", () => {
       expect.objectContaining({ path: "src/generated/main.py" })
     );
   });
+
+  it("shows MPK identity warnings when an archive is expanded", async () => {
+    const user = userEvent.setup();
+    const details = dummyApps[0]?.details;
+    expect(details).toBeDefined();
+    if (!details) throw new Error("Expected dummy project details");
+
+    const archive = zipSync({
+      "wrong-directory/MANIFEST.JSON": strToU8(
+        JSON.stringify({ fullname: "com.example.other" })
+      ),
+    });
+    vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
+      getDraftFile: vi.fn().mockResolvedValue({
+        status: 200,
+        body: new Blob([archive.buffer as ArrayBuffer]),
+      }),
+    } as unknown as Awaited<ReturnType<typeof getFreshAuthorizedApiClient>>);
+    const project = withFiles(details, [
+      {
+        full_path: "sample.mpk",
+        updated_at: "2024-01-01T00:00:00.000Z",
+      },
+    ]);
+
+    render(
+      <AppEditFileList project={project} slug="demo" keycloak={keycloak} />
+    );
+
+    await user.click(screen.getByText("sample.mpk"));
+
+    const warning = await screen.findByRole("alert");
+    expect(warning).toHaveTextContent(
+      'MANIFEST fullname "com.example.other" does not match BadgeHub app identifier "demo".'
+    );
+    expect(warning).toHaveTextContent(
+      'MPK directory "wrong-directory" does not match MANIFEST fullname "com.example.other".'
+    );
+    expect(
+      screen.getByRole("link", {
+        name: /learn more about publishing micropythonos apps on badgehub/i,
+      })
+    ).toHaveAttribute("href", "https://docs.micropythonos.com/apps/badgehub/");
+  });
 });

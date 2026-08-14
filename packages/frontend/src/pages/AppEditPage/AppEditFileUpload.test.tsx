@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@__test__";
 import { getAuthorizationHeader, getFreshToken } from "@api/apiClient.ts";
 import { uploadDraftFile } from "@api/uploadDraftFile.ts";
 import userEvent from "@testing-library/user-event";
+import { strToU8, zipSync } from "fflate";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppEditFileUpload from "./AppEditFileUpload.tsx";
 
@@ -54,6 +55,49 @@ function dropFiles(target: Element, files: File[]) {
 }
 
 describe("AppEditFileUpload", () => {
+  it("warns about MPK identity mismatches without blocking the upload", async () => {
+    const user = userEvent.setup();
+    const onUploadSuccess = vi.fn();
+    vi.mocked(uploadDraftFile).mockResolvedValue({
+      status: 204,
+      body: undefined,
+      headers: new Headers(),
+    });
+    const archive = zipSync({
+      "wrong-directory/MANIFEST.JSON": strToU8(
+        JSON.stringify({ fullname: "com.example.other" })
+      ),
+    });
+
+    render(
+      <AppEditFileUpload
+        slug="demo"
+        keycloak={keycloak}
+        onUploadSuccess={onUploadSuccess}
+      />
+    );
+
+    const file = new File(
+      [archive.buffer as ArrayBuffer],
+      "com.example.other.mpk"
+    );
+    await user.upload(screen.getByTestId("app-edit-file-upload-input"), file);
+
+    expect(await screen.findByTestId("mpk-upload-warning")).toHaveTextContent(
+      'MANIFEST fullname "com.example.other" does not match BadgeHub app identifier "demo".'
+    );
+    expect(screen.getByTestId("mpk-upload-warning")).toHaveTextContent(
+      'MPK directory "wrong-directory" does not match MANIFEST fullname "com.example.other".'
+    );
+    expect(
+      screen.getByRole("link", {
+        name: /learn more about publishing micropythonos apps on badgehub/i,
+      })
+    ).toHaveAttribute("href", "https://docs.micropythonos.com/apps/badgehub/");
+    expect(uploadDraftFile).toHaveBeenCalledTimes(1);
+    expect(onUploadSuccess).toHaveBeenCalled();
+  });
+
   it("uploads files and reports success with file names", async () => {
     const user = userEvent.setup();
     const onUploadSuccess = vi.fn();

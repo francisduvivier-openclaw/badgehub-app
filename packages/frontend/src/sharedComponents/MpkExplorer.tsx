@@ -1,5 +1,9 @@
 import Spinner from "@sharedComponents/Spinner.tsx";
 import {
+  inspectMpkIdentity,
+  type MpkIdentityInspection,
+} from "@utils/mpkIdentity.ts";
+import {
   BlobReader,
   BlobWriter,
   type FileEntry,
@@ -171,12 +175,14 @@ const ArchiveNodes: React.FC<{
 
 const ArchiveContents: React.FC<{
   blob: Blob;
+  expectedAppSlug?: string;
   filename: string;
   onSelect: (file: MpkArchiveFile) => void;
   selectedPath: string | null;
-}> = ({ blob, filename, onSelect, selectedPath }) => {
+}> = ({ blob, expectedAppSlug, filename, onSelect, selectedPath }) => {
   const [entries, setEntries] = useState<FileEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [identity, setIdentity] = useState<MpkIdentityInspection | null>(null);
   const [collapsedFolders, setCollapsedFolders] = useState<ReadonlySet<string>>(
     () => new Set()
   );
@@ -186,6 +192,13 @@ const ArchiveContents: React.FC<{
     const reader = new ZipReader(new BlobReader(blob));
     setEntries(null);
     setError(null);
+    setIdentity(null);
+
+    if (expectedAppSlug) {
+      void inspectMpkIdentity(blob, expectedAppSlug).then((inspection) => {
+        if (active) setIdentity(inspection);
+      });
+    }
 
     void reader
       .getEntries()
@@ -206,7 +219,7 @@ const ArchiveContents: React.FC<{
       active = false;
       void reader.close();
     };
-  }, [blob]);
+  }, [blob, expectedAppSlug]);
 
   const nodes = useMemo(() => (entries ? buildTree(entries) : []), [entries]);
   const handleToggleFolder = (path: string) => {
@@ -234,6 +247,29 @@ const ArchiveContents: React.FC<{
       className="ml-8 border-l border-base-300 pl-3"
       data-testid="mpk-explorer"
     >
+      {identity && (identity.error || identity.warnings.length > 0) && (
+        <div className="alert alert-warning mb-3 text-sm" role="alert">
+          <div>
+            <p className="font-semibold">MicroPythonOS package warning</p>
+            {identity.error && <p>{identity.error}</p>}
+            {identity.warnings.length > 0 && (
+              <ul className="list-disc pl-5">
+                {identity.warnings.map((warning) => (
+                  <li key={warning.code}>{warning.message}</li>
+                ))}
+              </ul>
+            )}
+            <a
+              className="link"
+              href="https://docs.micropythonos.com/apps/badgehub/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Learn more about publishing MicroPythonOS apps on BadgeHub
+            </a>
+          </div>
+        </div>
+      )}
       {nodes.length > 0 ? (
         <ArchiveNodes
           collapsedFolders={collapsedFolders}
@@ -250,11 +286,12 @@ const ArchiveContents: React.FC<{
 };
 
 const MpkExplorer: React.FC<{
+  expectedAppSlug?: string;
   filename: string;
   loadArchive: () => Promise<Blob>;
   onSelect: (file: MpkArchiveFile) => void;
   selectedPath: string | null;
-}> = ({ filename, loadArchive, onSelect, selectedPath }) => {
+}> = ({ expectedAppSlug, filename, loadArchive, onSelect, selectedPath }) => {
   const loadArchiveRef = useRef(loadArchive);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -288,6 +325,7 @@ const MpkExplorer: React.FC<{
   return (
     <ArchiveContents
       blob={blob as Blob}
+      expectedAppSlug={expectedAppSlug}
       filename={filename}
       onSelect={onSelect}
       selectedPath={selectedPath}

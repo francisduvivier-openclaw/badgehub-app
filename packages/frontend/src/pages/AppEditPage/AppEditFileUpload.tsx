@@ -3,6 +3,7 @@ import { uploadDraftFile } from "@api/uploadDraftFile.ts";
 import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@config.ts";
 import { assertDefined } from "@shared/util/assertions.ts";
 import { isExecutableFileName } from "@utils/fileUtils.ts";
+import { inspectMpkIdentity } from "@utils/mpkIdentity.ts";
 import type Keycloak from "keycloak-js";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
@@ -38,6 +39,8 @@ type FileUploadItem = {
   name: string;
   status: FileUploadItemStatus;
   errorMessage?: string;
+  inspectionError?: string;
+  warningMessages?: string[];
 };
 
 type UploadProgressState = {
@@ -145,6 +148,16 @@ const AppEditFileUpload: React.FC<{
               throw new Error(
                 `File too large (max ${MAX_UPLOAD_FILE_SIZE_MB} MB)`
               );
+            }
+
+            if (file.name.toLowerCase().endsWith(".mpk")) {
+              const inspection = await inspectMpkIdentity(file, slug);
+              updateItem(itemId, {
+                inspectionError: inspection.error,
+                warningMessages: inspection.warnings.map(
+                  (warning) => warning.message
+                ),
+              });
             }
 
             const { authorization } = await getAuthorizationHeader(keycloak);
@@ -295,7 +308,11 @@ const AppEditFileUpload: React.FC<{
 
   const currentUploading = items.find((item) => item.status === "uploading");
   const hasErrors = items.some((item) => item.status === "error");
-  const showItemList = items.length > 1 || uploading || hasErrors;
+  const hasInspectionFeedback = items.some(
+    (item) => item.inspectionError || item.warningMessages?.length
+  );
+  const showItemList =
+    items.length > 1 || uploading || hasErrors || hasInspectionFeedback;
   const percent =
     progress.total > 0
       ? Math.min(100, Math.round((progress.loaded / progress.total) * 100))
@@ -388,30 +405,56 @@ const AppEditFileUpload: React.FC<{
               data-testid="app-edit-file-upload-items"
             >
               {items.map((item) => (
-                <li key={item.id} className="flex items-center gap-2 font-mono">
-                  <span aria-hidden="true" className="w-4 shrink-0 text-center">
-                    {item.status === "success" && "✓"}
-                    {item.status === "uploading" && "↑"}
-                    {item.status === "pending" && "○"}
-                    {item.status === "error" && "✕"}
-                  </span>
-                  <span
-                    className={
-                      item.status === "error"
-                        ? "text-error"
-                        : item.status === "success"
-                          ? "opacity-80"
-                          : item.status === "uploading"
-                            ? "text-primary"
-                            : "opacity-50"
-                    }
-                  >
-                    {item.name}
-                    {item.status === "uploading" && " — Uploading…"}
-                    {item.status === "error" &&
-                      item.errorMessage &&
-                      ` — ${item.errorMessage}`}
-                  </span>
+                <li key={item.id} className="font-mono">
+                  <div className="flex items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="w-4 shrink-0 text-center"
+                    >
+                      {item.status === "success" && "✓"}
+                      {item.status === "uploading" && "↑"}
+                      {item.status === "pending" && "○"}
+                      {item.status === "error" && "✕"}
+                    </span>
+                    <span
+                      className={
+                        item.status === "error"
+                          ? "text-error"
+                          : item.status === "success"
+                            ? "opacity-80"
+                            : item.status === "uploading"
+                              ? "text-primary"
+                              : "opacity-50"
+                      }
+                    >
+                      {item.name}
+                      {item.status === "uploading" && " — Uploading…"}
+                      {item.status === "error" &&
+                        item.errorMessage &&
+                        ` — ${item.errorMessage}`}
+                    </span>
+                  </div>
+                  {(item.inspectionError || item.warningMessages?.length) && (
+                    <div
+                      className="ml-6 mt-1 text-warning"
+                      role="alert"
+                      data-testid="mpk-upload-warning"
+                    >
+                      {item.inspectionError && <p>{item.inspectionError}</p>}
+                      {item.warningMessages?.map((message) => (
+                        <p key={message}>{message}</p>
+                      ))}
+                      <a
+                        className="link"
+                        href="https://docs.micropythonos.com/apps/badgehub/"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Learn more about publishing MicroPythonOS apps on
+                        BadgeHub
+                      </a>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
