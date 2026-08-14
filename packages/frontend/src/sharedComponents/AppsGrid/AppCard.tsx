@@ -105,130 +105,129 @@ const AppCard: React.FC<
   return (
     <div
       data-testid="AppCard"
-      className="card bg-base-200 shadow-lg overflow-hidden card-hover-effect flex flex-col h-60"
+      className="card bg-base-200 shadow-lg overflow-hidden card-hover-effect h-60 relative"
     >
-      <div className="card-body p-5 flex flex-col flex-grow">
-        {/* Header with icon, title, and Git link */}
-        <div className="flex items-center mb-3">
-          <div className="w-10 h-10 rounded-lg bg-base-300 flex items-center justify-center mr-4 flex-shrink-0 overflow-hidden">
-            {isLoadingIcon || !authenticatedIconSrc ? (
-              <div className="skeleton w-8 h-8 rounded"></div>
-            ) : (
-              <img
-                src={authenticatedIconSrc}
-                alt={name || "App icon"}
-                className="w-8 h-8 object-contain"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.src = ERROR_ICON_URL;
-                }}
-              />
-            )}
-          </div>
-          <div className="flex-grow flex items-center justify-between min-w-0">
-            <MLink
-              to={
-                editable
-                  ? `/page/project/${slug}/edit`
-                  : `/page/project/${slug}`
-              }
-              className="min-w-0"
-            >
-              <h3 className="text-xl font-semibold text-primary hover:text-primary/80 transition-colors truncate">
+      <MLink
+        to={editable ? `/page/project/${slug}/edit` : `/page/project/${slug}`}
+        aria-label={`Open ${name}`}
+        className="group flex h-full flex-col rounded-box focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+      >
+        <div className="card-body p-5 flex flex-col flex-grow">
+          {/* Header with icon and title */}
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 rounded-lg bg-base-300 flex items-center justify-center mr-4 flex-shrink-0 overflow-hidden">
+              {isLoadingIcon || !authenticatedIconSrc ? (
+                <div className="skeleton w-8 h-8 rounded"></div>
+              ) : (
+                <img
+                  src={authenticatedIconSrc}
+                  alt={name || "App icon"}
+                  className="w-8 h-8 object-contain"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = ERROR_ICON_URL;
+                  }}
+                />
+              )}
+            </div>
+            <div className="min-w-0 flex-grow pr-8">
+              <h3 className="text-xl font-semibold text-primary group-hover:text-primary/80 transition-colors truncate">
                 {name}
               </h3>
-            </MLink>
-            <GitLink url={git_url} />
+            </div>
+          </div>
+
+          {/* Description with line clamp */}
+          <p className="text-sm opacity-70 leading-relaxed line-clamp-2">
+            {description}
+          </p>
+
+          {/* Tags section pushed to bottom */}
+          <div className="mt-auto mb-3">
+            {(() => {
+              const MAX_VISIBLE_TAGS = 3;
+              const allTags = [
+                ...(development_status === "work_in_progress"
+                  ? [
+                      {
+                        text: "WIP",
+                        type: "status",
+                        id: "status-wip",
+                      },
+                    ]
+                  : []),
+                ...(categories?.map((cat, index) => ({
+                  text: cat,
+                  type: "category",
+                  id: `category-${index}`,
+                })) ?? []),
+                ...(badges?.map((badge, index) => ({
+                  text: badge,
+                  type: "badge",
+                  id: `badge-${index}`,
+                })) ?? []),
+              ];
+              const visibleTags = allTags.slice(0, MAX_VISIBLE_TAGS);
+              const hiddenCount = allTags.length - MAX_VISIBLE_TAGS;
+
+              return (
+                <>
+                  {visibleTags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className={`${
+                        tag.type === "category"
+                          ? "badge badge-neutral"
+                          : tag.type === "status"
+                            ? "badge badge-warning"
+                            : "badge badge-success"
+                      } text-xs font-semibold mr-2`}
+                    >
+                      {tag.text}
+                    </span>
+                  ))}
+                  {hiddenCount > 0 && (
+                    <span
+                      className="text-xs opacity-50 font-medium cursor-help"
+                      title={allTags
+                        .slice(MAX_VISIBLE_TAGS)
+                        .map((tag) => tag.text)
+                        .join(", ")}
+                    >
+                      +{hiddenCount} more
+                    </span>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
 
-        {/* Description with line clamp */}
-        <p className="text-sm opacity-70 leading-relaxed line-clamp-2">
-          {description}
-        </p>
-
-        {/* Tags section pushed to bottom */}
-        <div className="mt-auto mb-3">
-          {(() => {
-            const MAX_VISIBLE_TAGS = 3;
-            const allTags = [
-              ...(development_status === "work_in_progress"
-                ? [
-                    {
-                      text: "WIP",
-                      type: "status",
-                      id: "status-wip",
-                    },
-                  ]
-                : []),
-              ...(categories?.map((cat, index) => ({
-                text: cat,
-                type: "category",
-                id: `category-${index}`,
-              })) ?? []),
-              ...(badges?.map((badge, index) => ({
-                text: badge,
-                type: "badge",
-                id: `badge-${index}`,
-              })) ?? []),
-            ];
-            const visibleTags = allTags.slice(0, MAX_VISIBLE_TAGS);
-            const hiddenCount = allTags.length - MAX_VISIBLE_TAGS;
-
-            return (
-              <>
-                {visibleTags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className={`${
-                      tag.type === "category"
-                        ? "badge badge-neutral"
-                        : tag.type === "status"
-                          ? "badge badge-warning"
-                          : "badge badge-success"
-                    } text-xs font-semibold mr-2`}
-                  >
-                    {tag.text}
-                  </span>
-                ))}
-                {hiddenCount > 0 && (
-                  <span
-                    className="text-xs opacity-50 font-medium cursor-help"
-                    title={allTags
-                      .slice(MAX_VISIBLE_TAGS)
-                      .map((tag) => tag.text)
-                      .join(", ")}
-                  >
-                    +{hiddenCount} more
-                  </span>
-                )}
-              </>
-            );
-          })()}
+        {/* Footer with stats */}
+        <div className="px-5 py-3 bg-base-300 border-t border-base-300 flex justify-between items-center gap-3">
+          <p className="text-sm opacity-70">Revision: {revision ?? "-"}</p>
+          <p className="text-sm opacity-70">
+            Published:{" "}
+            {published_at ? new Date(published_at).toLocaleDateString() : "-"}
+          </p>
+          {ratings && (
+            <p className="text-sm opacity-70 flex items-center">
+              <RatingIcon />
+              <span className="ml-1">
+                {ratings.average.toFixed(1)} ({ratings.count})
+              </span>
+            </p>
+          )}
+          {installs !== undefined && (
+            <p className="text-sm opacity-70 flex items-center">
+              <DownloadIcon />
+              <span className="ml-1">{installs}</span>
+            </p>
+          )}
         </div>
-      </div>
-
-      {/* Footer with stats */}
-      <div className="px-5 py-3 bg-base-300 border-t border-base-300 flex justify-between items-center gap-3">
-        <p className="text-sm opacity-70">Revision: {revision ?? "-"}</p>
-        <p className="text-sm opacity-70">
-          Published:{" "}
-          {published_at ? new Date(published_at).toLocaleDateString() : "-"}
-        </p>
-        {ratings && (
-          <p className="text-sm opacity-70 flex items-center">
-            <RatingIcon />
-            <span className="ml-1">
-              {ratings.average.toFixed(1)} ({ratings.count})
-            </span>
-          </p>
-        )}
-        {installs !== undefined && (
-          <p className="text-sm opacity-70 flex items-center">
-            <DownloadIcon />
-            <span className="ml-1">{installs}</span>
-          </p>
-        )}
+      </MLink>
+      <div className="absolute right-5 top-7 z-10">
+        <GitLink url={git_url} />
       </div>
     </div>
   );

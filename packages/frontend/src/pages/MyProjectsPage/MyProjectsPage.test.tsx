@@ -16,6 +16,9 @@ describe("MyProjectsPage", () => {
       const appCardElements = screen.getAllByTestId("AppCard");
       expect(appCardElements.length).toBeGreaterThan(0);
     });
+    expect(
+      screen.getByRole("link", { name: "Open Dummy App 1" })
+    ).toHaveAttribute("href", "/page/project/dummy-app-1/edit");
     expect(screen.getByTestId("app-cards-container")).toBeInTheDocument();
   });
 

@@ -31,6 +31,9 @@ describe("HomePage", () => {
       expect(appCardElements.length).toBeGreaterThan(0);
     });
     expect(
+      screen.getByRole("link", { name: "Open Dummy App 1" })
+    ).toHaveAttribute("href", "/page/project/dummy-app-1");
+    expect(
       screen.getByTestId("Header/Link/BrowseProjects")
     ).toBeInTheDocument();
     expect(
