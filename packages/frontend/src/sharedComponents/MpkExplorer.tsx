@@ -176,10 +176,18 @@ const ArchiveNodes: React.FC<{
 const ArchiveContents: React.FC<{
   blob: Blob;
   expectedAppSlug?: string;
+  expectedAppVersion?: string;
   filename: string;
   onSelect: (file: MpkArchiveFile) => void;
   selectedPath: string | null;
-}> = ({ blob, expectedAppSlug, filename, onSelect, selectedPath }) => {
+}> = ({
+  blob,
+  expectedAppSlug,
+  expectedAppVersion,
+  filename,
+  onSelect,
+  selectedPath,
+}) => {
   const [entries, setEntries] = useState<FileEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [identity, setIdentity] = useState<MpkIdentityInspection | null>(null);
@@ -195,9 +203,11 @@ const ArchiveContents: React.FC<{
     setIdentity(null);
 
     if (expectedAppSlug) {
-      void inspectMpkIdentity(blob, expectedAppSlug).then((inspection) => {
-        if (active) setIdentity(inspection);
-      });
+      void inspectMpkIdentity(blob, expectedAppSlug, expectedAppVersion).then(
+        (inspection) => {
+          if (active) setIdentity(inspection);
+        }
+      );
     }
 
     void reader
@@ -219,7 +229,7 @@ const ArchiveContents: React.FC<{
       active = false;
       void reader.close();
     };
-  }, [blob, expectedAppSlug]);
+  }, [blob, expectedAppSlug, expectedAppVersion]);
 
   const nodes = useMemo(() => (entries ? buildTree(entries) : []), [entries]);
   const handleToggleFolder = (path: string) => {
@@ -287,11 +297,19 @@ const ArchiveContents: React.FC<{
 
 const MpkExplorer: React.FC<{
   expectedAppSlug?: string;
+  expectedAppVersion?: string;
   filename: string;
   loadArchive: () => Promise<Blob>;
   onSelect: (file: MpkArchiveFile) => void;
   selectedPath: string | null;
-}> = ({ expectedAppSlug, filename, loadArchive, onSelect, selectedPath }) => {
+}> = ({
+  expectedAppSlug,
+  expectedAppVersion,
+  filename,
+  loadArchive,
+  onSelect,
+  selectedPath,
+}) => {
   const loadArchiveRef = useRef(loadArchive);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -326,6 +344,7 @@ const MpkExplorer: React.FC<{
     <ArchiveContents
       blob={blob as Blob}
       expectedAppSlug={expectedAppSlug}
+      expectedAppVersion={expectedAppVersion}
       filename={filename}
       onSelect={onSelect}
       selectedPath={selectedPath}

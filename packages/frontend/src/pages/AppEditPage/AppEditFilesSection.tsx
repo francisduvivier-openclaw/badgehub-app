@@ -99,6 +99,7 @@ const AppEditFilesSection: React.FC<{
         )}
         <AppEditFileUpload
           slug={slug}
+          expectedAppVersion={appMetadata.version}
           keycloak={keycloak}
           onUploadSuccess={handleUploadSuccess}
         />

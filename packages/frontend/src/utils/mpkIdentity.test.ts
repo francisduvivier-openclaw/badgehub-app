@@ -7,8 +7,8 @@ const mpk = (entries: Record<string, Uint8Array>) => {
   return new Blob([archive.buffer as ArrayBuffer]);
 };
 
-const manifest = (fullname: string) =>
-  strToU8(JSON.stringify({ fullname, name: "Demo" }));
+const manifest = (fullname: string, version = "1.0.0") =>
+  strToU8(JSON.stringify({ fullname, name: "Demo", version }));
 
 describe("inspectMpkIdentity", () => {
   it("accepts matching slug, fullname and directory", async () => {
@@ -51,6 +51,36 @@ describe("inspectMpkIdentity", () => {
     expect(result.warnings.map(({ code }) => code)).toEqual([
       "directory_fullname_mismatch",
     ]);
+  });
+
+  it("warns when the manifest version differs from the BadgeHub version", async () => {
+    const result = await inspectMpkIdentity(
+      mpk({
+        "com.example.demo/MANIFEST.JSON": manifest("com.example.demo", "1.2.3"),
+      }),
+      "com.example.demo",
+      "2.0.0"
+    );
+
+    expect(result.warnings).toEqual([
+      {
+        code: "version_mismatch",
+        message:
+          'MANIFEST version "1.2.3" does not match BadgeHub version "2.0.0".',
+      },
+    ]);
+  });
+
+  it("accepts a manifest version matching the BadgeHub version", async () => {
+    const result = await inspectMpkIdentity(
+      mpk({
+        "com.example.demo/MANIFEST.JSON": manifest("com.example.demo", "1.2.3"),
+      }),
+      "com.example.demo",
+      "1.2.3"
+    );
+
+    expect(result.warnings).toEqual([]);
   });
 
   it("reports an unreadable manifest separately from identity warnings", async () => {

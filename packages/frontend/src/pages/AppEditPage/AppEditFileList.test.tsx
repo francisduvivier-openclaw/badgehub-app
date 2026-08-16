@@ -189,7 +189,7 @@ describe("AppEditFileList", () => {
 
     const archive = zipSync({
       "wrong-directory/MANIFEST.JSON": strToU8(
-        JSON.stringify({ fullname: "com.example.other" })
+        JSON.stringify({ fullname: "com.example.other", version: "1.0.0" })
       ),
     });
     vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
@@ -198,12 +198,24 @@ describe("AppEditFileList", () => {
         body: new Blob([archive.buffer as ArrayBuffer]),
       }),
     } as unknown as Awaited<ReturnType<typeof getFreshAuthorizedApiClient>>);
-    const project = withFiles(details, [
+    const project = withFiles(
       {
-        full_path: "sample.mpk",
-        updated_at: "2024-01-01T00:00:00.000Z",
+        ...details,
+        version: {
+          ...details.version,
+          app_metadata: {
+            ...details.version.app_metadata,
+            version: "2.0.0",
+          },
+        },
       },
-    ]);
+      [
+        {
+          full_path: "sample.mpk",
+          updated_at: "2024-01-01T00:00:00.000Z",
+        },
+      ]
+    );
 
     render(
       <AppEditFileList project={project} slug="demo" keycloak={keycloak} />
@@ -217,6 +229,9 @@ describe("AppEditFileList", () => {
     );
     expect(warning).toHaveTextContent(
       'MPK directory "wrong-directory" does not match MANIFEST fullname "com.example.other".'
+    );
+    expect(warning).toHaveTextContent(
+      'MANIFEST version "1.0.0" does not match BadgeHub version "2.0.0".'
     );
     expect(
       screen.getByRole("link", {

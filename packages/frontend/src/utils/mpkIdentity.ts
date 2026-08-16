@@ -8,7 +8,10 @@ import {
 const MAX_MANIFEST_SIZE_BYTES = 1024 * 1024;
 
 export type MpkIdentityWarning = {
-  code: "directory_fullname_mismatch" | "fullname_slug_mismatch";
+  code:
+    | "directory_fullname_mismatch"
+    | "fullname_slug_mismatch"
+    | "version_mismatch";
   message: string;
 };
 
@@ -31,7 +34,8 @@ const isIgnoredArchivePath = (path: string) => {
 
 export async function inspectMpkIdentity(
   blob: Blob,
-  appSlug: string
+  appSlug: string,
+  appVersion?: string
 ): Promise<MpkIdentityInspection> {
   const reader = new ZipReader(new BlobReader(blob));
 
@@ -96,7 +100,8 @@ export async function inspectMpkIdentity(
       };
     }
 
-    const fullnameValue = (parsed as Record<string, unknown>).fullname;
+    const manifestData = parsed as Record<string, unknown>;
+    const fullnameValue = manifestData.fullname;
     if (typeof fullnameValue !== "string" || !fullnameValue.trim()) {
       return {
         directory,
@@ -118,6 +123,22 @@ export async function inspectMpkIdentity(
         code: "directory_fullname_mismatch",
         message: `MPK directory "${directory}" does not match MANIFEST fullname "${fullname}".`,
       });
+    }
+    const expectedVersion = appVersion?.trim();
+    if (expectedVersion) {
+      const manifestVersionValue = manifestData.version;
+      const manifestVersion =
+        typeof manifestVersionValue === "string"
+          ? manifestVersionValue.trim()
+          : undefined;
+      if (manifestVersion !== expectedVersion) {
+        warnings.push({
+          code: "version_mismatch",
+          message: manifestVersion
+            ? `MANIFEST version "${manifestVersion}" does not match BadgeHub version "${expectedVersion}".`
+            : `MANIFEST version is missing or invalid and does not match BadgeHub version "${expectedVersion}".`,
+        });
+      }
     }
 
     return { directory, fullname, warnings };

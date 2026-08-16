@@ -61,9 +61,10 @@ function fileSizeForProgress(file: File): number {
 
 const AppEditFileUpload: React.FC<{
   slug: string;
+  expectedAppVersion?: string;
   onUploadSuccess: (result: UploadSuccessResult) => void;
   keycloak?: Keycloak | undefined;
-}> = ({ slug, onUploadSuccess, keycloak }) => {
+}> = ({ slug, expectedAppVersion, onUploadSuccess, keycloak }) => {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -151,7 +152,11 @@ const AppEditFileUpload: React.FC<{
             }
 
             if (file.name.toLowerCase().endsWith(".mpk")) {
-              const inspection = await inspectMpkIdentity(file, slug);
+              const inspection = await inspectMpkIdentity(
+                file,
+                slug,
+                expectedAppVersion
+              );
               updateItem(itemId, {
                 inspectionError: inspection.error,
                 warningMessages: inspection.warnings.map(
@@ -254,7 +259,7 @@ const AppEditFileUpload: React.FC<{
         }
       }
     },
-    [keycloak, onUploadSuccess, slug, updateItem]
+    [expectedAppVersion, keycloak, onUploadSuccess, slug, updateItem]
   );
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

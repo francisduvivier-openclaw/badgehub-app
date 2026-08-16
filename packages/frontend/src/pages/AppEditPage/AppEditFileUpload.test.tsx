@@ -65,13 +65,14 @@ describe("AppEditFileUpload", () => {
     });
     const archive = zipSync({
       "wrong-directory/MANIFEST.JSON": strToU8(
-        JSON.stringify({ fullname: "com.example.other" })
+        JSON.stringify({ fullname: "com.example.other", version: "1.0.0" })
       ),
     });
 
     render(
       <AppEditFileUpload
         slug="demo"
+        expectedAppVersion="2.0.0"
         keycloak={keycloak}
         onUploadSuccess={onUploadSuccess}
       />
@@ -88,6 +89,9 @@ describe("AppEditFileUpload", () => {
     );
     expect(screen.getByTestId("mpk-upload-warning")).toHaveTextContent(
       'MPK directory "wrong-directory" does not match MANIFEST fullname "com.example.other".'
+    );
+    expect(screen.getByTestId("mpk-upload-warning")).toHaveTextContent(
+      'MANIFEST version "1.0.0" does not match BadgeHub version "2.0.0".'
     );
     expect(
       screen.getByRole("link", {
