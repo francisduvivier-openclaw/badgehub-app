@@ -2,7 +2,10 @@ import { getFreshAuthorizedApiClient } from "@api/apiClient.ts";
 import type { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetadataJSON.ts";
 import type Keycloak from "keycloak-js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AUTOSAVE_DEBOUNCE_MS } from "./editPageFeedback.ts";
+import {
+  AUTOSAVE_DEBOUNCE_MS,
+  AUTOSAVE_SUCCESS_MESSAGE_MS,
+} from "./editPageFeedback.ts";
 
 function serializeMetadata(metadata: AppMetadataJSON): string {
   return JSON.stringify(metadata);
@@ -18,10 +21,14 @@ export function useDraftMetadataAutosave({
   keycloak: Keycloak | undefined;
 }) {
   const [isSaving, setIsSaving] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const lastSavedSerializedRef = useRef<string | null>(null);
   const latestMetadataRef = useRef(appMetadata);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const saveQueueRef = useRef(Promise.resolve(true));
   const successfulSaveCountRef = useRef(0);
   const keycloakRef = useRef(keycloak);
@@ -46,6 +53,27 @@ export function useDraftMetadataAutosave({
     }
   }, []);
 
+  const cancelSavedFeedbackTimer = useCallback(() => {
+    if (savedFeedbackTimerRef.current !== null) {
+      clearTimeout(savedFeedbackTimerRef.current);
+      savedFeedbackTimerRef.current = null;
+    }
+  }, []);
+
+  const clearSavedFeedback = useCallback(() => {
+    cancelSavedFeedbackTimer();
+    setDraftSaved(false);
+  }, [cancelSavedFeedbackTimer]);
+
+  const showSavedFeedback = useCallback(() => {
+    cancelSavedFeedbackTimer();
+    setDraftSaved(true);
+    savedFeedbackTimerRef.current = setTimeout(() => {
+      savedFeedbackTimerRef.current = null;
+      setDraftSaved(false);
+    }, AUTOSAVE_SUCCESS_MESSAGE_MS);
+  }, [cancelSavedFeedbackTimer]);
+
   const persistIfDirty = useCallback(
     async (force = false): Promise<boolean> => {
       const metadata = latestMetadataRef.current;
@@ -59,6 +87,8 @@ export function useDraftMetadataAutosave({
         return true;
       }
 
+      clearSavedFeedback();
+      setSaveError(null);
       setIsSaving(true);
       try {
         const result = await (
@@ -75,6 +105,13 @@ export function useDraftMetadataAutosave({
         lastSavedSerializedRef.current = serialized;
         successfulSaveCountRef.current += 1;
         setSaveError(null);
+        const latestMetadata = latestMetadataRef.current;
+        const latestSerialized = latestMetadata
+          ? serializeMetadata(latestMetadata)
+          : null;
+        if (!force && latestSerialized === serialized) {
+          showSavedFeedback();
+        }
         return true;
       } catch (error) {
         console.error(error);
@@ -84,7 +121,7 @@ export function useDraftMetadataAutosave({
         setIsSaving(false);
       }
     },
-    []
+    [clearSavedFeedback, showSavedFeedback]
   );
 
   const saveNow = useCallback(
@@ -101,9 +138,15 @@ export function useDraftMetadataAutosave({
         () => true,
         () => true
       );
-      return result;
+      if (!options?.force) {
+        return result;
+      }
+      return result.then((saved) => {
+        clearSavedFeedback();
+        return saved;
+      });
     },
-    [clearDebounce, persistIfDirty]
+    [clearDebounce, clearSavedFeedback, persistIfDirty]
   );
 
   useEffect(() => {
@@ -114,6 +157,7 @@ export function useDraftMetadataAutosave({
       return;
     }
 
+    clearSavedFeedback();
     clearDebounce();
     debounceTimerRef.current = setTimeout(() => {
       debounceTimerRef.current = null;
@@ -121,7 +165,9 @@ export function useDraftMetadataAutosave({
     }, AUTOSAVE_DEBOUNCE_MS);
 
     return clearDebounce;
-  }, [appMetadata, clearDebounce, saveNow]);
+  }, [appMetadata, clearDebounce, clearSavedFeedback, saveNow]);
 
-  return { saveNow, isSaving, saveError };
+  useEffect(() => cancelSavedFeedbackTimer, [cancelSavedFeedbackTimer]);
+
+  return { saveNow, isSaving, draftSaved, saveError };
 }

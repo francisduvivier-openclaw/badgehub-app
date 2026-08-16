@@ -33,6 +33,7 @@ const AppEditForm: React.FC<{
   isPublishing: boolean;
   publishedMessage: string | null;
   isSaving: boolean;
+  draftSaved: boolean;
   saveError: string | null;
 }> = ({
   project,
@@ -55,6 +56,7 @@ const AppEditForm: React.FC<{
   isPublishing,
   publishedMessage,
   isSaving,
+  draftSaved,
   saveError,
 }) => {
   return (
@@ -64,17 +66,32 @@ const AppEditForm: React.FC<{
         <h1 className="text-3xl font-bold">
           Editing {project.slug}/rev{project.version.revision}
         </h1>
-        {isSaving && !isPublishing && (
-          <span className="text-sm opacity-60" aria-live="polite">
-            Saving draft…
-          </span>
-        )}
-        {saveError && (
-          <span className="text-sm text-error" role="alert">
-            {saveError}
-          </span>
-        )}
       </div>
+      {!isPublishing && (isSaving || draftSaved || saveError) && (
+        <div className="toast toast-end toast-bottom z-50">
+          <div
+            className={`alert shadow-lg ${
+              saveError
+                ? "alert-error"
+                : draftSaved && !isSaving
+                  ? "alert-success"
+                  : "alert-info"
+            }`}
+            aria-live="polite"
+            data-testid="autosave-feedback"
+            role={saveError ? "alert" : "status"}
+          >
+            {isSaving && !saveError && (
+              <>
+                <span className="loading loading-spinner loading-xs" />
+                <span>Saving draft…</span>
+              </>
+            )}
+            {!isSaving && draftSaved && !saveError && <span>Draft saved</span>}
+            {saveError && <span>{saveError}</span>}
+          </div>
+        </div>
+      )}
       <div className="space-y-8">
         <form className="space-y-8" onSubmit={onSubmit} onBlur={onFlushSave}>
           <AppEditActions

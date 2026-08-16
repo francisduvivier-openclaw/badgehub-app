@@ -57,11 +57,13 @@ const AppEditPage: React.FC<{
   if (appMetadata) {
     appMetadata.author ??= user?.name;
   }
-  const { saveNow, isSaving, saveError } = useDraftMetadataAutosave({
-    slug,
-    appMetadata,
-    keycloak,
-  });
+  const { saveNow, isSaving, draftSaved, saveError } = useDraftMetadataAutosave(
+    {
+      slug,
+      appMetadata,
+      keycloak,
+    }
+  );
 
   useEffect(() => {
     return () => {
@@ -331,6 +333,7 @@ const AppEditPage: React.FC<{
               isPublishing={isPublishing}
               publishedMessage={publishedMessage}
               isSaving={isSaving}
+              draftSaved={draftSaved}
               saveError={saveError}
             />
           )}

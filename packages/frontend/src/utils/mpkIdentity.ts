@@ -19,8 +19,24 @@ export type MpkIdentityInspection = {
   directory?: string;
   error?: string;
   fullname?: string;
+  version?: string;
   warnings: MpkIdentityWarning[];
 };
+
+export function getMpkVersionWarning(
+  manifestVersion: string | undefined,
+  appVersion: string | undefined
+): MpkIdentityWarning | undefined {
+  const expectedVersion = appVersion?.trim();
+  if (!expectedVersion || manifestVersion === expectedVersion) return undefined;
+
+  return {
+    code: "version_mismatch",
+    message: manifestVersion
+      ? `MANIFEST version "${manifestVersion}" does not match BadgeHub version "${expectedVersion}".`
+      : `MANIFEST version is missing or invalid and does not match BadgeHub version "${expectedVersion}".`,
+  };
+}
 
 const normalizeArchivePath = (path: string) =>
   path.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+/g, "/");
@@ -111,6 +127,11 @@ export async function inspectMpkIdentity(
     }
 
     const fullname = fullnameValue.trim();
+    const manifestVersionValue = manifestData.version;
+    const version =
+      typeof manifestVersionValue === "string"
+        ? manifestVersionValue.trim()
+        : undefined;
     const warnings: MpkIdentityWarning[] = [];
     if (fullname !== appSlug) {
       warnings.push({
@@ -124,24 +145,10 @@ export async function inspectMpkIdentity(
         message: `MPK directory "${directory}" does not match MANIFEST fullname "${fullname}".`,
       });
     }
-    const expectedVersion = appVersion?.trim();
-    if (expectedVersion) {
-      const manifestVersionValue = manifestData.version;
-      const manifestVersion =
-        typeof manifestVersionValue === "string"
-          ? manifestVersionValue.trim()
-          : undefined;
-      if (manifestVersion !== expectedVersion) {
-        warnings.push({
-          code: "version_mismatch",
-          message: manifestVersion
-            ? `MANIFEST version "${manifestVersion}" does not match BadgeHub version "${expectedVersion}".`
-            : `MANIFEST version is missing or invalid and does not match BadgeHub version "${expectedVersion}".`,
-        });
-      }
-    }
+    const versionWarning = getMpkVersionWarning(version, appVersion);
+    if (versionWarning) warnings.push(versionWarning);
 
-    return { directory, fullname, warnings };
+    return { directory, fullname, version, warnings };
   } catch {
     return {
       error: "This MPK file could not be inspected.",

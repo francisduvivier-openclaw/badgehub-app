@@ -3,7 +3,10 @@ import type { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetad
 import { act, renderHook } from "@testing-library/react";
 import type Keycloak from "keycloak-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AUTOSAVE_DEBOUNCE_MS } from "./editPageFeedback.ts";
+import {
+  AUTOSAVE_DEBOUNCE_MS,
+  AUTOSAVE_SUCCESS_MESSAGE_MS,
+} from "./editPageFeedback.ts";
 import { useDraftMetadataAutosave } from "./useDraftMetadataAutosave.ts";
 
 vi.mock("@api/apiClient.ts", async (importOriginal) => {
@@ -112,6 +115,17 @@ describe("useDraftMetadataAutosave", () => {
       params: { slug: "demo" },
       body: metadata("Updated"),
     });
+    expect(result.current.draftSaved).toBe(true);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_SUCCESS_MESSAGE_MS - 1);
+    });
+    expect(result.current.draftSaved).toBe(true);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(result.current.draftSaved).toBe(false);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS);
@@ -135,6 +149,46 @@ describe("useDraftMetadataAutosave", () => {
     expect(changeDraftAppMetadata).not.toHaveBeenCalled();
   });
 
+  it("does not report saved when newer changes are still pending", async () => {
+    let finishSave!: () => void;
+    changeDraftAppMetadata.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishSave = () =>
+            resolve({
+              status: 204,
+              body: undefined,
+              headers: new Headers(),
+            });
+        })
+    );
+    const { result, rerender } = renderHook(
+      ({ appMetadata }) =>
+        useDraftMetadataAutosave({
+          slug: "demo",
+          appMetadata,
+          keycloak,
+        }),
+      { initialProps: { appMetadata: metadata("Demo") } }
+    );
+
+    rerender({ appMetadata: metadata("First edit") });
+    let savePromise!: Promise<boolean>;
+    await act(async () => {
+      savePromise = result.current.saveNow();
+      await Promise.resolve();
+    });
+    expect(result.current.isSaving).toBe(true);
+
+    rerender({ appMetadata: metadata("Newer edit") });
+    await act(async () => {
+      finishSave();
+      await savePromise;
+    });
+
+    expect(result.current.draftSaved).toBe(false);
+  });
+
   it("forces a save when metadata is unchanged", async () => {
     const unchangedMetadata = metadata("Demo");
     const { result } = renderHook(() =>
@@ -154,6 +208,7 @@ describe("useDraftMetadataAutosave", () => {
       params: { slug: "demo" },
       body: unchangedMetadata,
     });
+    expect(result.current.draftSaved).toBe(false);
   });
 
   it("reports an error when the save request fails", async () => {

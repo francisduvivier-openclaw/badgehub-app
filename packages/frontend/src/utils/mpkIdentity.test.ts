@@ -23,6 +23,7 @@ describe("inspectMpkIdentity", () => {
     expect(result).toEqual({
       directory: "com.example.demo",
       fullname: "com.example.demo",
+      version: "1.0.0",
       warnings: [],
     });
   });

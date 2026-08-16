@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@__test__";
+import { act, render, screen, waitFor } from "@__test__";
 import { dummyApps } from "@__test__/fixtures";
 import { getFreshAuthorizedApiClient } from "@api/apiClient.ts";
 import userEvent from "@testing-library/user-event";
@@ -81,11 +81,18 @@ describe("AppEditPage", () => {
 
   it("saves draft metadata when a field loses focus", async () => {
     const user = userEvent.setup();
-    const changeDraftAppMetadata = vi.fn().mockResolvedValue({
-      status: 204,
-      body: undefined,
-      headers: new Headers(),
-    });
+    let finishSave!: () => void;
+    const changeDraftAppMetadata = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishSave = () =>
+            resolve({
+              status: 204,
+              body: undefined,
+              headers: new Headers(),
+            });
+        })
+    );
     vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
       getDraftProject: vi.fn().mockResolvedValue({
         status: 200,
@@ -101,9 +108,11 @@ describe("AppEditPage", () => {
     await user.type(nameInput, "Renamed App");
     await user.tab();
 
-    await waitFor(() => {
-      expect(changeDraftAppMetadata).toHaveBeenCalled();
+    expect(await screen.findByText("Saving draft…")).toBeInTheDocument();
+    await act(async () => {
+      finishSave();
     });
+    expect(await screen.findByText("Draft saved")).toBeInTheDocument();
     expect(changeDraftAppMetadata).toHaveBeenLastCalledWith(
       expect.objectContaining({
         params: { slug: "dummy-app-1" },
