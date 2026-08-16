@@ -1,4 +1,4 @@
-import { render, screen } from "@__test__";
+import { render, screen, within } from "@__test__";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import AppEditActions from "./AppEditActions.tsx";
@@ -22,7 +22,7 @@ describe("AppEditActions", () => {
     ).toBeInTheDocument();
   });
 
-  it("invokes delete handler when clicked", async () => {
+  it("only invokes the delete handler after confirmation", async () => {
     const user = userEvent.setup();
     const onClickDeleteApplication = vi.fn();
     render(
@@ -37,7 +37,28 @@ describe("AppEditActions", () => {
       screen.getByRole("button", { name: /delete application/i })
     );
 
-    expect(onClickDeleteApplication).toHaveBeenCalled();
+    const dialog = screen.getByRole("dialog", {
+      name: "Delete this application?",
+    });
+    expect(onClickDeleteApplication).not.toHaveBeenCalled();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Keep application" })
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(onClickDeleteApplication).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: /delete application/i })
+    );
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete application",
+      })
+    );
+
+    expect(onClickDeleteApplication).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("invokes status change handler when toggled", async () => {
