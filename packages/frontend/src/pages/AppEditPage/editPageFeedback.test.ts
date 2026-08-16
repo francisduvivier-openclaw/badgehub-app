@@ -3,7 +3,9 @@ import { publishedVersionMessage, waitAtLeast } from "./editPageFeedback.ts";
 
 describe("publishedVersionMessage", () => {
   it("uses the metadata version when present", () => {
-    expect(publishedVersionMessage("1.2.3", 4)).toBe("Published version 1.2.3");
+    expect(publishedVersionMessage("1.2.3", 4)).toBe(
+      "Published revision 4 (Version 1.2.3)"
+    );
   });
 
   it("falls back to the revision when version is empty", () => {

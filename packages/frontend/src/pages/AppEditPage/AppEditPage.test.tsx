@@ -4,10 +4,6 @@ import { getFreshAuthorizedApiClient } from "@api/apiClient.ts";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppEditPage from "./AppEditPage.tsx";
-import {
-  PUBLISH_MIN_SPINNER_MS,
-  PUBLISH_SUCCESS_MESSAGE_MS,
-} from "./editPageFeedback.ts";
 
 vi.mock("@api/apiClient.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@api/apiClient.ts")>();
@@ -164,19 +160,17 @@ describe("AppEditPage", () => {
     expect(publishButton).toBeDisabled();
 
     expect(
-      await screen.findByText("Published version 1.2.3")
+      await screen.findByText("Published revision 1 (Version 1.2.3)")
     ).toBeInTheDocument();
     expect(callOrder).toEqual(["save", "publish"]);
     expect(screen.queryByTestId("publish-spinner")).not.toBeInTheDocument();
+    expect(screen.queryByText("Draft saved")).not.toBeInTheDocument();
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("publish-success-message")).toHaveTextContent(
-          ""
-        );
-      },
-      { timeout: PUBLISH_MIN_SPINNER_MS + PUBLISH_SUCCESS_MESSAGE_MS + 500 }
-    );
+    await user.type(nameInput, " again");
+    expect(
+      screen.queryByTestId("publish-success-message")
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Unsaved changes")).toBeVisible();
   });
 
   it("forces a save before publishing when no field was manually edited", async () => {

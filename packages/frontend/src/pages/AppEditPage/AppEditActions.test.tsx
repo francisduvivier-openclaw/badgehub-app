@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import AppEditActions from "./AppEditActions.tsx";
 
 describe("AppEditActions", () => {
-  it("renders action buttons and cancel link", () => {
+  it("renders project actions and cancel link", () => {
     render(
       <AppEditActions
         onClickDeleteApplication={vi.fn()}
@@ -13,9 +13,6 @@ describe("AppEditActions", () => {
       />
     );
 
-    expect(
-      screen.getByRole("button", { name: /^publish$/i })
-    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /cancel/i })).toHaveAttribute(
       "href",
       "/"
@@ -59,36 +56,5 @@ describe("AppEditActions", () => {
     );
 
     expect(onWorkInProgressChange).toHaveBeenCalledWith(true);
-  });
-
-  it("shows a spinner and disables publish while publishing", () => {
-    render(
-      <AppEditActions
-        onClickDeleteApplication={vi.fn()}
-        workInProgress={false}
-        onWorkInProgressChange={vi.fn()}
-        isPublishing
-      />
-    );
-
-    const publishButton = screen.getByRole("button", { name: /^publish$/i });
-    expect(publishButton).toBeDisabled();
-    expect(publishButton).toHaveAttribute("aria-busy", "true");
-    expect(screen.getByTestId("publish-spinner")).toBeInTheDocument();
-  });
-
-  it("shows the published version message below the button", () => {
-    render(
-      <AppEditActions
-        onClickDeleteApplication={vi.fn()}
-        workInProgress={false}
-        onWorkInProgressChange={vi.fn()}
-        publishedMessage="Published version 1.2.3"
-      />
-    );
-
-    expect(screen.getByTestId("publish-success-message")).toHaveTextContent(
-      "Published version 1.2.3"
-    );
   });
 });

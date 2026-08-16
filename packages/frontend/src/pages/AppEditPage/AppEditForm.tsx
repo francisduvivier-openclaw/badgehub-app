@@ -11,6 +11,7 @@ import AppEditCategorization from "./AppEditCategorization.tsx";
 import AppEditFilesSection from "./AppEditFilesSection.tsx";
 import type { UploadSuccessResult } from "./AppEditFileUpload.tsx";
 import AppEditTokenManager from "./AppEditTokenManager.tsx";
+import AppEditToolbar from "./AppEditToolbar.tsx";
 
 const AppEditForm: React.FC<{
   project: ProjectDetails;
@@ -33,8 +34,10 @@ const AppEditForm: React.FC<{
   isPublishing: boolean;
   publishedMessage: string | null;
   isSaving: boolean;
-  draftSaved: boolean;
+  hasUnsavedChanges: boolean;
   saveError: string | null;
+  onSaveDraft: () => void;
+  onRetrySave: () => void;
 }> = ({
   project,
   appMetadata,
@@ -56,44 +59,32 @@ const AppEditForm: React.FC<{
   isPublishing,
   publishedMessage,
   isSaving,
-  draftSaved,
+  hasUnsavedChanges,
   saveError,
+  onSaveDraft,
+  onRetrySave,
 }) => {
   return (
     <>
       <AppEditBreadcrumb project={project} />
-      <div className="flex flex-wrap items-baseline gap-3 mb-6">
-        <h1 className="text-3xl font-bold">
-          Editing {project.slug}/rev{project.version.revision}
-        </h1>
-      </div>
-      {!isPublishing && (isSaving || draftSaved || saveError) && (
-        <div className="toast toast-end toast-bottom z-50">
-          <div
-            className={`alert shadow-lg ${
-              saveError
-                ? "alert-error"
-                : draftSaved && !isSaving
-                  ? "alert-success"
-                  : "alert-info"
-            }`}
-            aria-live="polite"
-            data-testid="autosave-feedback"
-            role={saveError ? "alert" : "status"}
-          >
-            {isSaving && !saveError && (
-              <>
-                <span className="loading loading-spinner loading-xs" />
-                <span>Saving draft…</span>
-              </>
-            )}
-            {!isSaving && draftSaved && !saveError && <span>Draft saved</span>}
-            {saveError && <span>{saveError}</span>}
-          </div>
-        </div>
-      )}
+      <AppEditToolbar
+        slug={project.slug}
+        revision={project.version.revision}
+        isSaving={isSaving}
+        hasUnsavedChanges={hasUnsavedChanges}
+        saveError={saveError}
+        onSaveDraft={onSaveDraft}
+        onRetrySave={onRetrySave}
+        isPublishing={isPublishing}
+        publishedMessage={publishedMessage}
+      />
       <div className="space-y-8">
-        <form className="space-y-8" onSubmit={onSubmit} onBlur={onFlushSave}>
+        <form
+          id="app-edit-form"
+          className="space-y-8"
+          onSubmit={onSubmit}
+          onBlur={onFlushSave}
+        >
           <AppEditActions
             onClickDeleteApplication={onDeleteApplication}
             workInProgress={
@@ -106,8 +97,6 @@ const AppEditForm: React.FC<{
                   : "stable",
               })
             }
-            isPublishing={isPublishing}
-            publishedMessage={publishedMessage}
           />
           <AppEditBasicInfo form={appMetadata} onChange={onFormChange} />
           <AppEditCategorization form={appMetadata} onChange={onFormChange} />

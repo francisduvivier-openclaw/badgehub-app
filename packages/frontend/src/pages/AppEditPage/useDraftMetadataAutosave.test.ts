@@ -3,10 +3,7 @@ import type { AppMetadataJSON } from "@shared/domain/readModels/project/AppMetad
 import { act, renderHook } from "@testing-library/react";
 import type Keycloak from "keycloak-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  AUTOSAVE_DEBOUNCE_MS,
-  AUTOSAVE_SUCCESS_MESSAGE_MS,
-} from "./editPageFeedback.ts";
+import { AUTOSAVE_DEBOUNCE_MS } from "./editPageFeedback.ts";
 import { useDraftMetadataAutosave } from "./useDraftMetadataAutosave.ts";
 
 vi.mock("@api/apiClient.ts", async (importOriginal) => {
@@ -60,7 +57,7 @@ describe("useDraftMetadataAutosave", () => {
   });
 
   it("debounces metadata saves by 3 seconds", async () => {
-    const { rerender } = renderHook(
+    const { result, rerender } = renderHook(
       ({ appMetadata }) =>
         useDraftMetadataAutosave({
           slug: "demo",
@@ -71,6 +68,7 @@ describe("useDraftMetadataAutosave", () => {
     );
 
     rerender({ appMetadata: metadata("Demo 1") });
+    expect(result.current.hasUnsavedChanges).toBe(true);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS - 1);
     });
@@ -91,6 +89,7 @@ describe("useDraftMetadataAutosave", () => {
       params: { slug: "demo" },
       body: metadata("Demo 12"),
     });
+    expect(result.current.hasUnsavedChanges).toBe(false);
   });
 
   it("saves immediately when saveNow is called", async () => {
@@ -105,6 +104,7 @@ describe("useDraftMetadataAutosave", () => {
     );
 
     rerender({ appMetadata: metadata("Updated") });
+    expect(result.current.hasUnsavedChanges).toBe(true);
 
     await act(async () => {
       await result.current.saveNow();
@@ -115,17 +115,7 @@ describe("useDraftMetadataAutosave", () => {
       params: { slug: "demo" },
       body: metadata("Updated"),
     });
-    expect(result.current.draftSaved).toBe(true);
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(AUTOSAVE_SUCCESS_MESSAGE_MS - 1);
-    });
-    expect(result.current.draftSaved).toBe(true);
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
-    });
-    expect(result.current.draftSaved).toBe(false);
+    expect(result.current.hasUnsavedChanges).toBe(false);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS);
@@ -186,7 +176,7 @@ describe("useDraftMetadataAutosave", () => {
       await savePromise;
     });
 
-    expect(result.current.draftSaved).toBe(false);
+    expect(result.current.hasUnsavedChanges).toBe(true);
   });
 
   it("forces a save when metadata is unchanged", async () => {
@@ -208,7 +198,7 @@ describe("useDraftMetadataAutosave", () => {
       params: { slug: "demo" },
       body: unchangedMetadata,
     });
-    expect(result.current.draftSaved).toBe(false);
+    expect(result.current.hasUnsavedChanges).toBe(false);
   });
 
   it("reports an error when the save request fails", async () => {

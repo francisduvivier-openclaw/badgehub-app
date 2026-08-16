@@ -5,22 +5,18 @@ interface AppEditActionsProps {
   onClickDeleteApplication: () => unknown;
   workInProgress: boolean;
   onWorkInProgressChange: (workInProgress: boolean) => void;
-  isPublishing?: boolean;
-  publishedMessage?: string | null;
 }
 
 const AppEditActions: React.FC<AppEditActionsProps> = ({
   onClickDeleteApplication,
   workInProgress,
   onWorkInProgressChange,
-  isPublishing = false,
-  publishedMessage = null,
 }) => (
   <section className="card bg-base-200 shadow-lg">
     <div className="card-body">
       <h2 className="card-title text-2xl mb-4">Actions</h2>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col items-start gap-4">
           <label className="label cursor-pointer justify-start gap-3 p-0">
             <input
               type="checkbox"
@@ -30,34 +26,9 @@ const AppEditActions: React.FC<AppEditActionsProps> = ({
             />
             <span className="label-text font-medium">Work in progress</span>
           </label>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center space-x-4">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isPublishing}
-                aria-busy={isPublishing}
-              >
-                {isPublishing && (
-                  <span
-                    className="loading loading-spinner loading-sm"
-                    data-testid="publish-spinner"
-                  />
-                )}
-                Publish
-              </button>
-              <Link to=".." className="btn btn-neutral">
-                Cancel
-              </Link>
-            </div>
-            <p
-              className="text-sm text-success min-h-5"
-              role="status"
-              data-testid="publish-success-message"
-            >
-              {publishedMessage}
-            </p>
-          </div>
+          <Link to=".." className="btn btn-neutral">
+            Cancel
+          </Link>
         </div>
         <div>
           <button

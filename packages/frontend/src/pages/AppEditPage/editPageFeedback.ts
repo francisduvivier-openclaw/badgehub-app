@@ -1,7 +1,5 @@
 export const AUTOSAVE_DEBOUNCE_MS = 3000;
-export const AUTOSAVE_SUCCESS_MESSAGE_MS = 2000;
 export const PUBLISH_MIN_SPINNER_MS = 500;
-export const PUBLISH_SUCCESS_MESSAGE_MS = 1000;
 
 export function publishedVersionMessage(
   version: string | undefined,
@@ -9,7 +7,7 @@ export function publishedVersionMessage(
 ): string {
   const trimmed = version?.trim();
   if (trimmed) {
-    return `Published version ${trimmed}`;
+    return `Published revision ${revision} (Version ${trimmed})`;
   }
   return `Published revision ${revision}`;
 }

@@ -19,7 +19,6 @@ import AppEditForm from "./AppEditForm.tsx";
 import AppEditStateView from "./AppEditStateView.tsx";
 import {
   PUBLISH_MIN_SPINNER_MS,
-  PUBLISH_SUCCESS_MESSAGE_MS,
   publishedVersionMessage,
   waitAtLeast,
 } from "./editPageFeedback.ts";
@@ -50,28 +49,22 @@ const AppEditPage: React.FC<{
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishedMessage, setPublishedMessage] = useState<string | null>(null);
   const isPublishingRef = useRef(false);
-  const publishedMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
   const appMetadata = project?.version.app_metadata;
   if (appMetadata) {
     appMetadata.author ??= user?.name;
   }
-  const { saveNow, isSaving, draftSaved, saveError } = useDraftMetadataAutosave(
-    {
+  const { saveNow, isSaving, hasUnsavedChanges, saveError } =
+    useDraftMetadataAutosave({
       slug,
       appMetadata,
       keycloak,
-    }
-  );
+    });
 
   useEffect(() => {
-    return () => {
-      if (publishedMessageTimerRef.current) {
-        clearTimeout(publishedMessageTimerRef.current);
-      }
-    };
-  }, []);
+    if (hasUnsavedChanges) {
+      setPublishedMessage(null);
+    }
+  }, [hasUnsavedChanges]);
 
   const setAppMetadata = (
     appMetadataOrFn:
@@ -93,6 +86,7 @@ const AppEditPage: React.FC<{
       };
     });
   };
+
   const handleFormChange = (changes: Partial<ProjectEditFormData>) => {
     setAppMetadata((prev) => ({ ...prev, ...changes }) as ProjectEditFormData);
   };
@@ -190,10 +184,6 @@ const AppEditPage: React.FC<{
     isPublishingRef.current = true;
     setIsPublishing(true);
     setPublishedMessage(null);
-    if (publishedMessageTimerRef.current) {
-      clearTimeout(publishedMessageTimerRef.current);
-      publishedMessageTimerRef.current = null;
-    }
     const startedAt = Date.now();
 
     try {
@@ -219,10 +209,6 @@ const AppEditPage: React.FC<{
         project?.version.revision ?? 0
       );
       setPublishedMessage(message);
-      publishedMessageTimerRef.current = setTimeout(() => {
-        setPublishedMessage(null);
-        publishedMessageTimerRef.current = null;
-      }, PUBLISH_SUCCESS_MESSAGE_MS);
       if (project) {
         setProject({
           ...project,
@@ -333,8 +319,14 @@ const AppEditPage: React.FC<{
               isPublishing={isPublishing}
               publishedMessage={publishedMessage}
               isSaving={isSaving}
-              draftSaved={draftSaved}
+              hasUnsavedChanges={hasUnsavedChanges}
               saveError={saveError}
+              onSaveDraft={() => {
+                void saveNow();
+              }}
+              onRetrySave={() => {
+                void saveNow({ force: true });
+              }}
             />
           )}
         </AppEditStateView>
