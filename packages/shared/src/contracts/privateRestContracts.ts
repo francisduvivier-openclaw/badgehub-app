@@ -25,6 +25,11 @@ export const createProjectInputSchema = createProjectBodyPartialSchema.extend({
   slug: z.string(),
 });
 
+export const transferProjectOwnerInputSchema = z.object({
+  slug: z.string(),
+  newOwnerId: z.string().trim().min(1),
+});
+
 const iconSizeSchema = z.enum(["8x8", "16x16", "32x32", "64x64"]);
 
 const ratingReportBodySchema = z.object({
@@ -315,6 +320,17 @@ export const nonScriptablePrivateProjectContracts = {
       successStatus: 204,
     })
     .input(createProjectInputSchema)
+    .output(z.void()),
+
+  transferProjectOwner: jwtOnly
+    .route({
+      method: "PATCH",
+      path: "/projects/{slug}/owner",
+      summary: "Transfer project ownership to another user",
+      tags: ["Private Non Scriptable"],
+      successStatus: 204,
+    })
+    .input(transferProjectOwnerInputSchema)
     .output(z.void()),
 };
 

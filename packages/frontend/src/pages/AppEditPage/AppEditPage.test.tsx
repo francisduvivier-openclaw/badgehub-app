@@ -176,7 +176,11 @@ describe("AppEditPage", () => {
   it("forces a save before publishing when no field was manually edited", async () => {
     const user = userEvent.setup();
     const callOrder: string[] = [];
-    const detailsWithoutAuthor = structuredClone(dummyApps[0]!.details);
+    const details = dummyApps[0]?.details;
+    if (!details) {
+      throw new Error("Missing dummy app fixture");
+    }
+    const detailsWithoutAuthor = structuredClone(details);
     delete detailsWithoutAuthor.version.app_metadata.author;
     const changeDraftAppMetadata = vi.fn().mockImplementation(async () => {
       callOrder.push("save");
@@ -207,5 +211,36 @@ describe("AppEditPage", () => {
         body: expect.objectContaining({ author: "Test User" }),
       })
     );
+  });
+
+  it("transfers project ownership and updates the displayed owner", async () => {
+    const user = userEvent.setup();
+    const transferProjectOwner = vi.fn().mockResolvedValue({
+      status: 204,
+      body: undefined,
+      headers: new Headers(),
+    });
+    vi.mocked(getFreshAuthorizedApiClient).mockResolvedValue({
+      getDraftProject: vi.fn().mockResolvedValue({
+        status: 200,
+        body: dummyApps[0]?.details,
+      }),
+      transferProjectOwner,
+    } as unknown as Awaited<ReturnType<typeof getFreshAuthorizedApiClient>>);
+
+    render(<AppEditPage slug="dummy-app-1" />);
+
+    await user.type(
+      await screen.findByRole("textbox", { name: /new owner/i }),
+      "new-owner-id"
+    );
+    await user.click(screen.getByRole("button", { name: /^transfer$/i }));
+    await user.click(screen.getByRole("button", { name: "Transfer project" }));
+
+    expect(transferProjectOwner).toHaveBeenCalledWith({
+      params: { slug: "dummy-app-1" },
+      body: { newOwnerId: "new-owner-id" },
+    });
+    expect(await screen.findByText("new-owner-id")).toBeInTheDocument();
   });
 });

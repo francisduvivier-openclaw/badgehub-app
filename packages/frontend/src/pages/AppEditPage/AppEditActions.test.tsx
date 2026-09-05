@@ -8,6 +8,8 @@ describe("AppEditActions", () => {
     render(
       <AppEditActions
         onClickDeleteApplication={vi.fn()}
+        onTransferOwner={vi.fn()}
+        projectOwnerId="owner-id"
         workInProgress={false}
         onWorkInProgressChange={vi.fn()}
       />
@@ -28,6 +30,8 @@ describe("AppEditActions", () => {
     render(
       <AppEditActions
         onClickDeleteApplication={onClickDeleteApplication}
+        onTransferOwner={vi.fn()}
+        projectOwnerId="owner-id"
         workInProgress={false}
         onWorkInProgressChange={vi.fn()}
       />
@@ -67,6 +71,8 @@ describe("AppEditActions", () => {
     render(
       <AppEditActions
         onClickDeleteApplication={vi.fn()}
+        onTransferOwner={vi.fn()}
+        projectOwnerId="owner-id"
         workInProgress={false}
         onWorkInProgressChange={onWorkInProgressChange}
       />
@@ -77,5 +83,38 @@ describe("AppEditActions", () => {
     );
 
     expect(onWorkInProgressChange).toHaveBeenCalledWith(true);
+  });
+
+  it("only invokes the ownership transfer handler after confirmation", async () => {
+    const user = userEvent.setup();
+    const onTransferOwner = vi.fn().mockResolvedValue(true);
+    render(
+      <AppEditActions
+        onClickDeleteApplication={vi.fn()}
+        onTransferOwner={onTransferOwner}
+        projectOwnerId="owner-id"
+        workInProgress={false}
+        onWorkInProgressChange={vi.fn()}
+      />
+    );
+
+    await user.type(
+      screen.getByRole("textbox", { name: /new owner/i }),
+      "new-owner-id"
+    );
+    await user.click(screen.getByRole("button", { name: /^transfer$/i }));
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Transfer this project?",
+    });
+    expect(onTransferOwner).not.toHaveBeenCalled();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Transfer project" })
+    );
+
+    expect(onTransferOwner).toHaveBeenCalledWith("new-owner-id");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /new owner/i })).toHaveValue("");
   });
 });

@@ -2985,6 +2985,125 @@ Warning: if it is present, then badgehub clients on badges will not update the a
         ],
       },
     },
+    "/api/v3/projects/{slug}/owner": {
+      "patch": {
+        "deprecated": undefined,
+        "description": undefined,
+        "operationId": "transferProjectOwner",
+        "parameters": [
+          {
+            "allowEmptyValue": undefined,
+            "allowReserved": undefined,
+            "explode": undefined,
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+            "style": undefined,
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "examples": undefined,
+                "properties": {
+                  "newOwnerId": {
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "newOwnerId",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "not": {},
+                    },
+                    {
+                      "not": {},
+                    },
+                  ],
+                },
+              },
+            },
+            "description": "OK",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http400Error",
+                },
+              },
+            },
+            "description": "400",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http401Error",
+                },
+              },
+            },
+            "description": "401",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http403Error",
+                },
+              },
+            },
+            "description": "403",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http404Error",
+                },
+              },
+            },
+            "description": "404",
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Http409Error",
+                },
+              },
+            },
+            "description": "409",
+          },
+        },
+        "security": [
+          {
+            "bearerAuth": [],
+          },
+        ],
+        "summary": "Transfer project ownership to another user",
+        "tags": [
+          "Private Non Scriptable",
+        ],
+      },
+    },
     "/api/v3/projects/{slug}/publish": {
       "patch": {
         "deprecated": undefined,
