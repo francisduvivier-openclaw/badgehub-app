@@ -31,6 +31,7 @@ const AppEditForm: React.FC<{
   onSubmit: (e: React.FormEvent) => void;
   onFlushSave: () => void;
   onDeleteApplication: () => void;
+  onTransferOwner: (newOwnerId: string) => Promise<boolean> | boolean;
   isPublishing: boolean;
   publishedMessage: string | null;
   isSaving: boolean;
@@ -56,6 +57,7 @@ const AppEditForm: React.FC<{
   onSubmit,
   onFlushSave,
   onDeleteApplication,
+  onTransferOwner,
   isPublishing,
   publishedMessage,
   isSaving,
@@ -87,6 +89,8 @@ const AppEditForm: React.FC<{
         >
           <AppEditActions
             onClickDeleteApplication={onDeleteApplication}
+            onTransferOwner={onTransferOwner}
+            projectOwnerId={project.idp_user_id}
             workInProgress={
               appMetadata.development_status === "work_in_progress"
             }

@@ -4,17 +4,28 @@ import { Link } from "react-router-dom";
 
 interface AppEditActionsProps {
   onClickDeleteApplication: () => unknown;
+  onTransferOwner: (newOwnerId: string) => Promise<boolean> | boolean;
+  projectOwnerId: string;
   workInProgress: boolean;
   onWorkInProgressChange: (workInProgress: boolean) => void;
 }
 
 const AppEditActions: React.FC<AppEditActionsProps> = ({
   onClickDeleteApplication,
+  onTransferOwner,
+  projectOwnerId,
   workInProgress,
   onWorkInProgressChange,
 }) => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showTransferConfirmation, setShowTransferConfirmation] =
+    useState(false);
+  const [newOwnerId, setNewOwnerId] = useState("");
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelTransferButtonRef = useRef<HTMLButtonElement>(null);
+  const trimmedNewOwnerId = newOwnerId.trim();
 
   useEffect(() => {
     if (showDeleteConfirmation) {
@@ -22,16 +33,49 @@ const AppEditActions: React.FC<AppEditActionsProps> = ({
     }
   }, [showDeleteConfirmation]);
 
+  useEffect(() => {
+    if (showTransferConfirmation) {
+      cancelTransferButtonRef.current?.focus();
+    }
+  }, [showTransferConfirmation]);
+
   const confirmDelete = () => {
     setShowDeleteConfirmation(false);
     void onClickDeleteApplication();
+  };
+
+  const openTransferConfirmation = () => {
+    setTransferError(null);
+    if (!trimmedNewOwnerId) {
+      setTransferError("Enter the new owner's user ID.");
+      return;
+    }
+    if (trimmedNewOwnerId === projectOwnerId) {
+      setTransferError("This user already owns the project.");
+      return;
+    }
+    setShowTransferConfirmation(true);
+  };
+
+  const confirmTransfer = async () => {
+    setIsTransferring(true);
+    setTransferError(null);
+    try {
+      const transferred = await onTransferOwner(trimmedNewOwnerId);
+      if (transferred) {
+        setShowTransferConfirmation(false);
+        setNewOwnerId("");
+      }
+    } finally {
+      setIsTransferring(false);
+    }
   };
 
   return (
     <section className="card bg-base-200 shadow-lg">
       <div className="card-body">
         <h2 className="card-title text-2xl mb-4">Actions</h2>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
           <div className="flex flex-col items-start gap-4">
             <label className="label cursor-pointer justify-start gap-3 p-0">
               <input
@@ -46,7 +90,47 @@ const AppEditActions: React.FC<AppEditActionsProps> = ({
               Cancel
             </Link>
           </div>
-          <div>
+          <div className="flex w-full max-w-xl flex-col gap-3 sm:w-auto">
+            <div>
+              <h3 className="font-semibold">Transfer ownership</h3>
+              <p className="text-sm opacity-70">
+                Current owner:{" "}
+                <span className="font-mono">{projectOwnerId}</span>
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <label className="input input-bordered flex min-w-0 flex-1 items-center gap-2">
+                <span className="shrink-0 text-sm opacity-70">New owner</span>
+                <input
+                  type="text"
+                  className="min-w-0 grow"
+                  value={newOwnerId}
+                  onChange={(event) => {
+                    setNewOwnerId(event.target.value);
+                    setTransferError(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      openTransferConfirmation();
+                    }
+                  }}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn btn-warning"
+                onClick={openTransferConfirmation}
+                disabled={!trimmedNewOwnerId}
+              >
+                Transfer
+              </button>
+            </div>
+            {transferError && (
+              <p className="text-sm text-error" role="alert">
+                {transferError}
+              </p>
+            )}
             <button
               type="button"
               className="btn btn-error flex items-center"
@@ -70,9 +154,65 @@ const AppEditActions: React.FC<AppEditActionsProps> = ({
           </div>
         </div>
         <p className="text-xs opacity-60 mt-4 text-right">
-          Deleting an application is permanent and cannot be undone.
+          Transferring or deleting an application is permanent and cannot be
+          undone.
         </p>
       </div>
+
+      {showTransferConfirmation && (
+        <dialog
+          open
+          className="modal"
+          aria-labelledby="transfer-ownership-title"
+          onCancel={(event) => {
+            event.preventDefault();
+            setShowTransferConfirmation(false);
+          }}
+        >
+          <div className="modal-box">
+            <h3
+              id="transfer-ownership-title"
+              className="text-lg font-bold text-warning"
+            >
+              Transfer this project?
+            </h3>
+            <p className="py-4">
+              Ownership will move from{" "}
+              <span className="font-mono">{projectOwnerId}</span> to{" "}
+              <span className="font-mono">{trimmedNewOwnerId}</span>.
+            </p>
+            <div className="modal-action">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setShowTransferConfirmation(false)}
+                ref={cancelTransferButtonRef}
+                disabled={isTransferring}
+              >
+                Keep owner
+              </button>
+              <button
+                type="button"
+                className="btn btn-warning"
+                onClick={confirmTransfer}
+                disabled={isTransferring}
+                aria-busy={isTransferring}
+              >
+                {isTransferring && (
+                  <span className="loading loading-spinner loading-sm" />
+                )}
+                Transfer project
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="modal-backdrop"
+            aria-label="Close transfer confirmation"
+            onClick={() => setShowTransferConfirmation(false)}
+          />
+        </dialog>
+      )}
 
       {showDeleteConfirmation && (
         <dialog

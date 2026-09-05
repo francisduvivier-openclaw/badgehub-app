@@ -133,6 +133,45 @@ describe("Authenticated API Routes", () => {
       ).toBeUndefined();
     });
 
+    test("PATCH /api/v3/projects/{slug}/owner transfers project ownership", async () => {
+      const TEST_APP_ID = toSlug(`test_owner_transfer_${crypto.randomUUID()}`);
+      const newOwnerId = `new-owner-${crypto.randomUUID()}`;
+
+      const postRes = await request(app)
+        .post(`/api/v3/projects/${TEST_APP_ID}`)
+        .auth(USER1_TOKEN, { type: "bearer" })
+        .send();
+      expect(postRes.statusCode).toBe(204);
+
+      const publishRes = await request(app)
+        .patch(`/api/v3/projects/${TEST_APP_ID}/publish`)
+        .auth(USER1_TOKEN, { type: "bearer" });
+      expect(publishRes.statusCode).toBe(204);
+
+      const warmedCacheRes = await request(app).get(
+        `/api/v3/projects/${TEST_APP_ID}`
+      );
+      expect(warmedCacheRes.statusCode).toBe(200);
+      expect(warmedCacheRes.body.idp_user_id).toBe(USER1_ID);
+
+      const transferRes = await request(app)
+        .patch(`/api/v3/projects/${TEST_APP_ID}/owner`)
+        .auth(USER1_TOKEN, { type: "bearer" })
+        .send({ newOwnerId });
+      expect(transferRes.statusCode).toBe(204);
+
+      const getPublicRes = await request(app).get(
+        `/api/v3/projects/${TEST_APP_ID}`
+      );
+      expect(getPublicRes.statusCode).toBe(200);
+      expect(getPublicRes.body.idp_user_id).toBe(newOwnerId);
+
+      const getDraftAsOldOwnerRes = await request(app)
+        .get(`/api/v3/projects/${TEST_APP_ID}/draft`)
+        .auth(USER1_TOKEN, { type: "bearer" });
+      expect(getDraftAsOldOwnerRes.statusCode).toBe(403);
+    });
+
     test("PATCH draft metadata with admin category returns 403 for non-admin", async () => {
       const dynamicTestAppId = toSlug(
         `test_admin_category_${crypto.randomUUID()}`

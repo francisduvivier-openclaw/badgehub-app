@@ -179,6 +179,14 @@ describe("The API should return a 403 if the user is not authorized of the proje
         });
       expect(updateAppRes.status).toBe(403);
     });
+
+    test("PATCH project owner", async () => {
+      const transferRes = await request(app)
+        .patch(`/api/v3/projects/${dynamicTestAppId}/owner`)
+        .auth(USER2_TOKEN, { type: "bearer" })
+        .send({ newOwnerId: "new-owner-id" });
+      expect(transferRes.status).toBe(403);
+    });
   });
 
   describe("/api/v3/projects/{slug}/publish", () => {

@@ -1,5 +1,4 @@
 import { createExpressServer } from "@createExpressServer";
-import type { ProjectApiTokenMetadata } from "@shared/domain/readModels/project/ProjectApiToken";
 import { isInDebugMode } from "@util/debug";
 import type { Express } from "express";
 import { decodeJwt } from "jose";
@@ -162,6 +161,14 @@ describe("Project API Tokens", () => {
         const res = await request(app)
           .get(`/api/v3/users/${USER1_ID}/drafts`)
           .set("badgehub-api-token", `Bearer ${dynamicApp1Token}`);
+        expect(res.statusCode).toBe(403);
+      });
+
+      test("PATCH /projects/{slug}/owner should not be possible with an api-token", async () => {
+        const res = await request(app)
+          .patch(`/api/v3/projects/${dynamicAppId}/owner`)
+          .set("badgehub-api-token", `Bearer ${dynamicApp1Token}`)
+          .send({ newOwnerId: "new-owner-id" });
         expect(res.statusCode).toBe(403);
       });
     });

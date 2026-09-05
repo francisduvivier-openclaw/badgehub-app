@@ -188,11 +188,19 @@ export class BadgeHubData {
     return this.badgeHubMetadata.insertProject(project, mockDates);
   }
 
-  updateProject(
+  async updateProject(
     projectSlug: ProjectSlug,
     changes: Partial<Omit<DBProject, "slug">>
   ): Promise<void> {
-    return this.badgeHubMetadata.updateProject(projectSlug, changes);
+    await this.badgeHubMetadata.updateProject(projectSlug, changes);
+    this.invalidateProjectCaches(projectSlug);
+  }
+
+  async transferProjectOwner(
+    projectSlug: ProjectSlug,
+    newOwnerId: User["idp_user_id"]
+  ): Promise<void> {
+    await this.updateProject(projectSlug, { idp_user_id: newOwnerId });
   }
 
   deleteProject(projectSlug: ProjectSlug): Promise<void> {
@@ -323,6 +331,16 @@ export class BadgeHubData {
       this.statsCacheInvalidationTimer = undefined;
     }
     this.statsCache.delete("stats");
+  }
+
+  private invalidateProjectCaches(projectSlug: ProjectSlug): void {
+    this.latestProjectCache.delete(`${projectSlug}_latest`);
+    this.immutableProjectCache.delete(`${projectSlug}_draft`);
+    for (const key of this.immutableProjectCache.keys()) {
+      if (key.startsWith(`${projectSlug}_`)) {
+        this.immutableProjectCache.delete(key);
+      }
+    }
   }
 
   private debounceStatsCacheInvalidation(): void {

@@ -328,6 +328,16 @@ export function createApiRouter(
     }
   );
 
+  const transferProjectOwner = privateOs.transferProjectOwner.handler(
+    async ({ input, context }) => {
+      if (!context.user) {
+        forbidden("Project ownership can only be transferred by a user");
+      }
+      await assertProjectAccess(badgeHubData, input.slug, context);
+      await badgeHubData.transferProjectOwner(input.slug, input.newOwnerId);
+    }
+  );
+
   const deleteProject = privateOs.deleteProject.handler(
     async ({ input, context }) => {
       await assertProjectAccess(badgeHubData, input.slug, context);
@@ -533,6 +543,7 @@ export function createApiRouter(
       getRatingFromUser,
       reportRatingFromUser,
       updateProject,
+      transferProjectOwner,
       deleteProject,
       writeDraftFile,
       setDraftIconFromFile,

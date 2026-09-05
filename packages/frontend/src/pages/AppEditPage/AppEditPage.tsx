@@ -245,6 +245,33 @@ const AppEditPage: React.FC<{
     }
   };
 
+  const handleTransferOwner = async (newOwnerId: string): Promise<boolean> => {
+    try {
+      assertDefined(keycloak);
+      const response = await (
+        await getFreshAuthorizedApiClient(keycloak)
+      ).transferProjectOwner({
+        params: { slug },
+        body: { newOwnerId },
+      });
+      if (response.status !== 204) {
+        console.error("owner transfer failed", response);
+        window.alert("Owner transfer failed");
+        return false;
+      }
+      setProject((currentProject) =>
+        currentProject
+          ? { ...currentProject, idp_user_id: newOwnerId }
+          : currentProject
+      );
+      return true;
+    } catch (e) {
+      console.error(e);
+      window.alert("Something went wrong during owner transfer.");
+      return false;
+    }
+  };
+
   const handleSetIcon = async (filePath: string) => {
     assertDefined(keycloak);
     try {
@@ -316,6 +343,7 @@ const AppEditPage: React.FC<{
                 void saveNow();
               }}
               onDeleteApplication={handleDeleteApplication}
+              onTransferOwner={handleTransferOwner}
               isPublishing={isPublishing}
               publishedMessage={publishedMessage}
               isSaving={isSaving}
